@@ -1,0 +1,40 @@
+HEAD
+node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+ main
+
+ # Next.js 필수 제외 항목
+node_modules/
+.next/
+out/
+build/
+
+# 보안: API 키 및 환경 변수 파일 (가장 중요) [cite: 112, 240, 489]
+.env*.local
+.env
+.env.local
+

@@ -1,5 +1,5 @@
 """
-Agent Graph
+Agent Graph (네이버 → Place Enrichment 순차 실행)
 LangGraph를 사용하여 에이전트 그래프를 정의하는 모듈입니다.
 """
 
@@ -8,7 +8,7 @@ from typing import Literal
 from langgraph.graph import StateGraph, END
 
 from .state import AgentState
-from .nodes import llm_node, tool_node
+from .nodes import llm_node, tool_node, google_place_search_node, naver_blog_search_node, query_planner_node
 
 
 def should_continue(state: AgentState) -> Literal["tool_node", "end"]:
@@ -33,9 +33,17 @@ def create_agent_graph() -> StateGraph:
     """
     에이전트 그래프를 생성합니다.
 
-    그래프 구조:
-        START -> llm_node -> (조건) -> tool_node -> llm_node (반복)
-                                   -> END
+    그래프 구조 (Places 우선 방식):
+        START 
+          ↓
+        query_planner_node (LLM이 쿼리 생성)
+          ↓
+        google_place_search_node (Google Places로 5개 가게 + 리뷰 검색)
+          ↓
+        naver_blog_search_node (각 가게명으로 블로그 검색, RSS 매칭)
+          ↓
+        llm_node → (조건) → tool_node → llm_node (반복)
+                          → END
 
     Returns:
         컴파일된 StateGraph
@@ -44,11 +52,19 @@ def create_agent_graph() -> StateGraph:
     graph_builder = StateGraph(AgentState)
 
     # 노드 추가
+    graph_builder.add_node("query_planner_node", query_planner_node)
+    graph_builder.add_node("google_place_search_node", google_place_search_node)
+    graph_builder.add_node("naver_blog_search_node", naver_blog_search_node)
     graph_builder.add_node("llm_node", llm_node)
     graph_builder.add_node("tool_node", tool_node)
 
-    # 시작점 설정
-    graph_builder.set_entry_point("llm_node")
+    # 시작점: Query Planner부터 시작
+    graph_builder.set_entry_point("query_planner_node")
+
+    # 순차 실행: query_planner → google_place_search → naver_blog_search → llm
+    graph_builder.add_edge("query_planner_node", "google_place_search_node")
+    graph_builder.add_edge("google_place_search_node", "naver_blog_search_node")
+    graph_builder.add_edge("naver_blog_search_node", "llm_node")
 
     # 조건부 엣지 추가 (LLM 노드 이후)
     graph_builder.add_conditional_edges(
@@ -67,3 +83,7 @@ def create_agent_graph() -> StateGraph:
     graph = graph_builder.compile()
 
     return graph
+
+
+# 외부에서 import 할 수 있도록 그래프 인스턴스 생성
+app = create_agent_graph()

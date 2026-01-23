@@ -15,7 +15,10 @@ dependencies = [
     "faiss-cpu (>=1.13.2,<2.0.0)",
     "python-dotenv (>=1.2.1,<2.0.0)",
     "fastapi (>=0.128.0,<0.129.0)",
-    "uvicorn (>=0.40.0,<0.41.0)"
+    "uvicorn (>=0.40.0,<0.41.0)",
+    "requests (>=2.32.0,<3.0.0)",
+    "feedparser (>=6.0.11,<7.0.0)",
+    "langchain-openai (>=1.1.7,<2.0.0)"
 ]
 
 
