@@ -1,5 +1,5 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+
 import { CoursePoint, SavedCourse, Message, EvidenceCard } from "../types";
 
 export class GeminiService {
