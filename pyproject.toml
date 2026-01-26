@@ -18,7 +18,9 @@ dependencies = [
     "uvicorn (>=0.40.0,<0.41.0)",
     "requests (>=2.32.0,<3.0.0)",
     "feedparser (>=6.0.11,<7.0.0)",
-    "langchain-openai (>=1.1.7,<2.0.0)"
+    "langchain-openai (>=1.1.7,<2.0.0)",
+    "aiohttp (>=3.13.3,<4.0.0)",
+    "nest-asyncio (>=1.6.0,<2.0.0)"
 ]
 
 

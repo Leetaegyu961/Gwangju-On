@@ -22,7 +22,7 @@ async def chat(request: ChatRequest):
     try:
         # 1. Agent 실행
         print(f"🚀 [Agent Start] User: {user_id}")
-        result = agent_app.invoke({
+        result = await agent_app.ainvoke({
             "messages": [HumanMessage(content=input_text)],
             "survey_data": survey_data
         })

@@ -26,9 +26,9 @@ class QueryPlan(BaseModel):
     )
 
 
-def query_planner_node(state: AgentState) -> dict[str, Any]:
+async def query_planner_node(state: AgentState) -> dict[str, Any]:
     """
-    사용자 질문을 분석하여 최적화된 검색 쿼리를 생성합니다.
+    사용자 질문을 분석하여 최적화된 검색 쿼리를 생성합니다. (Async)
     
     Args:
         state: 현재 에이전트 상태
@@ -92,7 +92,6 @@ def query_planner_node(state: AgentState) -> dict[str, Any]:
    - 왜 이런 쿼리를 생성했는지 간단히 설명
 
 예시:
-예시:
 - "광주 카레 맛집 3개만 추천해줘 동명동!" 
   → place_queries: ["광주 동명동 카레"], result_count: 3
   
@@ -101,9 +100,10 @@ def query_planner_node(state: AgentState) -> dict[str, Any]:
 """
     
     try:
-        query_plan = structured_llm.invoke(prompt)
+        # Async invoke
+        query_plan = await structured_llm.ainvoke(prompt)
         
-        print(f"📋 쿼리 계획:")
+        print(f"📋 쿼리 계획 (Async):")
         print(f"   - Place Queries: {query_plan.place_queries}")
         print(f"   - 개수(쿼리당): {query_plan.result_count}개")
         print(f"   - 이유: {query_plan.reasoning}")

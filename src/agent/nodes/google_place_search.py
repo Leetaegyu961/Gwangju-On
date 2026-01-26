@@ -1,16 +1,15 @@
 """
-Google Place Search Node
-Google Places API를 호출하여 여러 가게 정보와 리뷰를 수집합니다.
+Google Place Search Node (Async Version - Native)
+Google Places API를 호출하여 여러 가게 정보와 리뷰를 완전한 비동기로 수집합니다.
 """
 
 import os
-import requests
 import re
-from typing import Any
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import asyncio
+import aiohttp
+from typing import Any, List
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-
 from ..config import config
 from ..state import AgentState
 
@@ -18,8 +17,8 @@ load_dotenv()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
 
 
-def _search_places(query: str, max_results: int = 5) -> list[dict]:
-    """Google Places API로 여러 장소를 검색합니다."""
+async def _search_places_async(session: aiohttp.ClientSession, query: str, max_results: int = 5) -> List[dict]:
+    """Google Places API로 여러 장소를 비동기 검색합니다."""
     url = "https://places.googleapis.com/v1/places:searchText"
     
     headers = {
@@ -31,23 +30,22 @@ def _search_places(query: str, max_results: int = 5) -> list[dict]:
     payload = {
         "textQuery": query,
         "languageCode": "ko",
-        "maxResultCount": min(max_results, 20)  # API 최대 20개
+        "maxResultCount": min(max_results, 20)
     }
     
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        result = response.json()
-        
-        if "places" in result:
-            return result["places"][:max_results]
+        async with session.post(url, headers=headers, json=payload, timeout=10) as response:
+            result = await response.json()
+            if "places" in result:
+                return result["places"][:max_results]
     except Exception as e:
         print(f"⚠️ Place 검색 오류: {e}")
     
     return []
 
 
-def _get_place_reviews(place_name_id: str, place_name: str) -> dict:
-    """장소의 상세 정보와 리뷰를 가져옵니다."""
+async def _get_place_reviews_async(session: aiohttp.ClientSession, place_name_id: str, place_name: str) -> dict:
+    """장소의 상세 정보와 리뷰를 비동기로 가져옵니다."""
     url = f"https://places.googleapis.com/v1/{place_name_id}"
     
     headers = {
@@ -59,17 +57,17 @@ def _get_place_reviews(place_name_id: str, place_name: str) -> dict:
     params = {"languageCode": "ko"}
     
     try:
-        response = requests.get(url, headers=headers, params=params, timeout=10)
-        details = response.json()
-        
-        return {
-            "place_name": place_name,
-            "rating": details.get('rating', 0),
-            "total_reviews": details.get('userRatingCount', 0),
-            "reviews": details.get('reviews', []),
-            "photo_name": details.get('photos', [{}])[0].get('name') if details.get('photos') else None,
-            "price_level": details.get('priceLevel', "")
-        }
+        async with session.get(url, headers=headers, params=params, timeout=10) as response:
+            details = await response.json()
+            
+            return {
+                "place_name": place_name,
+                "rating": details.get('rating', 0),
+                "total_reviews": details.get('userRatingCount', 0),
+                "reviews": details.get('reviews', []),
+                "photo_name": details.get('photos', [{}])[0].get('name') if details.get('photos') else None,
+                "price_level": details.get('priceLevel', "")
+            }
     except Exception as e:
         print(f"⚠️ {place_name} 리뷰 조회 오류: {e}")
         return {
@@ -80,9 +78,9 @@ def _get_place_reviews(place_name_id: str, place_name: str) -> dict:
         }
 
 
-def _normalize_names_to_korean(place_data_list: list[dict]) -> list[dict]:
+async def _normalize_names_to_korean_async(place_data_list: list[dict]) -> list[dict]:
     """
-    가게 이름들이 영어/일어인 경우 Gemini를 사용하여 한글로 변환합니다.
+    (비동기 함수) 가게 이름들이 영어/일어인 경우 Gemini를 사용하여 한글로 변환합니다.
     """
     llm = ChatGoogleGenerativeAI(
         model=config.GEMINI_MODEL,
@@ -90,7 +88,6 @@ def _normalize_names_to_korean(place_data_list: list[dict]) -> list[dict]:
         temperature=0,
     )
     
-    # 변환이 필요한 이름들 선별 (한글이 포함되지 않은 이름)
     targets = []
     for item in place_data_list:
         name = item["name"]
@@ -100,7 +97,6 @@ def _normalize_names_to_korean(place_data_list: list[dict]) -> list[dict]:
     if not targets:
         return place_data_list
     
-    # 이름 변환 요청
     prompt = f"""다음 외국어(영어/일어 등)로 된 식당 이름들을 한국인들이 네이버 검색 시 가장 많이 사용하는 한글 표기법으로 변환해줘.
 원래 고유 명사 느낌을 최대한 살려줘.
 
@@ -109,13 +105,11 @@ def _normalize_names_to_korean(place_data_list: list[dict]) -> list[dict]:
 출력 형식: JSON 배열 [ "한글이름1", "한글이름2", ... ] (순서 엄수, 다른 설명 없이 배열만 출력)"""
     
     try:
-        response = llm.invoke(prompt)
-        # JSON 배열 추출
+        # Async invoke
+        response = await llm.ainvoke(prompt)
         match = re.search(r'\[.*\]', response.content, re.DOTALL)
         if match:
             korean_names = eval(match.group(0))
-            
-            # 원래 리스트에 적용
             k_idx = 0
             for item in place_data_list:
                 if not re.search(r'[ㄱ-ㅎㅏ-ㅣ가-힣]', item["name"]) and k_idx < len(korean_names):
@@ -129,9 +123,70 @@ def _normalize_names_to_korean(place_data_list: list[dict]) -> list[dict]:
     return place_data_list
 
 
-def google_place_search_node(state: AgentState) -> dict[str, Any]:
+async def _run_google_search_logic(queries: List[str], result_count: int) -> List[dict]:
+    """검색 및 리뷰 수집 전체 로직을 비동기로 실행"""
+    async with aiohttp.ClientSession() as session:
+        # 1. 병렬 검색
+        search_tasks = [
+            _search_places_async(session, q, result_count)
+            for q in queries
+        ]
+        search_results_list = await asyncio.gather(*search_tasks)
+        
+        # 결과 합치기 및 중복 제거
+        all_places = []
+        seen_names = set()
+        for results in search_results_list:
+            if results:
+                for p in results:
+                    name = p['displayName']['text']
+                    if name not in seen_names:
+                        all_places.append(p)
+                        seen_names.add(name)
+        
+        if not all_places:
+            return []
+            
+        print(f"📍 {len(all_places)}개 가게 발견, 리뷰 수집 중...")
+        
+        # 2. 병렬 리뷰 수집
+        detail_tasks = [
+            _get_place_reviews_async(session, place['name'], place['displayName']['text'])
+            for place in all_places
+        ]
+        
+        details_list = await asyncio.gather(*detail_tasks)
+        
+        # 데이터 병합
+        place_data_list = []
+        for place, details in zip(all_places, details_list):
+            place_data_list.append({
+                "id": place['name'],
+                "name": place['displayName']['text'],
+                "address": place['formattedAddress'],
+                "lat": place.get('location', {}).get('latitude', 0.0),
+                "lng": place.get('location', {}).get('longitude', 0.0),
+                "rating": details['rating'],
+                "total_reviews": details['total_reviews'],
+                "photo_name": details.get('photo_name'),
+                "price_level": details.get('price_level', ""),
+                "reviews": [
+                    {
+                        "rating": r.get('rating', 0),
+                        "text": r.get('text', {}).get('text') or r.get('originalText', {}).get('text') or "",
+                        "time": r.get('relativePublishTimeDescription', '')
+                    }
+                    for r in details['reviews'][:3]
+                ]
+            })
+            print(f"  ✅ {place['displayName']['text']} (⭐{details['rating']})")
+            
+        return place_data_list
+
+
+async def google_place_search_node(state: AgentState) -> dict[str, Any]:
     """
-    Google Place API를 호출하여 여러 맛집 정보를 조회하는 노드입니다.
+    Google Place API를 호출하여 여러 맛집 정보를 비동기로 조회하는 노드입니다. (Native Async)
     """
     if not GOOGLE_MAPS_API_KEY:
         print("⚠️ GOOGLE_CLOUD_API_KEY가 설정되지 않았습니다.")
@@ -141,7 +196,6 @@ def google_place_search_node(state: AgentState) -> dict[str, Any]:
     queries = query_plan.get("place_queries", [])
     
     if not queries:
-        # 하위 호환성: 옛날 place_query가 있는지 확인
         if query_plan.get("place_query"):
             queries = [query_plan["place_query"]]
         else:
@@ -152,77 +206,20 @@ def google_place_search_node(state: AgentState) -> dict[str, Any]:
     
     print(f"🔍 Google Place 검색 쿼리 목록: {queries} (쿼리당 최대 {result_count}개)")
     
-    all_places = []
-    seen_names = set()
-    
-    for query in queries:
-        print(f"  Running query: '{query}'")
-        # 각 쿼리 실행
-        results = _search_places(query, result_count)
-        if results:
-            for p in results:
-                # 이름 기준으로 중복 제거
-                if p['name'] not in seen_names:
-                    all_places.append(p)
-                    seen_names.add(p['name'])
-    
-    places = all_places
-    
-    if not places:
-        print(f"❌ '{query}' 검색 결과 없음")
+    try:
+        # Native Await
+        place_data_list = await _run_google_search_logic(queries, result_count)
+    except Exception as e:
+        print(f"❌ 검색 프로세스 오류: {e}")
         return {"place_data": None}
-    
-    print(f"📍 {len(places)}개 가게 발견, 리뷰 수집 중...")
-    
-    place_data_list = []
-    
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_place = {
-            executor.submit(
-                _get_place_reviews, 
-                place['name'], 
-                place['displayName']['text']
-            ): place 
-            for place in places
-        }
-        
-        for future in as_completed(future_to_place):
-            place = future_to_place[future]
-            try:
-                details = future.result()
-                
-                place_data_list.append({
-                    "id": place['name'],
-                    "name": place['displayName']['text'],
-                    "address": place['formattedAddress'],
-                    "lat": place.get('location', {}).get('latitude', 0.0),
-                    "lng": place.get('location', {}).get('longitude', 0.0),
-                    "rating": details['rating'],
-                    "total_reviews": details['total_reviews'],
-                    "photo_name": details.get('photo_name'),
-                    "price_level": details.get('price_level', ""),
-                    "reviews": [
-                        {
-                            "rating": r.get('rating', 0),
-                            "text": r.get('text', {}).get('text') or r.get('originalText', {}).get('text') or "",
-                            "time": r.get('relativePublishTimeDescription', '')
-                        }
-                        for r in details['reviews'][:3]
-                    ]
-                })
-                
-                print(f"  ✅ {place['displayName']['text']} (⭐{details['rating']})")
-                
-            except Exception as e:
-                print(f"  ⚠️ {place['displayName']['text']} 처리 오류: {e}")
     
     if not place_data_list:
+        print(f"❌ 검색 결과 없음")
         return {"place_data": None}
     
-    # 외국어 이름을 한글로 변환 (네이버 검색 최적화)
-    place_data_list = _normalize_names_to_korean(place_data_list)
+    # 외국어 이름을 한글로 변환 (비동기 처리)
+    place_data_list = await _normalize_names_to_korean_async(place_data_list)
     
     print(f"✅ Google Place 검색 완료: 총 {len(place_data_list)}개 가게")
     
     return {"place_data": place_data_list}
-

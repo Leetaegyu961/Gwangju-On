@@ -17,12 +17,7 @@ from ..tools import search_tool
 def _create_context_message(state: AgentState) -> SystemMessage | None:
     """
     enriched_results (블로그 + Places 리뷰 통합 데이터)를 SystemMessage로 변환합니다.
-    
-    Args:
-        state: 현재 에이전트 상태
-        
-    Returns:
-        컨텍스트가 포함된 SystemMessage 또는 None
+    (동기 함수 유지 - LLM 호출 없음)
     """
     # 컨텍스트 예산 설정
     MAX_CONTEXT_CHARS = 40000  # 컨텍스트 예산 증액
@@ -60,7 +55,6 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
             temp_id = f"p{idx}"
             
             title_line = f"\n---\n### [ID: {temp_id}] {place_name}{price_str}"
-            # 원래 Google Place ID는 내부적으로만 가지고 있거나 필요시 병기
             
             if place.get('lat') and place.get('lng'):
                 title_line += f" (lat: {place['lat']}, lng: {place['lng']})"
@@ -75,7 +69,6 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
                 item_section.append(f"\n**📣 Google 사용자 리뷰**:")
                 for r in reviews[:3]: # 3개만 샘플링
                     review_text = r.get('text', '')[:MAX_REVIEW_CHARS]
-                    # 줄바꿈 제거하여 간결하게
                     review_text = review_text.replace('\n', ' ')
                     rating_star = "⭐" * int(r.get('rating', 0))
                     item_section.append(f"- {rating_star} {review_text}")
@@ -91,7 +84,6 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
                     post_date = blog.get('postdate', '')
                     content = blog.get('full_content', '')
                     
-                    # 본문이 너무 길면 자름
                     if len(content) > MAX_BLOG_CHARS:
                         content = content[:MAX_BLOG_CHARS] + "...(중략)"
                     
@@ -100,10 +92,8 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
             else:
                 item_section.append("\n⚠️ 매칭된 블로그 후기가 없습니다.")
             
-            # 섹션 텍스트 합치기
             item_text = "\n".join(item_section)
             
-            # 예산 체크
             if total_chars + len(item_text) < MAX_CONTEXT_CHARS:
                 context_parts.extend(item_section)
                 total_chars += len(item_text)
@@ -151,9 +141,9 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 }}
 
 주의사항:
-3. `courses` 배열에는 추천하는 장소들을 순서대로 넣어주세요. **Context에 있는 lat, lng, id 값을 그대로 사용하세요.**
-4. `answer` 필드는 최대한 간결하게 작성하세요. 사용자는 텍스트보다 지도를 보고 싶어합니다. "요청하신 코스를 생성했습니다." 정도면 충분합니다.
-5. 형식을 철저히 지키세요.
+1. `courses` 배열에는 추천하는 장소들을 순서대로 넣어주세요. **Context에 있는 lat, lng, id 값을 그대로 사용하세요.**
+2. `answer` 필드는 최대한 간결하게 작성하세요. 사용자는 텍스트보다 지도를 보고 싶어합니다. "요청하신 코스를 생성했습니다." 정도면 충분합니다.
+3. 형식을 철저히 지키세요.
 """
         
         return SystemMessage(content=system_prompt)
@@ -162,16 +152,15 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 
 
 
-def llm_node(state: AgentState) -> dict[str, Any]:
+async def llm_node(state: AgentState) -> dict[str, Any]:
     """
-    LLM을 호출하여 응답을 생성하는 노드입니다.
-    Place API와 Naver Search 데이터를 컨텍스트로 주입합니다.
+    LLM을 호출하여 응답을 생성하는 노드입니다. (Async)
     """
-    # LLM 초기화 (json_mode를 지원하는 모델이면 좋지만, 여기선 프롬프트로 강제)
+    # LLM 초기화
     llm = ChatGoogleGenerativeAI(
         model=config.GEMINI_MODEL,
         google_api_key=config.GOOGLE_API_KEY,
-        temperature=0.4, # JSON 포맷 정확도를 위해 조금 낮춤
+        temperature=0.4, 
     )
     
     # 도구 바인딩
@@ -185,8 +174,6 @@ def llm_node(state: AgentState) -> dict[str, Any]:
     context_message = _create_context_message(state)
     
     if context_message:
-        # SystemMessage를 메시지 리스트 맨 앞에 삽입
-        # (이미 SystemMessage가 있으면 교체)
         if messages and isinstance(messages[0], SystemMessage):
             messages[0] = context_message
         else:
@@ -194,8 +181,8 @@ def llm_node(state: AgentState) -> dict[str, Any]:
         
         print("📤 LLM에 컨텍스트 주입 완료")
     
-    # LLM 호출
-    response = llm_with_tools.invoke(messages)
+    # Async LLM 호출
+    response = await llm_with_tools.ainvoke(messages)
     
     # 도구 호출이 필요한지 확인
     if response.tool_calls:

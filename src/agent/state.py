@@ -46,3 +46,5 @@ class AgentState(TypedDict):
     # 사용자 서베이 데이터 (성별, 연령, 테마, 코스 구성 등)
     survey_data: dict | None
 
+
+
