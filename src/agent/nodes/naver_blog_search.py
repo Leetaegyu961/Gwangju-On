@@ -87,14 +87,15 @@ async def _process_single_blog_item(
     return None
 
 
-async def _search_blogs_for_place_async(session: aiohttp.ClientSession, place_name: str) -> List[dict]:
-    """특정 가게명으로 네이버 검색 후 결과를 비동기 병렬 처리"""
+async def _search_blogs_for_place_async(session: aiohttp.ClientSession, query: str) -> List[dict]:
+    """특정 쿼리로 네이버 검색 후 결과(RSS 매칭) 반환"""
     if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
         return []
     
     try:
-        enc_text = urllib.parse.quote(place_name)
-        url = f"https://openapi.naver.com/v1/search/blog.json?query={enc_text}&display=30"
+        enc_text = urllib.parse.quote(query)
+        # 검색 결과 50개 조회
+        url = f"https://openapi.naver.com/v1/search/blog.json?query={enc_text}&display=50"
         headers = {
             "X-Naver-Client-Id": NAVER_CLIENT_ID,
             "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
@@ -122,7 +123,7 @@ async def _search_blogs_for_place_async(session: aiohttp.ClientSession, place_na
                 result = await future
                 if result:
                     matched_blogs.append(result)
-                    if len(matched_blogs) >= 5:
+                    if len(matched_blogs) >= 10:
                         break
             except Exception:
                 pass
@@ -141,15 +142,16 @@ async def _search_blogs_for_place_async(session: aiohttp.ClientSession, place_na
 
 
 async def _enrich_place_with_blogs_async(session: aiohttp.ClientSession, place_data: dict) -> dict:
-    """단일 가게 정보에 블로그 데이터를 비동기로 추가"""
+    """단일 가게 정보에 대해 여러 검색어 전략을 사용하여 블로그 데이터를 수집"""
     place_name = place_data.get('name', '')
+    original_name = place_data.get('original_name', '')
     address = place_data.get('address', '')
     
+    # 1. 지역명 추출 (동명동 등)
     location_parts = address.split()
     if location_parts and location_parts[0] in ['대한민국', 'Republic', 'of', 'Korea']:
         location_parts = location_parts[1:]
     
-    region_info = ""
     city = ""
     if len(location_parts) >= 1:
         city = location_parts[0].replace('특별시', '').replace('광역시', '').replace('자치시', '').replace('자치도', '')
@@ -160,20 +162,62 @@ async def _enrich_place_with_blogs_async(session: aiohttp.ClientSession, place_d
             district = part
             break
             
-    if city and district:
-        region_info = f"{city} {district}".strip()
-    elif city:
-        region_info = city
+    region_info = f"{city} {district}".strip() if (city and district) else city
     
-    search_query = f"{region_info} {place_name}" if region_info else place_name
+    # 2. 검색어 후보 생성 (우선순위 순)
+    search_queries = []
     
-    matched_blogs = await _search_blogs_for_place_async(session, search_query)
+    # (1) 기본: "동명동 투에프"
+    search_queries.append(f"{region_info} {place_name}".strip())
     
-    print(f"  📝 {place_name} - RSS 매칭 {len(matched_blogs)}/5개 완료")
+    # (2) 특수문자 제거: "데일리오아시스,광주점" -> "데일리오아시스 광주점"
+    clean_name = re.sub(r'[^\w\s]', ' ', place_name).strip()
+    clean_name = re.sub(r'\s+', ' ', clean_name) # 중복 공백 제거
+    if clean_name != place_name:
+        search_queries.append(f"{region_info} {clean_name}".strip())
+        
+    # (3) 원본 이름 (Google Original): "동명동 2F"
+    if original_name and original_name != place_name:
+        search_queries.append(f"{region_info} {original_name}".strip())
+        
+    # (4) 그냥 이름만 (지역명 없이, 너무 결과 안나올 때 대비 - 이건 위험하니 제외하거나 최후수단)
+    # search_queries.append(place_name)
+
+    # 중복 쿼리 제거
+    unique_queries = []
+    seen = set()
+    for q in search_queries:
+        if q not in seen:
+            unique_queries.append(q)
+            seen.add(q)
+            
+    print(f"  🔍 검색 전략 [{place_name}]: {unique_queries}")
+    
+    final_matched_blogs = []
+    seen_links = set()
+    
+    for query in unique_queries:
+        if len(final_matched_blogs) >= 10:
+            break
+            
+        print(f"    👉 시도: '{query}'")
+        matched = await _search_blogs_for_place_async(session, query)
+        
+        for blog in matched:
+            if blog['link'] not in seen_links:
+                final_matched_blogs.append(blog)
+                seen_links.add(blog['link'])
+                if len(final_matched_blogs) >= 10:
+                    break
+        
+        if len(final_matched_blogs) >= 3: # 3개 이상이면 충분하다고 판단
+            break
+            
+    print(f"  📝 {place_name} - 최종 RSS 매칭 {len(final_matched_blogs)}/10개 완료")
     
     return {
         "place": place_data,
-        "blogs": matched_blogs
+        "blogs": final_matched_blogs
     }
 
 
@@ -197,7 +241,6 @@ async def naver_blog_search_node(state: AgentState) -> dict[str, Any]:
     print(f"\n🔗 Naver 블로그 검색 시작 (Async): {len(place_data_list)}개 가게")
     
     try:
-        # ThreadPool 없이 바로 await (LangGraph가 async node를 지원하므로)
         enriched_results = await _run_all_searches(place_data_list)
     except Exception as e:
         print(f"⚠️ 비동기 실행 오류 발생: {e}")

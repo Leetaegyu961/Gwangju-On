@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from backend.models.chat import ChatRequest, ChatResponse, EvidenceCard
+from backend.models.chat import ChatRequest, ChatResponse, EvidenceCard, RecommendedCourse
 import time
 import uuid
 
@@ -29,6 +29,10 @@ async def chat(request: ChatRequest):
         
         # 2. 결과 추출
         final_answer_raw = result.get("final_answer", "")
+        if isinstance(final_answer_raw, list):
+            final_answer_raw = "".join([part.get("text", "") if isinstance(part, dict) else str(part) for part in final_answer_raw])
+        
+        final_answer_raw = str(final_answer_raw) # 보장
         # 사진 매핑을 위한 enriched_results 추출
         enriched_results = result.get("enriched_results", [])
         place_photos = {}
@@ -39,11 +43,14 @@ async def chat(request: ChatRequest):
                 p = item.get('place', {})
                 if p.get('photo_name'):
                     place_photos[temp_id] = p['photo_name']
-
+                    
         print(f"✅ [Agent Done] Output Length: {len(final_answer_raw)}, Photos: {len(place_photos)}")
         
         # 3. JSON 파싱 시도 (LLM Node에서 JSON으로 줄 예정)
         #    만약 텍스트만 오면 그대로 텍스트로 처리
+        final_courses = []
+        evidence_cards = []
+        
         try:
             # 마크다운 코드 블록 제거 (```json ... ```)
             clean_json = final_answer_raw.strip()
@@ -56,45 +63,57 @@ async def chat(request: ChatRequest):
             
             parsed_output = json.loads(clean_json)
             response_text = parsed_output.get("answer", str(final_answer_raw))
-            courses_data = parsed_output.get("courses", [])
-            evidence_cards = [] 
             
-            # Evidence Cards 생성 (courses 데이터 기반)
-            for idx, course in enumerate(courses_data):
-                # 사진 URL 생성
-                course_name = course.get("name", "")
+            # [Multi-Course Parsing Logic]
+            raw_courses = parsed_output.get("recommended_courses", [])
+            
+            if raw_courses:
+                for course in raw_courses:
+                    course_places = []
+                    for idx, place in enumerate(course.get("places", [])):
+                        # ID Mapping & Photo URL Logic
+                        place_id = place.get("id") or f"p{idx}"
+                        photo_name = place_photos.get(place_id)
+                        img_url = f"http://localhost:8000/api/photo?name={photo_name}" if photo_name else None
+                        
+                        course_places.append(EvidenceCard(
+                            placeId=place_id,
+                            name=place.get("name"),
+                            reason=place.get("reason", "추천 장소"),
+                            reviewSummary=place.get("reason", "추천 장소"), 
+                            risks="", 
+                            trustScore=90,
+                            keywords=[place.get("type", "장소")],
+                            lat=place.get("lat"),
+                            lng=place.get("lng"),
+                            img=img_url 
+                        ))
+                    
+                    final_courses.append(RecommendedCourse(
+                        course_id=course.get("course_id", 0),
+                        course_name=course.get("course_name", "추천 코스"),
+                        course_description=course.get("course_description", ""),
+                        places=course_places,
+                        total_budget=course.get("total_budget", "")
+                    ))
                 
-                # ID로 매핑 (p1, p2...)
-                photo_name = None
-                if course.get("id"):
-                    photo_name = place_photos.get(course["id"])
-                
-                # Proxy URL 사용
-                img_url = f"http://localhost:8000/api/photo?name={photo_name}" if photo_name else None
-                
-                # EvidenceCard에는 img 필드가 없지만 Frontend에서 EvidenceCard를 받아서 처리할 때
-                # img 속성이 필요함.
-                
-                evidence_cards.append(EvidenceCard(
-                    placeId=course.get("id") or f"p{idx}", # ID 우선 사용
-                    name=course_name,
-                    reason=course.get("reason", "추천 장소"),
-                    reviewSummary=course.get("reason", "추천 장소"), 
-                    risks="", 
-                    trustScore=90,
-                    keywords=[course.get("type", "장소")],
-                    lat=course.get("lat"),
-                    lng=course.get("lng"),
-                    img=img_url # 모델에 img 필드 추가해야 함
-                ))
+                # Fallback: 첫 번째 코스를 evidenceCards로 설정 (하위 호환성)
+                if final_courses:
+                    evidence_cards = final_courses[0].places
+            
+            # 구버전 호환 (courses 키가 없고 기존 필드만 있는 경우 - 거의 없을 듯)
+            elif parsed_output.get("courses"):
+                # ...legacy logic if needed...
+                pass
                 
         except json.JSONDecodeError:
             print("⚠️ JSON Parsing Failed, using raw text")
             response_text = final_answer_raw
+            final_courses = []
             evidence_cards = []
-
-        is_plan_request = bool(evidence_cards)
-
+            
+        is_plan_request = bool(final_courses)
+        
     except Exception as e:
         print(f"❌ [Agent Error] {e}")
         import traceback
@@ -103,9 +122,8 @@ async def chat(request: ChatRequest):
         # 에러 시 Fallback
         response_text = "죄송해요, 여행 정보를 찾는 중에 문제가 발생했어요. 잠시 후 다시 시도해 주세요."
         is_plan_request = False
+        final_courses = []
         evidence_cards = []
-
-    # (기존 Mock 로직 제거됨)
     
     return ChatResponse(
         id=str(uuid.uuid4()),
@@ -113,5 +131,6 @@ async def chat(request: ChatRequest):
         text=response_text,
         isDecisionPoint=is_plan_request, # 코스가 있으면 결정 포인트로 간주
         evidenceCards=evidence_cards,
+        courses=final_courses, # [New Field]
         status="done"
     )

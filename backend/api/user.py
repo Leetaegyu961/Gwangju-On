@@ -38,10 +38,49 @@ async def update_survey(survey: SurveyResult):
         print(f"⚠️ [Survey New] ID: {user_id} (Not found in onboard), Data: {USER_DB[user_id]}")
         return {"status": "success", "message": "Survey data saved (new session)."}
 
-# (옵션) 저장된 정보 확인용 API
+from backend.db import get_database
+from backend.models.user import UserArchive
+
+# (옵션) 저장된 정보 확인용 API (Memory + DB)
 @router.get("/user/{user_id}")
 async def get_user_profile(user_id: str):
-    profile = USER_DB.get(user_id)
-    if profile:
-        return profile
+    # 1. Check Memory (Guest)
+    if user_id in USER_DB:
+        return {"type": "guest", **USER_DB[user_id]}
+    
+    # 2. Check MongoDB (Google User)
+    db = await get_database()
+    user = await db["users"].find_one({"id": user_id})
+    if user:
+        # ObjectId -> str 변환 필요하지만 find_one은 dict 반환. _id 제외하고 반환 권장
+        user.pop("_id", None)
+        print(f"✅ [API] Found User in DB: {user_id}, Picture: {user.get('picture')}")
+        return user
+    
+    print(f"❌ [API] User not found in DB: {user_id}")
     return {"error": "User not found"}
+
+@router.get("/user/{user_id}/courses")
+async def get_user_courses(user_id: str):
+    db = await get_database()
+    # owner_id 또는 userId 필드 확인. Frontend가 'userId'를 보내므로 모델 맞춤
+    # 여기서 userId는 archive의 소유자
+    cursor = db["user_archive"].find({"userId": user_id})
+    courses = []
+    async for doc in cursor:
+        doc.pop("_id", None)
+        courses.append(doc)
+    return courses
+
+@router.post("/user/courses")
+async def save_user_course(course: UserArchive):
+    db = await get_database()
+    course_dict = course.dict()
+    # 이미 존재하는지 확인 (id 기준)
+    existing = await db["user_archive"].find_one({"id": course.id})
+    if existing:
+        await db["user_archive"].update_one({"id": course.id}, {"$set": course_dict})
+        return {"message": "Course updated", "id": course.id}
+    else:
+        await db["user_archive"].insert_one(course_dict)
+        return {"message": "Course saved", "id": course.id}

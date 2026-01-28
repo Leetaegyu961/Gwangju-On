@@ -24,12 +24,16 @@ export default function RootLayout({
                     <Navigation />
                 </main>
                 {/* Google Identity Services for login */}
-                <Script src="https://accounts.google.com/gsi/client" strategy="lazyOnload" />
+                <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
 
                 {/* Tmap SDK - 로더(document.write) 대신 실제 SDK 직접 로드 */}
                 <link rel="stylesheet" href="https://toptmaptile1.tmap.co.kr/scriptSDKV3/vsm.css" />
                 <Script
                     src="https://toptmaptile1.tmap.co.kr/scriptSDKV3/tmapjs3.min.js?version=20231206"
+                    strategy="beforeInteractive"
+                />
+                <Script
+                    src="https://toptmaptile1.tmap.co.kr/scriptSDKV3/lib/tmapjs3-service.min.js?version=20231206"
                     strategy="beforeInteractive"
                 />
             </body>

@@ -44,29 +44,46 @@ const ChatContent = () => {
     }
   }, [messages, loading]);
 
+  /* 
+  // [Modified] 자동 이동 로직 제거
+  // 사용자가 코스를 선택하도록 변경됨에 따라 자동 리다이렉트는 비활성화합니다.
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.isDecisionPoint && lastMsg.evidenceCards) {
-      // 자동 코스 생성 및 이동
-      const courses = lastMsg.evidenceCards.map((c, i) => ({
-        id: c.placeId || i.toString(),
-        name: c.name || c.placeId,
-        lat: c.lat || 0,
-        lng: c.lng || 0,
-        desc: c.reason,
-        tags: c.keywords || [],
-        transport: '이동',
-        img: c.img || getCourseImage(c.keywords, c.name)
-      }));
-      localStorage.setItem('current_course', JSON.stringify(courses));
-
-      // 잠시 후 이동 (사용자가 메시지를 볼 시간 1초)
-      const timer = setTimeout(() => {
-        router.push('/map');
-      }, 1000);
-      return () => clearTimeout(timer);
+       console.log("Course generated. Waiting for user selection.");
     }
-  }, [messages, router]);
+  }, [messages]); 
+  */
+
+  const handleSelectCourse = (courseName: string, places: any[], desc: string) => {
+    const courses = places.map((c, i) => ({
+      id: c.placeId || i.toString(),
+      type: '놀거리' as const,
+      name: c.name || c.placeId,
+      lat: c.lat || 0,
+      lng: c.lng || 0,
+      desc: c.reason,
+      tags: c.keywords || [],
+      transport: '이동',
+      img: c.img || getCourseImage(c.keywords, c.name)
+    }));
+
+    localStorage.setItem('current_course', JSON.stringify(courses));
+
+    // DB/History에 영구 저장
+    const savedCourse = {
+      id: Date.now().toString(),
+      userId: localStorage.getItem('temp_user_id') || '',
+      title: courseName,
+      points: courses,
+      totalBudget: '예산 미정', // API에서 받아오면 좋음
+      createdAt: new Date().toISOString(),
+      description: desc
+    };
+    aiService.saveCourse(savedCourse);
+
+    router.push('/map');
+  };
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -126,11 +143,42 @@ const ChatContent = () => {
               </div>
             )}
 
-            {/* 코스 결과가 나왔을 때 (isDecisionPoint) - 사용자에게 묻지 않고 바로 이동 */}
-            {m.isDecisionPoint && (
-              <div className="p-5 bg-blue-50 text-[#0066FF] rounded-2xl font-bold text-sm animate-pulse">
-                코스를 생성했습니다! 지도로 이동합니다...
-                {/* 자동 이동 로직은 useEffect에서 처리 */}
+            {/* Multi-Course Selection UI */}
+            {m.courses && m.courses.length > 0 && (
+              <div className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x hide-scrollbar mt-4 w-full">
+                {m.courses.map((course, idx) => (
+                  <div key={idx} className="min-w-[280px] w-[280px] bg-white rounded-2xl p-5 shadow-lg border border-gray-100 snap-center flex flex-col shrink-0">
+                    <div className="text-xs font-bold text-[#0066FF] mb-1">RECOMMENDED {idx + 1}</div>
+                    <h3 className="text-lg font-black text-gray-800 mb-2 truncate">{course.course_name}</h3>
+                    <p className="text-xs text-gray-500 mb-4 flex-1 line-clamp-3 leading-relaxed">{course.course_description}</p>
+
+                    <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gray-400">
+                      <span>📍 {course.places.length}개 장소</span>
+                      <span>•</span>
+                      <span className="truncate max-w-[100px]">{course.total_budget || "예산 미정"}</span>
+                    </div>
+
+                    <button
+                      onClick={() => handleSelectCourse(course.course_name, course.places, course.course_description)}
+                      className="w-full py-3 bg-[#f0f6ff] text-[#0066FF] font-bold rounded-xl hover:bg-[#0066FF] hover:text-white transition-all text-xs"
+                    >
+                      이 코스로 보기
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Legacy Fallback (Single Course) */}
+            {!m.courses && m.isDecisionPoint && (
+              <div className="p-5 bg-blue-50 text-[#0066FF] rounded-2xl font-bold text-sm">
+                <p className="mb-3">코스를 생성했습니다! 아래 버튼을 눌러 확인하세요.</p>
+                <button
+                  onClick={() => handleSelectCourse("추천 코스", m.evidenceCards!, m.text)}
+                  className="w-full py-2 bg-white text-[#0066FF] font-bold rounded-lg shadow-sm active:scale-95 transition-all"
+                >
+                  지도에서 보기
+                </button>
               </div>
             )}
 

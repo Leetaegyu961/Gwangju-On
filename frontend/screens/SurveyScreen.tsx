@@ -24,7 +24,6 @@ export const SurveyScreen = () => {
   const categories = [
     { type: '식당', icon: Utensils },
     { type: '카페', icon: Coffee },
-    { type: '공연', icon: Music },
     { type: '놀거리', icon: MapPin },
     { type: '숙박', icon: Bed },
   ] as const;
@@ -73,46 +72,51 @@ export const SurveyScreen = () => {
         {/* Main Survey Card - Image 1 Style */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 space-y-10">
 
-          <section className="space-y-4">
-            <h3 className="font-bold text-gray-900 text-lg">장소 (코스 구성) <span className="text-gray-400 font-medium text-sm">(최대 8개)</span></h3>
-            <div className="space-y-3">
+          <section className="space-y-6">
+            <div className="flex justify-between items-end">
+              <h3 className="font-bold text-gray-900 text-lg leading-none">장소 (코스 구성)</h3>
+              <span className="text-gray-400 font-medium text-xs">{courses.length} / 8</span>
+            </div>
+
+            <div className="space-y-8">
               {courses.map((c, i) => (
-                <div key={c.id} className="relative">
-                  <div
-                    onClick={() => setActiveSelect(activeSelect === c.id ? null : c.id)}
-                    className={`flex items-center gap-4 bg-white border ${activeSelect === c.id ? 'border-[#0066FF] ring-2 ring-blue-50' : 'border-gray-200'} p-4 rounded-2xl cursor-pointer hover:border-blue-300 transition-all`}
-                  >
-                    <p className="flex-1 text-gray-700 font-bold text-base">
-                      {i + 1}. <span className={c.type ? 'text-[#0066FF]' : 'text-gray-300'}>[{c.type || '선택 전'}]</span>
-                    </p>
-                    <ChevronDown size={20} className={`text-gray-400 transition-transform ${activeSelect === c.id ? 'rotate-180' : ''}`} />
+                <div key={c.id} className="relative space-y-3 animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-xs font-black text-[#0066FF] uppercase tracking-wider">{i + 1}번째 방문지</span>
+                    {courses.length > 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRemove(c.id); }}
+                        className="text-gray-300 hover:text-red-400 transition-colors p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
 
-                  {activeSelect === c.id && (
-                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-gray-100 rounded-3xl shadow-2xl z-50 p-3 grid grid-cols-5 gap-1 animate-fade-in transition-all">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat.type}
-                          onClick={(e) => { e.stopPropagation(); updateType(c.id, cat.type); }}
-                          className={`flex flex-col items-center gap-2 p-2 rounded-2xl transition-all ${c.type === cat.type ? 'bg-blue-50 text-[#0066FF]' : 'hover:bg-gray-50 text-gray-400'}`}
-                        >
-                          <cat.icon size={20} />
-                          <span className="text-[10px] font-bold">{cat.type}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {courses.length > 1 && (
-                    <button onClick={(e) => { e.stopPropagation(); handleRemove(c.id); }} className="absolute -right-2 -top-2 bg-gray-400 text-white rounded-full p-1 shadow-sm active:scale-75 transition-all"><X size={10} /></button>
-                  )}
+                  <div className="grid grid-cols-4 gap-2">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.type}
+                        onClick={() => updateType(c.id, cat.type)}
+                        className={`flex flex-col items-center gap-2 py-4 rounded-2xl border-2 transition-all duration-200 ${c.type === cat.type
+                          ? 'bg-blue-50 border-[#0066FF] text-[#0066FF] shadow-sm shadow-blue-100 scale-[1.02]'
+                          : 'bg-white border-gray-50 text-gray-300 hover:border-gray-200 hover:text-gray-500'
+                          }`}
+                      >
+                        <cat.icon size={20} />
+                        <span className="text-[11px] font-bold">{cat.type}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
+
               <button
                 onClick={handleAdd}
-                className="w-full py-4 bg-[#0066FF] text-white rounded-xl font-bold text-lg shadow-blue-100 shadow-lg active:scale-95 transition-all"
+                className="w-full py-4 bg-[#F0F7FF] text-[#0066FF] rounded-2xl font-bold text-base hover:bg-blue-100 transition-all flex items-center justify-center gap-2 border-2 border-dashed border-blue-200"
               >
-                [+ 코스 추가]
+                <Plus size={18} />
+                코스 추가하기
               </button>
             </div>
           </section>

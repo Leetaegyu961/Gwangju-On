@@ -50,14 +50,63 @@ export class GeminiService {
     }
   }
 
+  async getUserProfile(): Promise<any> {
+    const userId = localStorage.getItem('temp_user_id');
+    if (!userId) return null;
+    try {
+      const res = await fetch(`${this.apiUrl}/user/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Check for error response from backend or missing data
+        if (data.error || Object.keys(data).length === 0) {
+          console.warn("User profile fetch returned error or empty:", data);
+          return null;
+        }
+        return data;
+      }
+    } catch (e) {
+      console.error("Failed to fetch profile", e);
+    }
+    return null;
+  }
+
   async saveCourse(course: SavedCourse): Promise<boolean> {
+    // 1. Local Storage (Backup)
     const courses = JSON.parse(localStorage.getItem('courses') || '[]');
     courses.push(course);
     localStorage.setItem('courses', JSON.stringify(courses));
-    return true;
+
+    // 2. Backend API
+    try {
+      const userId = localStorage.getItem('temp_user_id');
+      if (userId) {
+        await fetch(`${this.apiUrl}/user/courses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...course, userId })
+        });
+      }
+      return true;
+    } catch (e) {
+      console.error("Failed to save course to server", e);
+      return false;
+    }
   }
 
   async getCourses(): Promise<SavedCourse[]> {
+    const userId = localStorage.getItem('temp_user_id');
+    if (!userId) return JSON.parse(localStorage.getItem('courses') || '[]');
+
+    try {
+      const res = await fetch(`${this.apiUrl}/user/${userId}/courses`);
+      if (res.ok) {
+        const serverCourses = await res.json();
+        // Merge with local if needed, or just return server
+        return serverCourses.length > 0 ? serverCourses : JSON.parse(localStorage.getItem('courses') || '[]');
+      }
+    } catch (e) {
+      console.error("Failed to fetch courses", e);
+    }
     return JSON.parse(localStorage.getItem('courses') || '[]');
   }
 

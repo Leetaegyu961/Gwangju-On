@@ -40,6 +40,9 @@ class AgentState(TypedDict):
     # 블로그 + Places 리뷰 통합 데이터
     enriched_results: list | None
 
+    # 스코어링된 결과 (점수 포함)
+    scored_results: list | None
+
     # 최종 응답
     final_answer: str | None
 

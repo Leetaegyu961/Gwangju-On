@@ -27,13 +27,16 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
     context_parts = []
     total_chars = 0
     
-    # enriched_results 데이터 처리 (블로그 + 리뷰 통합)
-    enriched_results = state.get("enriched_results")
+    # scored_results 우선 사용 (없으면 enriched_results 사용)
+    results_data = state.get("scored_results") or state.get("enriched_results")
+    has_scores = state.get("scored_results") is not None
     
-    if enriched_results:
-        context_parts.append(f"## 🍽️ 맛집 검색 결과 ({len(enriched_results)}개)")
+    if results_data:
+        context_parts.append(f"## 🍽️ 맛집 검색 결과 ({len(results_data)}개)")
+        if has_scores:
+            context_parts.append("*점수가 높은 순서대로 정렬되어 있습니다.*")
         
-        for idx, item in enumerate(enriched_results, 1):
+        for idx, item in enumerate(results_data, 1):
             item_section = []
             
             # 1. 기본 가게 정보
@@ -43,6 +46,10 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
             rating = place.get('rating', 0)
             total_reviews = place.get('total_reviews', 0)
             price_level = place.get('price_level', '')
+            
+            # 스코어 정보 (있는 경우)
+            score = item.get('score', 0)
+            score_breakdown = item.get('score_breakdown', {})
             
             # 가격대 변환
             price_str = ""
@@ -56,12 +63,38 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
             
             title_line = f"\n---\n### [ID: {temp_id}] {place_name}{price_str}"
             
+            if has_scores and score > 0:
+                title_line += f" ⭐️ 종합점수: {score}점"
+                # 감성 점수 표시
+                sentiment = score_breakdown.get('sentiment', 0)
+                if sentiment > 0:
+                    title_line += f" (감성: {sentiment}점)"
+            
             if place.get('lat') and place.get('lng'):
                 title_line += f" (lat: {place['lat']}, lng: {place['lng']})"
             item_section.append(title_line)
 
             item_section.append(f"📍 주소: {address}")
             item_section.append(f"⭐ 평점: {rating} ({total_reviews}개 리뷰)")
+            
+            # 스코어 세부내역 추가 (있는 경우)
+            if has_scores and score_breakdown:
+                score_details = []
+                if score_breakdown.get('exemplary', 0) > 0:
+                    score_details.append("모범음식점 인증")
+                if score_breakdown.get('gwangju_food', 0) > 0:
+                    score_details.append("광주 맛집 선정")
+                if score_breakdown.get('blogs', 0) > 0:
+                    blog_count = len(item.get('blogs', []))
+                    score_details.append(f"블로그 {blog_count}개 언급")
+                
+                # 감성 분석 요약 추가
+                sentiment_summary = score_breakdown.get('sentiment_summary', '')
+                if sentiment_summary and sentiment_summary != "분석 실패 - 기본값":
+                    score_details.append(f"리뷰 평가: {sentiment_summary}")
+                
+                if score_details:
+                    item_section.append(f"🏅 인증: {', '.join(score_details)}")
             
             # 2. Google Places 리뷰 (최대 3개)
             reviews = place.get('reviews', [])
@@ -113,7 +146,7 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 
 아래 제공된 **컨텍스트 데이터(Context Data)**는 Google Places API와 Naver Blog RSS를 통해 실시간으로 수집된 것입니다.
 각 장소에는 **[ID: p1]**과 같은 고유 ID가 부여되어 있습니다.
-이 데이터를 바탕으로 사용자의 질문에 답변하세요.
+이 데이터를 바탕으로 **3개의 서로 다른 추천 코스**를 생성하세요.
 
 **[Context Data]**
 {context_text}
@@ -122,28 +155,61 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 {state.get("survey_data", "정보 없음")}
 
 **[답변 작성 가이드]**
-반드시 아래 **JSON 형식**으로만 답변하세요. 마크다운(` ```json `)이나 다른 말은 붙이지 마세요.
+반드시 아래 **JSON 형식**으로 **3개의 서로 다른 코스**를 추천하세요. 마크다운(` ```json `)이나 다른 말은 붙이지 마세요.
+
+**코스 구성 시 중요 사항:**
+- **종합점수가 높은 맛집을 우선적으로 고려**하세요. 점수가 높다는 것은:
+  - 모범음식점 인증 또는 광주 맛집으로 선정됨
+  - 다수의 블로그에서 언급됨
+  - Google 평점과 리뷰 수가 많음
+- 점수 정보가 제공되는 경우, 점수가 높은 음식점을 우선 배치하세요.
+
+각 코스는 다음 테마 중 하나를 선택하여 차별화하세요:
+1. 맛집 탐방 코스: 평점과 점수가 가장 높은 맛집 위주로 구성
+2. 효율 이동 코스: 거리가 가까운 장소들로 동선을 최적화
+3. 인스타 핫플 코스: SNS에서 인기있는 분위기 좋은 장소 위주
 
 {{
-    "answer": "사용자에게 보여줄 친절한 텍스트 답변 (여기에 줄바꿈은 \\n 사용)",
-    "courses": [
+    "answer": "3개의 추천 코스를 생성했습니다. 원하시는 코스를 선택해주세요.",
+    "recommended_courses": [
         {{
-            "id": "p1",   // Context에 있는 [ID]를 그대로 쓰세요 (필수, 이것으로 사진 매핑함)
-            "name": "장소 이름",
-            "type": "식당/카페/명소",
-            "lat": 35.1234,  // Context의 lat
-            "lng": 126.1234, // Context의 lng
-            "reason": "장소 추천 이유"
+            "course_id": 1,
+            "course_name": "맛집 탐방 코스",
+            "course_description": "코스에 대한 한 줄 설명",
+            "places": [
+                {{
+                    "id": "p1",
+                    "name": "장소 이름",
+                    "type": "식당/카페/명소",
+                    "lat": 35.1234,
+                    "lng": 126.1234,
+                    "reason": "장소 추천 이유"
+                }}
+            ],
+            "total_budget": "예상 총액"
         }},
-        ... (최대 3~4개)
-    ],
-    "total_budget": "예상 총액 (문자열)"
+        {{
+            "course_id": 2,
+            "course_name": "효율 이동 코스",
+            "course_description": "코스에 대한 한 줄 설명",
+            "places": [ ... ],
+            "total_budget": "예상 총액"
+        }},
+        {{
+            "course_id": 3,
+            "course_name": "인스타 핫플 코스",
+            "course_description": "코스에 대한 한 줄 설명",
+            "places": [ ... ],
+            "total_budget": "예상 총액"
+        }}
+    ]
 }}
 
 주의사항:
-1. `courses` 배열에는 추천하는 장소들을 순서대로 넣어주세요. **Context에 있는 lat, lng, id 값을 그대로 사용하세요.**
-2. `answer` 필드는 최대한 간결하게 작성하세요. 사용자는 텍스트보다 지도를 보고 싶어합니다. "요청하신 코스를 생성했습니다." 정도면 충분합니다.
-3. 형식을 철저히 지키세요.
+1. 각 코스의 `places` 배열에는 추천하는 장소들을 순서대로 넣어주세요. **Context에 있는 lat, lng, id 값을 그대로 사용하세요.**
+2. 3개 코스는 서로 다른 장소 조합으로 구성하세요. 같은 장소가 여러 코스에 포함될 수 있지만, 전체 구성은 달라야 합니다.
+3. `answer` 필드는 간결하게 작성하세요.
+4. 형식을 철저히 지키세요. 반드시 3개의 코스를 모두 포함하세요.
 """
         
         return SystemMessage(content=system_prompt)

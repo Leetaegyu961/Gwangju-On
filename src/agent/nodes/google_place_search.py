@@ -163,6 +163,7 @@ async def _run_google_search_logic(queries: List[str], result_count: int) -> Lis
             place_data_list.append({
                 "id": place['name'],
                 "name": place['displayName']['text'],
+                "original_name": place['displayName']['text'],  # 원본 이름 보존
                 "address": place['formattedAddress'],
                 "lat": place.get('location', {}).get('latitude', 0.0),
                 "lng": place.get('location', {}).get('longitude', 0.0),

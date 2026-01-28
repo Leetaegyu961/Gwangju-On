@@ -3,15 +3,16 @@ Agent Main
 에이전트 실행 진입점입니다.
 """
 
+import asyncio
 from langchain_core.messages import HumanMessage
 
 from .config import config
 from .graph import create_agent_graph
 
 
-def run_agent(user_input: str) -> str:
+async def run_agent(user_input: str) -> str:
     """
-    에이전트를 실행합니다.
+    에이전트를 실행합니다. (Async)
 
     Args:
         user_input: 사용자 입력 문자열
@@ -36,11 +37,11 @@ def run_agent(user_input: str) -> str:
         "final_answer": None,
     }
 
-    # 그래프 실행
+    # 그래프 실행 (async)
     if config.VERBOSE:
         print(f"🤖 에이전트 시작: {user_input}")
 
-    result = graph.invoke(initial_state)
+    result = await graph.ainvoke(initial_state)
 
     final_answer = result.get("final_answer", "응답을 생성하지 못했습니다.")
 
@@ -68,7 +69,7 @@ def main():
                 print("👋 안녕히 가세요!")
                 break
 
-            response = run_agent(user_input)
+            response = asyncio.run(run_agent(user_input))
             print(f"\n🤖 Agent: {response}\n")
 
         except KeyboardInterrupt:

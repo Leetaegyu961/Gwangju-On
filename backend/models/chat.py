@@ -15,7 +15,14 @@ class EvidenceCard(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    userId: str | None = None # Frontend에서 userId를 보내줄 수 있도록 추가
+    userId: Optional[str] = None # Frontend에서 userId를 보내줄 수 있도록 추가
+
+class RecommendedCourse(BaseModel):
+    course_id: int
+    course_name: str
+    course_description: str
+    places: List[EvidenceCard]
+    total_budget: str
 
 class ChatResponse(BaseModel):
     id: str
@@ -23,4 +30,5 @@ class ChatResponse(BaseModel):
     text: str
     isDecisionPoint: Optional[bool] = False
     evidenceCards: Optional[List[EvidenceCard]] = None
+    courses: Optional[List[RecommendedCourse]] = None
     status: Optional[str] = "done"
