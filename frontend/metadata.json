@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Local Curator AI - Enterprise Edition",
+  "description": "Next.js + FastAPI + LangGraph 아키텍처 기반의 지능형 광주 여행 큐레이터",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}

@@ -1,0 +1,32 @@
+[project]
+name = "google-team-project-youngjunkim"
+version = "0.1.0"
+description = "google_team_project_Agent"
+authors = [
+    {name = "young3016",email = "kimyjok01@naver.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<3.15"
+dependencies = [
+    "langchain (>=1.2.6,<2.0.0)",
+    "langchain-google-genai (>=2.1.5,<3.0.0)",
+    "langgraph (>=1.0.6,<2.0.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "faiss-cpu (>=1.13.2,<2.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "fastapi (>=0.128.0,<0.129.0)",
+    "uvicorn (>=0.40.0,<0.41.0)",
+    "requests (>=2.32.0,<3.0.0)",
+    "feedparser (>=6.0.11,<7.0.0)",
+    "langchain-openai (>=1.1.7,<2.0.0)",
+    "aiohttp (>=3.13.3,<4.0.0)",
+    "nest-asyncio (>=1.6.0,<2.0.0)"
+]
+
+
+[tool.poetry]
+packages = [{include = "agent", from = "src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

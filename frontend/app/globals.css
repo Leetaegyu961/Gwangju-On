@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --trust-blue: #0066FF;
+    --trust-blue-light: #E6F0FF;
+    --trust-blue-dark: #0052CC;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    background-color: #f8fafc;
+    color: #1a1a1a;
+}
+
+/* Custom UI Tokens */
+.bg-gradient-trust {
+    background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+}
+
+.shadow-premium {
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes dotTyping {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.dot-typing span {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: #0066FF;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: dotTyping 1s infinite ease-in-out;
+}
+
+.dot-typing span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dot-typing span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Mobile Optimizations */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-sheet-transition {
+    transition: height 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes draw {
+    from {
+        stroke-dashoffset: 1000;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.animate-draw {
+    stroke-dasharray: 1000;
+    animation: draw 2s ease-out forwards;
+}
