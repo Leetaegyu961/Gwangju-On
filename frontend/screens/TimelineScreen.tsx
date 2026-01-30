@@ -1,24 +1,65 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Calendar, MapPin, ChevronDown, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Plus, FolderArchive, Images } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import html2canvas from 'html2canvas';
+
+// 앨범 데이터 타입 정의
+interface Album {
+    id: string;
+    title: string;
+    date: string;
+    location: string;
+    coverImg?: string;
+    description: string;
+    spots: any[]; // 코스 데이터
+    isNew?: boolean; // 최근 생성된 코스 여부
+}
 
 export default function TimelineScreen() {
     const router = useRouter();
+
+    // 뷰 모드: 'list' (앨범 목록) | 'detail' (상세 타임라인)
+    const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
     const [course, setCourse] = useState<any[]>([]);
+
+    const [albums, setAlbums] = useState<Album[]>([]);
+    const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+
+    // 상세 뷰 상태 (기존 로직 유지)
     const [photos, setPhotos] = useState<{ [key: number]: string }>({});
+    const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+    const [currentSlide, setCurrentSlide] = useState(0); // Album Slide State
+    const cardRef = useRef<HTMLDivElement>(null);
+    const hiddenSlidesRef = useRef<HTMLDivElement>(null); // Ref for hidden all-slides
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
-        // 저장된 코스 불러오기
+        // 1. 저장된 코스(최근 코스) 불러오기
         const stored = localStorage.getItem('current_course');
-        if (stored) {
-            setCourse(JSON.parse(stored));
-        }
+        const currentCourseSpots = stored ? JSON.parse(stored) : [];
+        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
 
-        // 이전에 업로드한 사진이 있다면 불러오기 (임시)
-        // 실제로는 DB나 별도 스토리지에 저장 필요
+        // 2. 더미 데이터 (지난 여행) 생성 - 제거됨
+        const pastAlbums: Album[] = [];
+
+        // 3. 현재 코스가 있다면 최상단에 추가
+        if (currentCourseSpots.length > 0) {
+            const currentAlbum: Album = {
+                id: 'current',
+                title: '광주에서 보낸 오후',
+                date: today,
+                location: '광주 동구', // 임시 위치
+                description: '#혼행 #힐링',
+                spots: currentCourseSpots,
+                isNew: true
+            };
+            setAlbums([currentAlbum, ...pastAlbums]);
+        } else {
+            setAlbums(pastAlbums);
+        }
     }, []);
 
     const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,95 +76,444 @@ export default function TimelineScreen() {
         }
     };
 
+    // 사진 삭제 (취소) 기능
+    const handleImageDelete = (index: number, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // 라벨(파일선택) 클릭 방지
+        setPhotos(prev => {
+            const newPhotos = { ...prev };
+            delete newPhotos[index];
+            return newPhotos;
+        });
+    };
+
+    // Save Current Slide Logic
+    const handleDownloadCard = async () => {
+        if (!cardRef.current) return;
+        setIsGenerating(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const canvas = await html2canvas(cardRef.current, {
+                scale: 2,
+                backgroundColor: '#FDFBF7',
+                useCORS: true,
+                logging: false,
+            });
+
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.href = image;
+            link.download = `gwangju-memory-page-${currentSlide}.png`;
+            link.click();
+        } catch (err) {
+            console.error("Failed to generate image", err);
+            alert("이미지 생성에 실패했습니다.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    // Save All Slides as Images (Sequentially)
+    const handleDownloadAll = async () => {
+        if (isGenerating || !cardRef.current) return;
+        setIsGenerating(true);
+        const originalSlide = currentSlide;
+
+        try {
+            // Total slides: Cover (0) + Spots (course.length) + Ending (1)
+            const totalSlides = course.length + 2;
+
+            for (let i = 0; i < totalSlides; i++) {
+                // 1. Switch Slide
+                setCurrentSlide(i);
+
+                // 2. Wait for animation/rendering (Transition duration is 0.3s, so wait a bit more)
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                // 3. Capture
+                if (cardRef.current) {
+                    const canvas = await html2canvas(cardRef.current, {
+                        scale: 2,
+                        backgroundColor: '#FDFBF7',
+                        useCORS: true,
+                        logging: false,
+                        allowTaint: true, // Allow cross-origin images if configured
+                    });
+
+                    const image = canvas.toDataURL("image/png");
+                    const link = document.createElement("a");
+                    link.href = image;
+                    // File Name
+                    const fileName = i === 0 ? '00_cover.png' : i === totalSlides - 1 ? '99_ending.png' : `0${i}_spot.png`;
+                    link.download = `gwangju-memory-${fileName}`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+
+            // Restore original slide after done
+            setCurrentSlide(originalSlide);
+            alert("모든 페이지가 저장되었습니다!");
+
+        } catch (err) {
+            console.error("Failed to download images", err);
+            alert("저장 중 오류가 발생했습니다.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+
     const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
 
-    if (course.length === 0) {
-        return (
-            <div className="h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6 text-center font-['Inter']">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-orange-100">
-                    <Calendar size={32} className="text-orange-300" />
-                </div>
-                <h2 className="text-xl font-black text-gray-800 mb-3">아직 여행 기록이 없어요</h2>
-                <p className="text-gray-500 mb-8 text-sm leading-relaxed">
-                    AI 가이드에게 코스를 추천받고<br />
-                    나만의 여행 앨범을 시작해보세요!
-                </p>
-                <button
-                    onClick={() => router.push('/chat')}
-                    className="px-8 py-3.5 bg-[#FF6B00] text-white font-bold rounded-full shadow-lg shadow-orange-200 active:scale-95 transition-all text-sm"
-                >
-                    여행 코스 추천받기
-                </button>
-            </div>
-        );
-    }
+    // 앨범 클릭 핸들러
+    const handleAlbumClick = (album: Album) => {
+        setSelectedAlbum(album);
+        // 상세 뷰 호환성을 위해 course 상태 업데이트
+        setCourse(album.spots);
+        setPhotos({});
+        setViewMode('detail');
+    };
 
     // 기본 이미지 (사진 없을 때)
     const placeholders = [
-        "/placeholder-1.jpg", // 실제로는 적절한 기본 이미지 URL 필요
+        "/placeholder-1.jpg",
         "/placeholder-2.jpg",
         "/placeholder-3.jpg"
     ];
 
+    // 엔딩 슬라이드 렌더링 (공통)
+    const renderEndingSlideContent = () => {
+        // 1. 좌표 데이터 유효성 검사 및 정규화
+        const validSpots = course.filter(s => s.lat && s.lng);
+        const hasCoordinates = validSpots.length >= 2;
+
+        let points: { x: number, y: number, name: string }[] = [];
+
+        if (hasCoordinates) {
+            // 위도(lat): Y축 (북쪽이 위, 값이 클수록 위), 경도(lng): X축 (동쪽이 오른쪽, 값이 클수록 오른쪽)
+            // 화면 좌표계: Y축은 아래로 갈수록 값이 커짐. 따라서 위도는 반전 필요.
+            const lats = validSpots.map(s => parseFloat(s.lat));
+            const lngs = validSpots.map(s => parseFloat(s.lng));
+
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+
+            // 여백 (Padding) - 점이 모서리에 딱 붙지 않도록
+            const padding = 0.2; // 20% 여백
+
+            points = validSpots.map(s => {
+                const lat = parseFloat(s.lat);
+                const lng = parseFloat(s.lng);
+
+                // 정규화 (0.0 ~ 1.0)
+                let x = (lng - minLng) / ((maxLng - minLng) || 1); // 분모 0 방지
+                let y = (lat - minLat) / ((maxLat - minLat) || 1);
+
+                // Y축 반전 (지도는 위가 북쪽/큰값, 화면은 아래가 큰값)
+                y = 1 - y;
+
+                // Padding 적용 (20% ~ 80% 사이로 축소)
+                x = x * (1 - padding * 2) + padding;
+                y = y * (1 - padding * 2) + padding;
+
+                return { x: x * 100, y: y * 100, name: s.place_name };
+            });
+        } else {
+            // 기본값 (좌표 없을 때 대각선 배치)
+            points = course.map((s, i) => ({
+                x: 20 + i * 30,
+                y: 80 - i * 25,
+                name: s.place_name
+            })).slice(0, 3); // 최대 3개까지만 기본 배치
+        }
+
+        // SVG Path 생성 (점들을 잇는 선)
+        const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`).join(' ');
+
+        return (
+            <div className="w-full h-full bg-[#FDFBF7] p-6 flex flex-col">
+                {/* Header */}
+                <div className="text-center mb-6 mt-2">
+                    <h2 className="text-xl font-black text-gray-800 mb-1">이 시간 이렇게 보냈어요.</h2>
+                    <div className="flex justify-center gap-1 text-[10px] font-bold text-gray-400">
+                        {selectedAlbum?.description && <span>{selectedAlbum.description} · </span>}
+                        <span>{selectedAlbum?.date || today}</span>
+                        <span> · {selectedAlbum?.location || "광주"}</span>
+                    </div>
+                </div>
+
+                {/* Photo Grid (Top 3) */}
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                    {course.slice(0, 3).map((spot, i) => {
+                        const img = photos[i] || spot.img || placeholders[i % 3];
+                        return (
+                            <div key={i} className="flex flex-col gap-2">
+                                <div className="w-full aspect-[3/4.5] rounded-xl overflow-hidden shadow-sm relative">
+                                    <img src={img} className="w-full h-full object-cover" crossOrigin="anonymous" alt={`spot-${i}`} />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 text-white pt-6">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                            <div className="w-3.5 h-3.5 rounded-full bg-white text-black flex items-center justify-center text-[9px] font-black">{i + 1}</div>
+                                            <span className="text-[9px] font-bold truncate">{spot.place_name}</span>
+                                        </div>
+                                        <p className="text-[8px] opacity-80 truncate">{spot.desc || "즐거운 시간"}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Route Section */}
+                <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="h-[1px] bg-gray-200 flex-1"></div>
+                        <span className="text-[10px] font-bold text-gray-400">이 시간의 이동 루트</span>
+                        <div className="h-[1px] bg-gray-200 flex-1"></div>
+                    </div>
+
+                    <div className="flex-1 bg-white rounded-xl border border-gray-100 relative overflow-hidden shadow-sm p-4">
+                        {/* Simulated Map Background - Made more visible */}
+                        <div className="absolute inset-0" style={{
+                            backgroundImage: `
+                                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px)
+                            `,
+                            backgroundSize: '20px 20px'
+                        }}></div>
+
+                        {/* Route Visuals */}
+                        <div className="relative w-full h-full">
+                            {/* SVG Lines */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                                <path d={pathData} fill="none" stroke="#FF6B00" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
+                            </svg>
+
+                            {/* Points */}
+                            {points.map((p, i) => (
+                                <div key={i} className="absolute flex flex-col items-center z-10" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
+                                    <div className="w-6 h-6 rounded-full bg-[#FF6B00] text-white text-[10px] font-bold flex items-center justify-center shadow-md border-2 border-white">{i + 1}</div>
+                                    <span className="text-[8px] font-bold bg-white/90 px-1.5 py-0.5 rounded shadow-sm mt-1 whitespace-nowrap">{p.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-3">
+                        <span className="text-[9px] text-gray-300 font-serif italic">{today} · Gwangju-On</span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- 1. 앨범 목록 화면 (List View) ---
+    if (viewMode === 'list') {
+        return (
+            <div className="min-h-screen bg-[#FDFBF7] font-['Inter'] px-6 pt-12 pb-32">
+                <header className="mb-12 animate-fade-in-up">
+                    <h1 className="text-3xl font-black text-gray-900 mb-2">나의 여행 기록</h1>
+                    <p className="text-sm text-gray-500">차곡차곡 쌓인 추억들을 꺼내보세요.</p>
+                </header>
+
+                <div className="flex flex-col gap-12 items-center">
+                    {/* 새 앨범 만들기 버튼 */}
+                    <button
+                        onClick={() => router.push('/chat')}
+                        className="w-full py-6 rounded-3xl border-2 border-dashed border-gray-300 flex items-center justify-center gap-3 text-gray-400 hover:border-[#FF6B00] hover:text-[#FF6B00] hover:bg-orange-50 transition-all group active:scale-95"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                            <Plus size={20} />
+                        </div>
+                        <span className="font-bold text-sm">새로운 여행 시작하기</span>
+                    </button>
+
+                    {albums.map((album, index) => {
+                        // 앨범 표지용 이미지 소스 결정
+                        const mainImg = album.spots && album.spots.length > 0 && album.spots[0].img ? album.spots[0].img : album.coverImg || placeholders[0];
+                        const subImg1 = album.spots && album.spots.length > 1 && album.spots[1].img ? album.spots[1].img : placeholders[1];
+                        const subImg2 = album.spots && album.spots.length > 2 && album.spots[2].img ? album.spots[2].img : placeholders[2];
+
+                        return (
+                            <motion.div
+                                key={album.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.15 }}
+                                onClick={() => handleAlbumClick(album)}
+                                className="group cursor-pointer relative pb-4 pr-4" // Padding for the stacked photos to be visible
+                            >
+                                {/* --- Behind Stacked Photos (One Direction: Right/Bottom) --- */}
+
+                                {/* Photo 3 (Back-most) */}
+                                <div className="absolute top-4 left-6 w-[90%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[6deg] z-0 transition-transform duration-500 group-hover:rotate-[12deg] group-hover:translate-x-8 group-hover:translate-y-2 border border-gray-200">
+                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.2]">
+                                        <img src={subImg2} className="w-full h-full object-cover opacity-80" alt="back" />
+                                    </div>
+                                </div>
+
+                                {/* Photo 2 (Middle) */}
+                                <div className="absolute top-2 left-3 w-[95%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[3deg] z-10 transition-transform duration-500 group-hover:rotate-[6deg] group-hover:translate-x-4 group-hover:translate-y-1 border border-gray-200">
+                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1]">
+                                        <img src={subImg1} className="w-full h-full object-cover opacity-90" alt="middle" />
+                                    </div>
+                                </div>
+
+                                {/* --- Main Cover Card (Front) --- */}
+                                <div className="relative z-20 bg-white p-6 shadow-xl shadow-gray-200/50 transition-all duration-500 max-w-[340px] w-full aspect-[3/4.5] flex flex-col items-center overflow-hidden border border-gray-50 transform group-hover:-translate-y-1"
+                                    style={{ borderRadius: '2px' }}
+                                >
+                                    {/* Texture */}
+                                    <div className="absolute inset-0 opacity-40 pointer-events-none z-0 mix-blend-multiply"
+                                        style={{ backgroundImage: 'radial-gradient(circle at 50% 10%, #fffbf0 0%, #fff 100%)', backgroundSize: 'cover' }}
+                                    />
+
+                                    {/* 1. Title Area */}
+                                    <div className="relative z-10 text-center mt-4 mb-6 w-full">
+                                        <h2 className="text-2xl font-black text-gray-800 mb-2 leading-tight break-keep" style={{ wordBreak: 'keep-all' }}>{album.title}</h2>
+                                        <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold text-gray-400">
+                                            {album.description.split(' ').map((tag, i) => <span key={i}>{tag}</span>)}
+                                            <span className="w-0.5 h-2 bg-gray-300 self-center mx-0.5"></span>
+                                            <span>{album.date}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Photo Layout (Collage) */}
+                                    <div className="relative w-full flex-1 mb-8 z-10">
+                                        {/* Main Photo (Left, Large) */}
+                                        <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1] contrast-[1.05]">
+                                                <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                            </div>
+                                        </div>
+
+                                        {/* Sub Photo 1 (Top Right) */}
+                                        <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
+                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                <img src={subImg1} className="w-full h-full object-cover" alt="sub1" />
+                                            </div>
+                                        </div>
+
+                                        {/* Sub Photo 2 (Bottom Right) */}
+                                        <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
+                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                <img src={subImg2} className="w-full h-full object-cover" alt="sub2" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Footer */}
+                                    <div className="relative z-10 w-[90%] bg-[#FDFBF7] py-2 px-4 shadow-sm transform rotate-[1deg] mb-2 border border-gray-100/50 flex items-center justify-center gap-2">
+                                        <div className="absolute inset-x-0 -top-[1px] h-[1px] border-t border-dashed border-gray-300"></div>
+                                        <div className="absolute inset-x-0 -bottom-[1px] h-[1px] border-b border-dashed border-gray-300"></div>
+                                        <MapPin size={12} className="text-[#FF6B00] shrink-0" />
+                                        <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">{album.date} • {album.location}</span>
+                                    </div>
+
+                                    {/* Overlay */}
+                                    <div className="absolute inset-0 bg-[#FF6B00] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
+                                    {album.isNew && <div className="absolute top-4 left-4 bg-[#FF6B00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-50">NEW</div>}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                {/* 하단 여백 데코 */}
+                <div className="mt-20 text-center">
+                    <span className="text-gray-300 text-sm font-serif italic">Keep your memories forever</span>
+                </div>
+            </div>
+        );
+    }
+
+    // --- 2. 상세 타임라인 화면 (Detail View) ---
+    if (viewMode === 'detail' && course.length === 0) {
+        return (
+            <div className="min-h-screen bg-[#FDFBF7] flex flex-col items-center justify-center p-6 text-center">
+                <div className="fixed top-4 left-4 z-50">
+                    <button onClick={() => setViewMode('list')} className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-sm border border-gray-100 hover:bg-white text-gray-700 transition-all"><ArrowLeft size={20} /></button>
+                </div>
+                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-orange-100">
+                    <Calendar size={32} className="text-orange-300" />
+                </div>
+                <h2 className="text-xl font-black text-gray-800 mb-3">저장된 코스 정보가 없어요</h2>
+            </div>
+        );
+    }
+
+
+
+
     return (
         <div className="min-h-screen bg-[#FDFBF7] font-['Inter'] relative pb-32">
-            {/* 배경 텍스처 효과 (CSS로 은은한 종이 질감 연출) */}
+            {/* 배경 텍스처 효과 */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0"
                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}
             />
+
+            {/* Back Button */}
+            <div className="fixed top-4 left-4 z-50">
+                <button
+                    onClick={() => setViewMode('list')}
+                    className="bg-white/80 backdrop-blur-md p-3 rounded-full shadow-sm border border-gray-100 hover:bg-white text-gray-700 transition-all"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+            </div>
 
             {/* 1. 앨범 커버 (Album Cover) */}
             <section className="relative px-6 pt-12 pb-16 z-10 flex flex-col items-center">
                 {/* 날짜 및 제목 */}
                 <div className="text-center mb-10 animate-fade-in-up">
-                    <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">광주에서 보낸 오후.</h1>
+                    <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">{selectedAlbum?.title || "광주 여행"}</h1>
                     <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                        <span>#혼행</span>
-                        <span>#힐링</span>
+                        <span>{selectedAlbum?.description}</span>
                         <span>•</span>
-                        <span>{today}</span>
+                        <span>{selectedAlbum?.date || today}</span>
                         <span>•</span>
-                        <span>광주 동구</span>
+                        <span>{selectedAlbum?.location || "광주"}</span>
                     </div>
                 </div>
 
-                {/* 폴라로이드 콜라주 */}
-                <div className="relative w-full max-w-[320px] aspect-[4/5] mx-auto mb-6">
+                {/* 폴라로이드 콜라주 (미리보기) */}
+                <div onClick={() => setIsCardModalOpen(true)} className="relative w-full max-w-[320px] aspect-[4/5] mx-auto mb-6 cursor-pointer group">
+                    {/* Hover Hint */}
+                    <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 rounded-xl pointer-events-none">
+                        <span className="bg-white/90 px-4 py-2 rounded-full text-xs font-bold text-[#FF6B00] shadow-md flex items-center gap-1">
+                            <Wand2 size={14} /> 추억 앨범 만들기
+                        </span>
+                    </div>
 
-                    {/* 사진 3: 오른쪽 아래 (가장 뒤) */}
+                    {/* 사진 3 */}
                     {course.length > 2 && (
-                        <div className="absolute top-[45%] right-0 w-[55%] aspect-[3/4] bg-white p-2 pb-8 shadow-lg transform rotate-[6deg] rounded-sm transition-all duration-700 hover:rotate-[8deg] hover:z-20 cursor-pointer border border-gray-100/50">
-                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                <img src={photos[2] || course[2].img || placeholders[2]} className="w-full h-full object-cover filter sepia-[0.1]" alt="photo3" />
-                                {!photos[2] && <div className="absolute inset-0 flex items-center justify-center bg-black/5"><Camera className="text-white/50" /></div>}
+                        <div className="absolute top-[45%] right-0 w-[55%] aspect-[3/4] bg-white p-2 pb-8 shadow-lg transform rotate-[6deg] rounded-sm border border-gray-100/50">
+                            <div className="w-full h-full bg-gray-100 overflow-hidden">
+                                <img src={photos[2] || course[2]?.img || placeholders[0]} className="w-full h-full object-cover filter sepia-[0.1]" alt="photo3" />
                             </div>
                         </div>
                     )}
-
-                    {/* 사진 2: 왼쪽 아래 (중간) */}
+                    {/* 사진 2 */}
                     {course.length > 1 && (
-                        <div className="absolute top-[40%] left-0 w-[55%] aspect-[3/4] bg-white p-2 pb-8 shadow-lg transform rotate-[-5deg] rounded-sm transition-all duration-700 hover:rotate-[-7deg] hover:z-20 cursor-pointer border border-gray-100/50">
-                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                <img src={photos[1] || course[1].img || placeholders[1]} className="w-full h-full object-cover filter sepia-[0.1]" alt="photo2" />
-                                {!photos[1] && <div className="absolute inset-0 flex items-center justify-center bg-black/5"><Camera className="text-white/50" /></div>}
+                        <div className="absolute top-[40%] left-0 w-[55%] aspect-[3/4] bg-white p-2 pb-8 shadow-lg transform rotate-[-5deg] rounded-sm border border-gray-100/50">
+                            <div className="w-full h-full bg-gray-100 overflow-hidden">
+                                <img src={photos[1] || course[1]?.img || placeholders[0]} className="w-full h-full object-cover filter sepia-[0.1]" alt="photo2" />
                             </div>
                         </div>
                     )}
-
-                    {/* 사진 1: 메인 (가장 앞) */}
-                    {course.length > 0 && (
-                        <div className="absolute top-0 left-[15%] w-[70%] aspect-[3/4] bg-white p-3 pb-10 shadow-2xl transform rotate-[2deg] rounded-sm z-10 transition-all duration-700 hover:scale-105 cursor-pointer border border-gray-100/50">
-                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                <img src={photos[0] || course[0].img || placeholders[0]} className="w-full h-full object-cover filter contrast-[1.05]" alt="photo1" />
-                                {!photos[0] && <div className="absolute inset-0 flex items-center justify-center bg-black/5"><Camera className="text-white/50" size={32} /></div>}
-                            </div>
+                    {/* 사진 1 */}
+                    <div className="absolute top-0 left-[15%] w-[70%] aspect-[3/4] bg-white p-3 pb-10 shadow-2xl transform rotate-[2deg] rounded-sm z-10 border border-gray-100/50">
+                        <div className="w-full h-full bg-gray-100 overflow-hidden">
+                            <img src={photos[0] || course[0]?.img || placeholders[0]} className="w-full h-full object-cover filter contrast-[1.05]" alt="photo1" />
                         </div>
-                    )}
+                    </div>
                 </div>
 
-                {/* 하단 찢어진 종이 데코 및 위치 표시 */}
                 <div className="relative w-full max-w-[280px] bg-white/60 backdrop-blur-sm py-3 px-6 text-center transform rotate-[-1deg] shadow-sm animate-fade-in-up delay-200">
-                    {/* 찢어진 효과 (CSS mask/clip-path로 흉내낼 수 있으나 여기선 간단히 점선으로 대체) */}
                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-transparent border-t-2 border-dashed border-gray-300"></div>
                     <div className="flex items-center justify-center gap-2 text-gray-600 font-bold text-sm">
                         <MapPin size={16} className="text-[#FF6B00]" />
@@ -142,39 +532,21 @@ export default function TimelineScreen() {
                 </div>
 
                 <div className="space-y-12 relative">
-                    {/* 타임라인 세로선 */}
                     <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-gray-200 -z-10 bg-repeat-y" style={{ backgroundImage: 'linear-gradient(to bottom, #E5E7EB 50%, transparent 50%)', backgroundSize: '2px 10px' }}></div>
-
                     {course.map((spot, index) => (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            key={index}
-                            className="flex gap-5"
-                        >
-                            {/* 왼쪽: 순서 마커 */}
+                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} key={index} className="flex gap-5">
                             <div className="shrink-0 relative">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-sm border-4 border-[#FDFBF7] ${photos[index] ? 'bg-[#FF6B00] text-white' : 'bg-white text-gray-400'}`}>
                                     {photos[index] ? <CheckCircle2 size={18} /> : <span className="text-sm font-black">{index + 1}</span>}
                                 </div>
                             </div>
-
-                            {/* 오른쪽: 카드 */}
                             <div className="flex-1 bg-white p-5 rounded-2xl shadow-sm border border-gray-100/50">
                                 <div className="mb-4">
                                     <h3 className="text-lg font-black text-gray-800">{spot.name}</h3>
                                     <p className="text-xs text-gray-400 mt-1">{spot.desc || "잠시 쉬기 좋은 공간"}</p>
                                 </div>
-
-                                {/* 사진 업로드 영역 */}
                                 <label className="block w-full aspect-[4/3] bg-gray-50 rounded-xl overflow-hidden relative cursor-pointer group transition-all hover:shadow-md border border-gray-100">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => handleImageUpload(index, e)}
-                                    />
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(index, e)} />
                                     {photos[index] ? (
                                         <img src={photos[index]} alt="uploaded" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                                     ) : (
@@ -185,10 +557,17 @@ export default function TimelineScreen() {
                                             <span className="text-xs font-bold">사진 남기기</span>
                                         </div>
                                     )}
-                                    {/* 사진 수정 오버레이 (이미 있을 때) */}
                                     {photos[index] && (
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="bg-white/90 px-3 py-1.5 rounded-full text-xs font-bold text-gray-700 shadow-sm">수정하기</span>
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <span className="bg-white/90 px-3 py-1.5 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1">
+                                                <Camera size={12} /> 수정
+                                            </span>
+                                            <button
+                                                onClick={(e) => handleImageDelete(index, e)}
+                                                className="bg-white/90 p-1.5 rounded-full text-red-500 shadow-sm hover:bg-red-50 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
                                         </div>
                                     )}
                                 </label>
@@ -198,13 +577,235 @@ export default function TimelineScreen() {
                 </div>
             </section>
 
-            {/* 하단 메시지 */}
-            <div className="px-6 pb-12 text-center">
-                <p className="text-sm text-gray-400 font-medium">
-                    모든 장소의 사진을 채워<br />나만의 지도를 완성해보세요 🎨
-                </p>
+            {/* Floating Action Button */}
+            <div className="fixed bottom-24 right-6 z-40">
+                <button
+                    onClick={() => setIsCardModalOpen(true)}
+                    className="bg-[#FF6B00] text-white p-4 rounded-full shadow-xl shadow-orange-300/50 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 font-bold"
+                >
+                    <Wand2 size={24} />
+                    <span className="hidden sm:inline">추억 앨범 만들기</span>
+                </button>
             </div>
 
+
+
+            {/* Photo Album Generator Modal (Carousel) */}
+            <AnimatePresence>
+                {isCardModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCardModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+
+                        {/* Carousel Area - Centered Vertically */}
+                        <div className="flex-1 flex items-center justify-center w-full z-10 overflow-hidden relative">
+                            {/* Close Button - Top Right */}
+                            <div className="absolute top-4 right-4 z-50">
+                                <button onClick={() => setIsCardModalOpen(false)} className="p-3 bg-white/20 rounded-full hover:bg-white/30 backdrop-blur-md text-white transition-all">
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="relative flex flex-col items-center justify-center"
+                            >
+                                {/* Carousel Controls */}
+                                <div className="flex items-center justify-center gap-4 sm:gap-8">
+                                    {/* Prev Button */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => Math.max(0, prev - 1)); }}
+                                        disabled={currentSlide === 0}
+                                        className={`p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all ${currentSlide === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:scale-110 active:scale-95'}`}
+                                    >
+                                        <ChevronLeft size={36} />
+                                    </button>
+
+                                    {/* The Card Content */}
+                                    <div
+                                        ref={cardRef}
+                                        className="relative bg-white shadow-2xl overflow-hidden w-[350px] aspect-[3/4.8] rounded-[4px] flex flex-col transition-all"
+                                        style={{ // Ensure it fits on small screens
+                                            maxWidth: '85vw',
+                                            maxHeight: '70vh',
+                                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                                        }}
+                                    >
+                                        <AnimatePresence mode="wait">
+                                            {/* 1. Cover Slide */}
+                                            {currentSlide === 0 && (
+                                                <motion.div
+                                                    key="cover"
+                                                    initial={{ opacity: 0, x: 20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -20 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className="w-full h-full flex flex-col relative"
+                                                >
+                                                    {/* Background */}
+                                                    <div className="absolute inset-0 opacity-40 pointer-events-none z-0 mix-blend-multiply" style={{ backgroundImage: 'radial-gradient(circle at 50% 10%, #fffbf0 0%, #fff 100%)', backgroundSize: 'cover' }} />
+                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                                                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-100/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+
+                                                    {/* Content */}
+                                                    <div className="relative z-10 flex flex-col w-full h-full p-6">
+                                                        <div className="text-center mt-4 mb-8 w-full">
+                                                            <h1 className="text-2xl font-black text-gray-800 mb-2 leading-tight break-keep">{selectedAlbum?.title || "광주 여행"}</h1>
+                                                            <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold text-gray-400">
+                                                                <span>{selectedAlbum?.date || today}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative w-full flex-1 mb-8">
+                                                            {(() => {
+                                                                const mainImg = photos[0] || (course.length > 0 && course[0].img) || placeholders[0];
+                                                                const subImg1 = photos[1] || (course.length > 1 && course[1].img) || placeholders[1];
+                                                                const subImg2 = photos[2] || (course.length > 2 && course[2].img) || placeholders[2];
+                                                                return (
+                                                                    <>
+                                                                        <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1] contrast-[1.05]">
+                                                                                <img src={mainImg} className="w-full h-full object-cover" alt="main" crossOrigin="anonymous" />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
+                                                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                                                <img src={subImg1} className="w-full h-full object-cover" alt="sub1" crossOrigin="anonymous" />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
+                                                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                                                <img src={subImg2} className="w-full h-full object-cover" alt="sub2" crossOrigin="anonymous" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
+
+                                                        <div className="w-[90%] mx-auto bg-[#FDFBF7] py-2 px-4 shadow-sm transform rotate-[-1deg] border border-gray-100/50 flex items-center justify-center gap-2 relative">
+                                                            <div className="absolute inset-x-0 -top-[1px] h-[1px] border-t border-dashed border-gray-300"></div>
+                                                            <div className="absolute inset-x-0 -bottom-[1px] h-[1px] border-b border-dashed border-gray-300"></div>
+                                                            <MapPin size={12} className="text-[#FF6B00] shrink-0" />
+                                                            <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">{selectedAlbum?.location || "광주"}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="absolute inset-0 bg-[#FF6B00] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
+                                                </motion.div>
+                                            )}
+
+                                            {/* 2. Spot Slides */}
+                                            {currentSlide > 0 && currentSlide <= course.length && (() => {
+                                                const spot = course[currentSlide - 1];
+                                                const displayImg = photos[currentSlide - 1] || spot.img || placeholders[(currentSlide - 1) % 3];
+                                                return (
+                                                    <motion.div
+                                                        key={`spot-${currentSlide}`}
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -20 }}
+                                                        transition={{ duration: 0.3 }}
+                                                        className="w-full h-full bg-[#FAF9F6] p-8 flex flex-col relative"
+                                                    >
+                                                        <div className="flex justify-between items-end border-b-2 border-dashed border-gray-200 pb-4 mb-6">
+                                                            <div>
+                                                                <span className="text-xs font-bold text-[#FF6B00] block mb-1">Step {currentSlide}</span>
+                                                                <h2 className="text-2xl font-black text-gray-800 leading-tight">{spot.place_name}</h2>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-[10px] text-gray-400 block">{spot.category_group_name}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-full aspect-square bg-white p-3 shadow-lg transform rotate-1 rounded-[2px] mb-8 border border-gray-100">
+                                                            <div className="w-full h-full bg-gray-100 relative overflow-hidden">
+                                                                <img src={displayImg} className="w-full h-full object-cover" alt="spot" crossOrigin="anonymous" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1 bg-white p-6 rounded-lg shadow-sm border border-orange-50 relative overflow-hidden">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF6B00]"></div>
+                                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                                                                {spot.description || "이곳에서의 특별한 순간을 기록했습니다. 광주의 아름다움을 느껴보세요."}
+                                                            </p>
+                                                        </div>
+                                                        <div className="mt-6 text-center">
+                                                            <span className="text-[10px] font-bold text-gray-300">- {currentSlide} / {course.length} -</span>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })()}
+
+                                            {/* 3. Ending Slide */}
+                                            {currentSlide > course.length && (
+                                                <motion.div
+                                                    key="ending"
+                                                    initial={{ opacity: 0, x: 20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -20 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className="w-full h-full"
+                                                >
+                                                    {renderEndingSlideContent()}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Next Button */}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setCurrentSlide(prev => Math.min(course.length + 1, prev + 1)); }}
+                                        disabled={currentSlide >= course.length + 1}
+                                        className={`p-3 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition-all ${currentSlide >= course.length + 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:scale-110 active:scale-95'}`}
+                                    >
+                                        <ChevronRight size={36} />
+                                    </button>
+                                </div>
+                                <div className="flex gap-3 mt-4 mb-6">
+                                    {Array.from({ length: course.length + 2 }).map((_, i) => (
+                                        <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'bg-white w-8' : 'bg-white/30 w-1.5'}`}></div>
+                                    ))}
+                                </div>
+
+                                {/* Download Buttons - Moved Here */}
+                                <div className="flex gap-4 animate-fade-in-up mt-2">
+                                    <button
+                                        onClick={handleDownloadCard}
+                                        disabled={isGenerating}
+                                        className="px-6 py-3 bg-white text-gray-900 font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-2 hover:bg-gray-50"
+                                    >
+                                        {isGenerating ? (
+                                            <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <Download size={18} className="text-[#FF6B00]" />
+                                                <span className="text-xs">현재 페이지 저장</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleDownloadAll}
+                                        disabled={isGenerating}
+                                        className="px-6 py-3 bg-[#FF6B00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/30 active:scale-95 transition-all flex items-center gap-2 hover:bg-[#ff7b1a]"
+                                    >
+                                        {isGenerating ? (
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <Images size={18} />
+                                                <span className="text-xs">전체 이미지 저장</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <div className="px-6 pb-12 text-center">
+                <p className="text-sm text-gray-400 font-medium">모든 장소의 사진을 채워<br />나만의 지도를 완성해보세요 🎨</p>
+            </div>
         </div>
     );
 }

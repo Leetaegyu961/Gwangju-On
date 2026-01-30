@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Navigation2, ArrowLeft, Locate } from 'lucide-react';
+import { Navigation2, ArrowLeft, Locate, Maximize2, Heart } from 'lucide-react';
 import Script from 'next/script';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
 
@@ -42,6 +42,9 @@ export const MapView = () => {
   const [selectedPlace, setSelectedPlace] = useState<{ name: string, content: string, img?: string } | null>(null); // 선택된 장소의 상세 정보
   const [isDetailLoading, setIsDetailLoading] = useState(false); // AI 상세 정보 로딩 중 여부
   const [isSearching, setIsSearching] = useState(false);       // 장소 검색(POI) 로딩 중 여부
+
+  // 코스 상세 보기 확장 모드 (가로 리스트 vs 상세 스텝 뷰)
+  const [isCourseDetailExpanded, setIsCourseDetailExpanded] = useState(false);
 
   // 기타 UI 상태
   const [isRouteOptionsOpen, setIsRouteOptionsOpen] = useState(false); // 경로 옵션 토글 상태
@@ -387,9 +390,23 @@ export const MapView = () => {
           }
         }
 
-        const markerContent = viewMode === 'course'
-          ? `<div style="background:#0066FF; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; pointer-events: auto;">${index + 1}</div>`
-          : `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
+        // 현재 활성화된 코스 단계인지 확인
+        const isActiveStep = viewMode === 'course' && index === activeStep;
+
+        let markerContent = "";
+
+        if (viewMode === 'course') {
+          // 코스 모드 마커 디자인 (활성화 시 빨간색 강조)
+          const bgColor = isActiveStep ? '#FF4444' : '#0066FF';
+          const scale = isActiveStep ? 'scale(1.25)' : 'scale(1)';
+          const zIndex = isActiveStep ? '300' : '200';
+          const border = isActiveStep ? '3px solid white' : '2px solid white';
+          const boxShadow = isActiveStep ? '0 6px 16px rgba(255, 68, 68, 0.4)' : '0 4px 12px rgba(0,0,0,0.1)';
+
+          markerContent = `<div style="transform: ${scale}; z-index:${zIndex}; background:${bgColor}; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:${border}; box-shadow: ${boxShadow}; cursor: pointer; pointer-events: auto; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${index + 1}</div>`;
+        } else {
+          // 장소 모드 마커 디자인
+          markerContent = `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
                <div onclick="window.toggleDetailBtn('marker-detail-btn-${index}'); event.stopPropagation();" 
                     style="background:${markerBg}; color:${markerBorder}; padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid ${markerBorder}; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size:16px; cursor: pointer; pointer-events: auto;">${markerIcon}</div>
                <span style="background:white; margin-top:4px; padding:3px 8px; border-radius:8px; border:1px solid #eee; font-size:11px; font-weight:bold; color:#333; box-shadow:0 2px 4px rgba(0,0,0,0.05); white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; pointer-events:none;">${spot.name}</span>
@@ -401,6 +418,7 @@ export const MapView = () => {
                  상세정보 👉
                </button>
              </div>`;
+        }
 
         const marker = new Tmapv3.Marker({
           position: position,
@@ -457,7 +475,7 @@ export const MapView = () => {
         }, 200);
       }
     }
-  }, [spots, allPlaces, viewMode, activeCategory, isMapReady]);
+  }, [spots, allPlaces, viewMode, activeCategory, isMapReady, activeStep]);
 
   // Route mode state: 'pedestrian' or 'car'
   const [routeMode, setRouteMode] = useState<'pedestrian' | 'car'>('pedestrian');
@@ -738,8 +756,8 @@ export const MapView = () => {
             코스 정보가 없습니다.<br />채팅에서 여행 코스를 생성해주세요.
           </div>
         ) : (
-          <div className="px-8 flex flex-col h-full overflow-hidden">
-            {/* 1. Detail View Mode */}
+          <div className="px-6 flex flex-col h-full overflow-hidden">
+            {/* 1. Detail View Overlay (공통) */}
             {(selectedPlace || isDetailLoading) ? (
               <div className="animate-fade-in space-y-4 pt-2 h-full flex flex-col">
                 {/* Header with Back Button */}
@@ -770,9 +788,7 @@ export const MapView = () => {
                 {isDetailLoading ? (
                   <div className="flex flex-col items-center justify-center py-10 gap-4">
                     <div className="w-10 h-10 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm text-gray-500 font-medium animate-pulse">
-                      AI 에이전트가 정보를 찾고 있어요...
-                    </p>
+                    <p className="text-sm text-gray-500 font-medium animate-pulse">AI 에이전트가 정보를 찾고 있어요...</p>
                   </div>
                 ) : (
                   /* Content State */
@@ -783,144 +799,217 @@ export const MapView = () => {
                           src={selectedPlace.img}
                           alt={selectedPlace.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
                         />
                       </div>
                     )}
 
-                    <div className="bg-gray-50 p-5 rounded-2xl text-sm text-gray-700 leading-relaxed whitespace-pre-line border border-gray-100 font-medium shadow-sm">
+                    <div className="prose prose-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
                       {selectedPlace?.content}
                     </div>
 
-                    <div className="mt-4">
-                      <button
-                        onClick={() => {
-                          setSelectedPlace(null);
-                          setIsDetailLoading(false);
-                        }}
-                        className="w-full py-4 bg-[#0066FF] text-white font-bold rounded-xl active:scale-95 transition-all shadow-lg shadow-blue-100"
-                      >
+                    <div className="mt-8 pt-4 border-t border-gray-100 flex gap-3">
+                      <button onClick={() => { setSelectedPlace(null); setIsDetailLoading(false); }} className="flex-1 bg-[#0066FF] text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all">
                         확인 완료
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-            ) : !sheetOpen ? (
-              // 2. Collapsed Course View
-              <div className="flex items-center justify-between py-4 animate-fade-in">
-                <div className="flex-1">
-                  <span className="text-[10px] font-black text-[#0066FF] uppercase tracking-widest mb-1 block">최적 경로 분석 완료</span>
-                  <h2 className="text-xl font-black text-gray-900 tracking-tight">
-                    {activeStep + 1}. {spots[activeStep].name}
-                  </h2>
-                  <span className="text-gray-300 font-bold text-sm">다음 장소까지 {spots[activeStep].transport}</span>
-                </div>
-                <button
-                  onClick={() => setSheetOpen(true)}
-                  className="w-14 h-14 bg-[#0066FF] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100 active:scale-95 transition-all"
-                >
-                  <Navigation2 size={24} fill="currentColor" />
-                </button>
-              </div>
-            ) : (
-              <div className="animate-fade-in space-y-6 pt-2">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-black text-gray-900 tracking-tight">단계 {activeStep + 1} / {spots.length}</span>
-                    <span className="text-[10px] font-bold text-[#0066FF] bg-blue-50 px-3 py-1 rounded-full">Tmap 실시간 데이터</span>
+            ) : viewMode === 'course' ? (
+              isCourseDetailExpanded ? (
+                // [2-B] Expanded Detail View (상세 길찾기 및 정보)
+                <div className="animate-fade-in space-y-6 pt-2 h-full flex flex-col overflow-y-auto pb-48 custom-scrollbar">
+                  {/* Back Header */}
+                  <div className="flex items-center gap-3 border-b border-gray-50 pb-4 shrink-0">
+                    <button
+                      onClick={() => setIsCourseDetailExpanded(false)}
+                      className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-gray-600"
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900">코스 상세 정보</h3>
+                      <p className="text-xs text-gray-400 font-medium">{activeStep + 1}번째 장소 탐색 중</p>
+                    </div>
                   </div>
-                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#0066FF] transition-all duration-700" style={{ width: `${((activeStep + 1) / spots.length) * 100}%` }} />
-                  </div>
-                </div>
 
-                <div className="flex gap-6 items-center">
-                  <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-md shrink-0">
-                    <img src={spots[activeStep].img} className="w-full h-full object-cover" alt="place" />
+                  <div className="space-y-3 shrink-0">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-black text-gray-900 tracking-tight">단계 {activeStep + 1} / {spots.length}</span>
+                      <span className="text-[10px] font-bold text-[#0066FF] bg-blue-50 px-3 py-1 rounded-full">Tmap 실시간 데이터</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-[#0066FF] transition-all duration-700" style={{ width: `${((activeStep + 1) / spots.length) * 100}%` }} />
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-black text-gray-900 mb-2 truncate">{spots[activeStep].name}</h3>
-                    <p className="text-xs font-bold text-gray-400 leading-relaxed mb-3 line-clamp-2">{spots[activeStep].desc}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {spots[activeStep].tags.map((t: string) => (
-                        <span key={t} className="px-2 py-1 bg-gray-50 rounded-md text-[10px] font-black text-gray-400">{t}</span>
-                      ))}
+
+                  <div className="flex gap-4 items-start shrink-0">
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-md shrink-0 border border-gray-100">
+                      <img src={spots[activeStep].img} className="w-full h-full object-cover" alt="place" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-black text-gray-900 mb-2 truncate">{spots[activeStep].name}</h3>
+                      <p className="text-xs font-bold text-gray-500 leading-relaxed mb-3 line-clamp-2">{spots[activeStep].desc}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {spots[activeStep].tags.map((t: string) => (
+                          <span key={t} className="px-2 py-1 bg-gray-50 rounded-md text-[10px] font-black text-gray-400">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 shrink-0">
+                    <button onClick={prevStep} disabled={activeStep === 0} className="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm disabled:opacity-30 active:scale-95 transition-all">이전</button>
+                    <button onClick={nextStep} disabled={activeStep === spots.length - 1} className="flex-1 py-4 bg-gray-100 text-gray-800 rounded-2xl font-black text-sm disabled:opacity-30 active:scale-95 transition-all">다음 장소</button>
+                  </div>
+
+                  <div className="flex gap-3 mt-2 shrink-0">
+                    <button
+                      onClick={() => fetchRoute('pedestrian')}
+                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'pedestrian'
+                        ? 'bg-[#0066FF] text-white border-[#0066FF]'
+                        : 'bg-white text-gray-700 border-gray-200'
+                        }`}
+                    >
+                      <span className="flex items-center gap-1.5"><span className="text-lg">🚶</span> 도보 안내</span>
+                      {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
+                    </button>
+
+                    <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 px-2 py-2 flex flex-row items-center justify-center gap-3">
+                      <span className="text-xs font-black text-gray-800 flex items-center gap-1 shrink-0">길찾기</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const dest = spots[activeStep];
+                            const url = `https://map.naver.com/v5/directions/-/${dest.lng},${dest.lat},${encodeURIComponent(dest.name)}/-/car`;
+                            window.open(url, '_blank');
+                          }}
+                          className="w-9 h-9 bg-white rounded-lg shadow-sm border border-gray-100 flex items-center justify-center hover:scale-105 transition-transform"
+                        >
+                          <span className="text-[#03C75A] font-black text-[10px]">N</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const dest = spots[activeStep];
+                            const destName = encodeURIComponent(dest.name.replace(/,/g, ' '));
+                            const url = `https://map.kakao.com/link/to/${destName},${dest.lat},${dest.lng}`;
+                            window.open(url, '_blank');
+                          }}
+                          className="w-9 h-9 bg-[#FEE500] rounded-lg shadow-sm border border-gray-100 flex items-center justify-center hover:scale-105 transition-transform"
+                        >
+                          <span className="text-[#1952C5] font-black text-[10px]">K</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ) : (
+                // [2-A] Summary View (Horizontal Scroll List)
+                <div className="flex flex-col h-full pb-6 pt-2 relative">
+                  {/* Top Right Buttons (찜하기 & 상세보기) */}
+                  <div className="absolute top-0 right-0 flex gap-2 z-10">
+                    <button
+                      className="w-10 h-10 bg-white border border-gray-100 text-gray-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all shadow-sm"
+                      onClick={(e) => { e.stopPropagation(); /* 찜하기 기능 추후 구현 */ }}
+                    >
+                      <Heart size={20} />
+                    </button>
+                    <button
+                      onClick={() => setIsCourseDetailExpanded(true)}
+                      className="h-10 px-4 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all active:scale-95 text-xs font-bold gap-1"
+                    >
+                      상세보기 & 길찾기 <ArrowLeft size={12} className="rotate-180" />
+                    </button>
+                  </div>
 
-                <div className="flex gap-3">
-                  <button onClick={prevStep} disabled={activeStep === 0} className="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl font-black text-sm disabled:opacity-30">이전</button>
-                  <button onClick={nextStep} disabled={activeStep === spots.length - 1} className="flex-1 py-4 bg-gray-100 text-gray-800 rounded-2xl font-black text-sm disabled:opacity-30">다음 장소</button>
-                </div>
+                  <div className="mb-4 shrink-0 pr-24">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold">Recommended</span>
+                      <h2 className="text-lg font-bold text-gray-900 line-clamp-1">광주 핫플레이스 코스</h2>
+                    </div>
+                    <p className="text-sm text-gray-500 font-medium line-clamp-1">동구 동명동 · 34,900원 · 4시간 50분</p>
+                    <div className="flex gap-2 mt-3 flex-wrap">
+                      <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">연인과</span>
+                      <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
+                      <span className="text-xs border border-blue-200 text-blue-500 bg-blue-50 px-2 py-1 rounded-md font-bold">힐링</span>
+                    </div>
+                  </div>
 
-                {/* 경로 모드 선택 버튼 */}
-                {/* 경로 모드 선택 버튼 (도보 안내 vs 외부 길찾기) */}
-                <div className="flex gap-3 mt-4">
-                  {/* 1. 도보 안내 (앱 내 Tmap) */}
-                  <button
-                    onClick={() => fetchRoute('pedestrian')}
-                    disabled={isLoadingRoute || activeStep >= spots.length - 1}
-                    className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border ${routeMode === 'pedestrian'
-                      ? 'bg-[#0066FF] text-white border-[#0066FF]'
-                      : 'bg-white text-gray-700 border-gray-200'
-                      }`}
-                  >
-                    <span className="flex items-center gap-1.5"><span className="text-lg">🚶</span> 도보 안내</span>
-                    {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
-                  </button>
-
-                  {/* 2. 외부 길찾기 (네이버/카카오) */}
-                  <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 px-4 py-2 flex flex-row items-center justify-center gap-4">
-                    <span className="text-sm font-black text-gray-800 flex items-center gap-1 shrink-0">🗺️ 길찾기</span>
-                    <div className="flex gap-3">
-                      {/* 네이버 지도 아이콘 */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // 현재 보고 있는 장소를 목적지로 설정 (출발지는 네이버 지도에서 내 위치로 자동 설정)
-                          const dest = spots[activeStep];
-                          const url = `https://map.naver.com/v5/directions/-/${dest.lng},${dest.lat},${encodeURIComponent(dest.name)}/-/car`;
-                          window.open(url, '_blank');
+                  <div className="flex overflow-x-auto gap-3 pb-4 -mx-6 px-6 snap-x no-scrollbar">
+                    {spots.map((spot, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setActiveStep(index);
+                          // 클릭 시 지도 이동
+                          if (mapInstance.current && (window as any).Tmapv3) {
+                            const Tmapv3 = (window as any).Tmapv3;
+                            mapInstance.current.panTo(new Tmapv3.LatLng(spot.lat, spot.lng));
+                          }
                         }}
-                        className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center hover:scale-110 transition-transform overflow-hidden relative group shrink-0"
-                        title="네이버 지도로 길찾기"
+                        className={`snap-center shrink-0 w-[280px] p-3 rounded-xl border bg-white flex gap-3 cursor-pointer transition-all active:scale-95 ${activeStep === index ? 'border-[#0066FF] ring-1 ring-[#0066FF] shadow-md' : 'border-gray-200 shadow-sm'}`}
                       >
-                        {/* 네이버 지도 로고 스타일 */}
-                        <div className="w-full h-full bg-[#03C75A] flex items-center justify-center text-white font-black text-xs">
-                          N
+                        <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                          <span className="absolute top-0 left-0 bg-black/70 text-white text-xs px-2 py-1 rounded-br-lg font-bold z-10">{index + 1}</span>
+                          {spot.img ? (<img src={spot.img} className="w-full h-full object-cover" />) : (<div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>)}
                         </div>
-                      </button>
+                        <div className="flex flex-col justify-center min-w-0 flex-1">
+                          <h3 className="font-bold text-gray-900 truncate text-base">{spot.name}</h3>
+                          <div className="text-xs text-gray-500 truncate mt-0.5">{spot.address || spot.category}</div>
+                          <div className="flex items-center gap-1 mt-2 text-xs text-gray-400 font-medium">
+                            <span className="text-yellow-400">★</span> <span>4.5</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                      {/* 카카오맵 아이콘 */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // 현재 보고 있는 장소를 목적지로 설정
-                          const dest = spots[activeStep];
-                          const destName = encodeURIComponent(dest.name.replace(/,/g, ' '));
-                          const url = `https://map.kakao.com/link/to/${destName},${dest.lat},${dest.lng}`;
-                          window.open(url, '_blank');
-                        }}
-                        className="w-10 h-10 bg-[#FEE500] rounded-xl shadow-sm border border-gray-100 flex items-center justify-center hover:scale-110 transition-transform overflow-hidden group shrink-0"
-                        title="카카오맵으로 길찾기"
-                      >
-                        {/* 카카오맵 핀 아이콘 (파란색 핀) */}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 2C7.58172 2 4 5.58172 4 10C4 14.4183 12 22 12 22C12 22 20 14.4183 20 10C20 5.58172 16.4183 2 12 2Z" fill="#1952C5" />
-                          <circle cx="12" cy="10" r="3" fill="white" />
-                        </svg>
-                      </button>
-                    </div>
+                  <div className="mt-auto flex flex-col gap-3">
+                    <button className="w-full bg-[#FF4444] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                      <span className="text-lg">📥</span> 코스 저장
+                    </button>
                   </div>
                 </div>
-
-                {isLoadingRoute && (
-                  <div className="text-center text-sm text-gray-400 mt-2 animate-pulse">경로를 불러오는 중...</div>
-                )}
+              )
+            ) : (
+              // 3. Places Mode (Vertical List)
+              <div className="flex-1 overflow-y-auto custom-scrollbar pb-20 pt-2">
+                <div className="space-y-3">
+                  {(allPlaces.length > 0 ? allPlaces : []).map((spot, index) => (
+                    <div key={index} className="flex gap-4 p-3 border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => {
+                        if (mapInstance.current && (window as any).Tmapv3) {
+                          const Tmapv3 = (window as any).Tmapv3;
+                          mapInstance.current.setCenter(new Tmapv3.LatLng(spot.lat, spot.lng));
+                          mapInstance.current.setZoom(17);
+                        }
+                      }}>
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl shrink-0">
+                        {spot.category === '맛집' ? '🍴' : spot.category === '카페' ? '☕' : '📍'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-gray-900">{spot.name}</h4>
+                        <p className="text-xs text-gray-500 mt-1 truncate">{spot.address}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fetchPlaceDetail(spot.name, spot.address);
+                          }}
+                          className="mt-2 text-xs bg-[#0066FF] text-white px-3 py-1 rounded-full font-bold">
+                          상세보기
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {allPlaces.length === 0 && !isSearching && (
+                    <div className="text-center py-10 text-gray-400 text-sm">
+                      검색 결과가 없습니다.
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
