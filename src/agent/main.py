@@ -39,14 +39,14 @@ async def run_agent(user_input: str) -> str:
 
     # 그래프 실행 (async)
     if config.VERBOSE:
-        print(f"🤖 에이전트 시작: {user_input}")
+        print(f"[Start] 에이전트 시작: {user_input}")
 
     result = await graph.ainvoke(initial_state)
 
     final_answer = result.get("final_answer", "응답을 생성하지 못했습니다.")
 
     if config.VERBOSE:
-        print(f"✅ 최종 응답: {final_answer}")
+        print(f"[Final] 최종 응답: {final_answer}")
 
     return final_answer
 
@@ -54,29 +54,29 @@ async def run_agent(user_input: str) -> str:
 def main():
     """메인 함수 - CLI 인터페이스"""
     print("=" * 50)
-    print("🚀 AI Agent에 오신 것을 환영합니다!")
+    print("[Welcome] AI Agent에 오신 것을 환영합니다!")
     print("=" * 50)
     print("종료하려면 'quit' 또는 'exit'를 입력하세요.\n")
 
     while True:
         try:
-            user_input = input("👤 You: ").strip()
+            user_input = input("[You]: ").strip()
 
             if not user_input:
                 continue
 
             if user_input.lower() in ["quit", "exit", "종료"]:
-                print("👋 안녕히 가세요!")
+                print("[Bye] 안녕히 가세요!")
                 break
 
             response = asyncio.run(run_agent(user_input))
-            print(f"\n🤖 Agent: {response}\n")
+            print(f"\n[Agent]: {response}\n")
 
         except KeyboardInterrupt:
-            print("\n👋 안녕히 가세요!")
+            print("\n[Bye] 안녕히 가세요!")
             break
         except Exception as e:
-            print(f"❌ 오류 발생: {e}\n")
+            print(f"[Error] 오류 발생: {e}\n")
 
 
 if __name__ == "__main__":

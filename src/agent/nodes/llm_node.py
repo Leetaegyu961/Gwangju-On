@@ -20,9 +20,9 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
     (동기 함수 유지 - LLM 호출 없음)
     """
     # 컨텍스트 예산 설정
-    MAX_CONTEXT_CHARS = 40000  # 컨텍스트 예산 증액
-    MAX_REVIEW_CHARS = 500
-    MAX_BLOG_CHARS = 3000
+    MAX_CONTEXT_CHARS = 50000  # 컨텍스트 예산 증액
+    MAX_REVIEW_CHARS = 800
+    MAX_BLOG_CHARS = 5000
     
     context_parts = []
     total_chars = 0
@@ -127,12 +127,16 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
             
             item_text = "\n".join(item_section)
             
-            if total_chars + len(item_text) < MAX_CONTEXT_CHARS:
-                context_parts.extend(item_section)
-                total_chars += len(item_text)
-            else:
-                print(f"⚠️ 컨텍스트 예산 초과 - {idx-1}개 가게까지만 포함됨")
-                break
+            # 제한 없이 모두 포함 (사용자 요청)
+            context_parts.extend(item_section)
+            total_chars += len(item_text)
+            
+            # if total_chars + len(item_text) < MAX_CONTEXT_CHARS:
+            #     context_parts.extend(item_section)
+            #     total_chars += len(item_text)
+            # else:
+            #     print(f"⚠️ 컨텍스트 예산 초과 - {idx-1}개 가게까지만 포함됨")
+            #     break
         
         context_parts.append("")
     
@@ -141,6 +145,16 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
         context_text = "\n".join(context_parts)
         
         print(f"📊 프롬프트 컨텍스트 크기: {len(context_text):,}자")
+        
+        # 설문에서 지정한 코스당 장소 개수 추출 (기본값: 4)
+        survey_data = state.get("survey_data", {})
+        if isinstance(survey_data, dict):
+            courses_list = survey_data.get("courses", [])
+            places_per_course = len(courses_list) if courses_list else 4
+        else:
+            places_per_course = 4
+        
+        print(f"📍 코스당 장소 개수: {places_per_course}개")
         
         system_prompt = f"""당신은 맛집 정보를 분석하여 사용자에게 추천해주는 전문 AI 에이전트입니다.
 
@@ -157,12 +171,16 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 **[답변 작성 가이드]**
 반드시 아래 **JSON 형식**으로 **3개의 서로 다른 코스**를 추천하세요. 마크다운(` ```json `)이나 다른 말은 붙이지 마세요.
 
+**🚨 코스 구성 시 핵심 규칙 (반드시 준수):**
+1. **각 코스의 식당/카페는 중복되면 안 됩니다!** 코스 1에 포함된 식당은 코스 2, 3에 절대 포함하지 마세요.
+2. 컨텍스트에 있는 모든 장소를 3개 코스에 고르게 분배하세요.
+3. **각 코스는 정확히 {places_per_course}개 장소로 구성하세요.** (사용자가 설문에서 지정한 개수입니다)
+
 **코스 구성 시 중요 사항:**
 - **종합점수가 높은 맛집을 우선적으로 고려**하세요. 점수가 높다는 것은:
   - 모범음식점 인증 또는 광주 맛집으로 선정됨
   - 다수의 블로그에서 언급됨
   - Google 평점과 리뷰 수가 많음
-- 점수 정보가 제공되는 경우, 점수가 높은 음식점을 우선 배치하세요.
 
 각 코스는 다음 테마 중 하나를 선택하여 차별화하세요:
 1. 맛집 탐방 코스: 평점과 점수가 가장 높은 맛집 위주로 구성
@@ -207,7 +225,7 @@ def _create_context_message(state: AgentState) -> SystemMessage | None:
 
 주의사항:
 1. 각 코스의 `places` 배열에는 추천하는 장소들을 순서대로 넣어주세요. **Context에 있는 lat, lng, id 값을 그대로 사용하세요.**
-2. 3개 코스는 서로 다른 장소 조합으로 구성하세요. 같은 장소가 여러 코스에 포함될 수 있지만, 전체 구성은 달라야 합니다.
+2. **🚨 3개 코스의 식당/카페는 절대 겹치면 안 됩니다!** 코스별로 완전히 다른 장소를 배치하세요.
 3. `answer` 필드는 간결하게 작성하세요.
 4. 형식을 철저히 지키세요. 반드시 3개의 코스를 모두 포함하세요.
 """

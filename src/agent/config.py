@@ -42,7 +42,7 @@ class Config:
             os.environ["LANGCHAIN_ENDPOINT"] = cls.LANGSMITH_ENDPOINT
             os.environ["LANGCHAIN_API_KEY"] = cls.LANGSMITH_API_KEY
             os.environ["LANGCHAIN_PROJECT"] = cls.LANGSMITH_PROJECT
-            print(f"✅ LangSmith 트레이싱 활성화: {cls.LANGSMITH_PROJECT}")
+            print(f"[OK] LangSmith 트레이싱 활성화: {cls.LANGSMITH_PROJECT}")
 
 
 # 설정 인스턴스

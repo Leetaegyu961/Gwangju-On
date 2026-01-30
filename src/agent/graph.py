@@ -1,6 +1,7 @@
 """
-Agent Graph (네이버 → Place Enrichment 순차 실행)
+Agent Graph (Parallel Execution Version)
 LangGraph를 사용하여 에이전트 그래프를 정의하는 모듈입니다.
+3개의 코스를 병렬로 생성하는 구조로 변경되었습니다.
 """
 
 from typing import Literal
@@ -8,47 +9,41 @@ from typing import Literal
 from langgraph.graph import StateGraph, END
 
 from .state import AgentState
-from .nodes import llm_node, tool_node, google_place_search_node, naver_blog_search_node, query_planner_node, scoring_node
-
-
-def should_continue(state: AgentState) -> Literal["tool_node", "end"]:
-    """
-    다음 노드를 결정하는 조건부 엣지 함수입니다.
-
-    Args:
-        state: 현재 에이전트 상태
-
-    Returns:
-        다음 노드 이름 ("tool_node" 또는 "end")
-    """
-    current_step = state.get("current_step", "")
-
-    if current_step == "tool_calling":
-        return "tool_node"
-    else:
-        return "end"
+from .nodes import (
+    google_place_search_node, 
+    naver_blog_search_node, 
+    query_planner_node, 
+    scoring_node,
+    generate_course_1,
+    generate_course_2,
+    generate_course_3,
+    aggregator_node
+)
 
 
 def create_agent_graph() -> StateGraph:
     """
     에이전트 그래프를 생성합니다.
 
-    그래프 구조 (스코어링 적용):
+    그래프 구조:
         START 
           ↓
-        query_planner_node (LLM이 쿼리 생성)
+        query_planner_node (테마 3개 선정 + 쿼리 생성)
           ↓
-        google_place_search_node (Google Places로 5개 가게 + 리뷰 검색)
+        google_place_search_node (장소 검색)
           ↓
-        naver_blog_search_node (각 가게명으로 블로그 검색, RSS 매칭)
+        naver_blog_search_node (블로그 리뷰 검색)
           ↓
-        scoring_node (공공 데이터 + API 데이터 기반 점수 계산)
+        scoring_node (점수 계산 및 정렬)
+          ↓ 
+        [Parallel Execution] 
+        ├── generate_course_1 (테마 1 코스 생성)
+        ├── generate_course_2 (테마 2 코스 생성)
+        └── generate_course_3 (테마 3 코스 생성)
           ↓
-        llm_node → (조건) → tool_node → llm_node (반복)
-                          → END
-
-    Returns:
-        컴파일된 StateGraph
+        aggregator_node (결과 취합 및 포맷팅)
+          ↓
+         END
     """
     # 그래프 빌더 생성
     graph_builder = StateGraph(AgentState)
@@ -57,31 +52,36 @@ def create_agent_graph() -> StateGraph:
     graph_builder.add_node("query_planner_node", query_planner_node)
     graph_builder.add_node("google_place_search_node", google_place_search_node)
     graph_builder.add_node("naver_blog_search_node", naver_blog_search_node)
-    graph_builder.add_node("scoring_node", scoring_node)  # 스코어링 노드 추가
-    graph_builder.add_node("llm_node", llm_node)
-    graph_builder.add_node("tool_node", tool_node)
+    graph_builder.add_node("scoring_node", scoring_node)
+    
+    # 병렬 코스 생성 노드
+    graph_builder.add_node("generate_course_1", generate_course_1)
+    graph_builder.add_node("generate_course_2", generate_course_2)
+    graph_builder.add_node("generate_course_3", generate_course_3)
+    
+    # 취합 노드
+    graph_builder.add_node("aggregator_node", aggregator_node)
 
-    # 시작점: Query Planner부터 시작
+    # 시작점
     graph_builder.set_entry_point("query_planner_node")
 
-    # 순차 실행: query_planner → google_place_search → naver_blog_search → scoring → llm
+    # 검색 및 스코어링 단계 (순차)
     graph_builder.add_edge("query_planner_node", "google_place_search_node")
     graph_builder.add_edge("google_place_search_node", "naver_blog_search_node")
-    graph_builder.add_edge("naver_blog_search_node", "scoring_node")  # 스코어링 추가
-    graph_builder.add_edge("scoring_node", "llm_node")  # 스코어링 후 LLM으로
-
-    # 조건부 엣지 추가 (LLM 노드 이후)
-    graph_builder.add_conditional_edges(
-        "llm_node",
-        should_continue,
-        {
-            "tool_node": "tool_node",
-            "end": END,
-        },
-    )
-
-    # tool_node -> llm_node (도구 실행 후 다시 LLM으로)
-    graph_builder.add_edge("tool_node", "llm_node")
+    graph_builder.add_edge("naver_blog_search_node", "scoring_node")
+    
+    # 병렬 실행 (Fan-out)
+    graph_builder.add_edge("scoring_node", "generate_course_1")
+    graph_builder.add_edge("scoring_node", "generate_course_2")
+    graph_builder.add_edge("scoring_node", "generate_course_3")
+    
+    # 결과 취합 (Fan-in)
+    graph_builder.add_edge("generate_course_1", "aggregator_node")
+    graph_builder.add_edge("generate_course_2", "aggregator_node")
+    graph_builder.add_edge("generate_course_3", "aggregator_node")
+    
+    # 종료
+    graph_builder.add_edge("aggregator_node", END)
 
     # 그래프 컴파일
     graph = graph_builder.compile()

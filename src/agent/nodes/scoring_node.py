@@ -1,12 +1,13 @@
 """
-Scoring Node v4 (LLM 직접 점수화)
+Scoring Node v4 (LLM 직접 점수화 - Batching 적용)
 LLM이 4개 차원(맛/서비스/가성비/재방문)별로 직접 채점하는 방식입니다.
+배치 처리(Batch Processing)를 통해 LLM 호출 수를 줄이고 속도를 개선했습니다.
 """
 
 import os
 import json
 import asyncio
-from typing import Any
+from typing import Any, List, Dict, Tuple
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..state import AgentState
 from ..scoring_system import get_scoring_system
@@ -55,110 +56,146 @@ SCORING_RUBRIC = """
 - 리뷰가 없거나 부족하면 각 차원에 기본값 1.0점을 부여하세요
 """
 
+def _get_default_score(reason: str) -> Tuple[float, Dict]:
+    """기본 점수 반환"""
+    default_breakdown = {
+        "taste": 1.0,
+        "service": 1.0,
+        "value": 0.5,
+        "revisit": 0.5,
+        "total": 3.0,
+        "reason": reason
+    }
+    return 3.0, default_breakdown
 
-async def analyze_sentiment_v4(llm: ChatGoogleGenerativeAI, enriched_item: dict) -> tuple[float, dict]:
+
+async def analyze_sentiment_batch(llm: ChatGoogleGenerativeAI, batch_items: List[Dict]) -> List[Tuple[float, Dict]]:
     """
-    v4: LLM이 4개 차원별로 직접 채점
-    
-    Args:
-        llm: LLM 인스턴스
-        enriched_item: {"place": {...}, "blogs": [...]}
+    Process a batch of items (max 5) in a single LLM call.
+    Returns a list of tuples (total_score, breakdown) corresponding to the input items.
+    """
+    # Prepare prompt data
+    places_text = ""
+    for idx, item in enumerate(batch_items):
+        place = item.get("place", {})
+        blogs = item.get("blogs", [])
+        reviews = place.get("reviews", [])
         
-    Returns:
-        (total_score, breakdown)
-        - total_score: 0~6점
-        - breakdown: {"taste": 2.0, "service": 1.5, "value": 1.0, "revisit": 1.0, "reason": "..."}
-    """
-    place = enriched_item.get("place", {})
-    blogs = enriched_item.get("blogs", [])
-    reviews = place.get("reviews", [])
-    
-    # 리뷰 텍스트 수집
-    blog_texts = []
-    for blog in blogs[:3]:
-        content = blog.get("full_content", "")[:500]
-        if content:
-            blog_texts.append(content)
-    
-    review_texts = []
-    for review in reviews[:5]:
-        text = review.get("text", "")[:200]
-        if text:
-            review_texts.append(f"⭐{review.get('rating', 0)}점: {text}")
-    
-    blog_summary = "\n".join(blog_texts) if blog_texts else "블로그 리뷰 없음"
-    review_summary = "\n".join(review_texts) if review_texts else "Google 리뷰 없음"
-    
+        # Collect reviews
+        blog_texts = []
+        for blog in blogs[:3]:
+            content = blog.get("full_content", "")[:300]  # Reduced length for batching
+            if content:
+                blog_texts.append(content)
+        
+        review_texts = []
+        for review in reviews[:5]:
+            text = review.get("text", "")[:150] # Reduced length for batching
+            if text:
+                review_texts.append(f"⭐{review.get('rating', 0)}: {text}")
+        
+        blog_summary = "\n".join(blog_texts) if blog_texts else "블로그 리뷰 없음"
+        review_summary = "\n".join(review_texts) if review_texts else "Google 리뷰 없음"
+        
+        places_text += f"""
+---
+### Place {idx + 1}: {place.get('name', 'Unknown')}
+#### Google Reviews
+{review_summary}
+#### Blog Reviews
+{blog_summary}
+"""
+
     prompt = f"""당신은 음식점 리뷰 전문 평가사입니다.
-아래 리뷰들을 읽고 4가지 차원에서 점수를 매기세요.
+아래 {len(batch_items)}개의 음식점 리뷰를 읽고 각각 4가지 차원에서 점수를 매기세요.
 
 {SCORING_RUBRIC}
 
----
-
-## 평가 대상: {place.get('name', 'Unknown')}
-
-### Google Places 리뷰
-{review_summary}
-
-### Naver 블로그 리뷰
-{blog_summary}
+## 평가 대상 목록
+{places_text}
 
 ---
 
-## 출력 형식 (JSON만, 다른 말 X)
-{{"taste": 1.5, "service": 2.0, "value": 1.0, "revisit": 1.0, "reason": "맛과 분위기가 좋고 재방문 의사가 높음"}}
+## 출력 형식 (JSON List Only)
+반드시 아래 형식의 JSON 리스트만 출력하세요. 순서는 입력된 Place 1, Place 2... 순서를 지켜야 합니다.
+
+[
+  {{
+    "index": 1,
+    "name": "음식점 이름",
+    "taste": 1.5,
+    "service": 2.0,
+    "value": 1.0,
+    "revisit": 1.0,
+    "reason": "맛과 분위기가 좋고 재방문 의사가 높음"
+  }},
+  ...
+]
 """
     
     try:
         response = await llm.ainvoke(prompt)
         content = response.content.strip()
         
-        # JSON 파싱
         if content.startswith("```"):
             content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:].strip()
+            if content.strip().startswith("json"):
+                content = content.strip()[4:].strip()
+            else:
+                content = content.strip()
         
-        result = json.loads(content)
+        results_json = json.loads(content)
         
-        # 점수 추출 및 범위 제한
-        taste = min(2.0, max(0.0, float(result.get("taste", 1.0))))
-        service = min(2.0, max(0.0, float(result.get("service", 1.0))))
-        value = min(1.0, max(0.0, float(result.get("value", 0.5))))
-        revisit = min(1.0, max(0.0, float(result.get("revisit", 0.5))))
-        reason = result.get("reason", "평가 완료")
+        # Process results
+        batch_results = []
         
-        total_score = taste + service + value + revisit
-        
-        breakdown = {
-            "taste": round(taste, 1),
-            "service": round(service, 1),
-            "value": round(value, 1),
-            "revisit": round(revisit, 1),
-            "total": round(total_score, 2),
-            "reason": reason
-        }
-        
-        return round(total_score, 2), breakdown
-        
+        if isinstance(results_json, list):
+             # Ensure we have results for each item
+            for i in range(len(batch_items)):
+                # Try to find matching result by index or position
+                result = None
+                if i < len(results_json):
+                    result = results_json[i]
+                
+                # If result is missing or structure is wrong, use default
+                if not result:
+                    batch_results.append(_get_default_score("분석 누락"))
+                    continue
+                
+                # Calculate score
+                taste = min(2.0, max(0.0, float(result.get("taste", 1.0))))
+                service = min(2.0, max(0.0, float(result.get("service", 1.0))))
+                value = min(1.0, max(0.0, float(result.get("value", 0.5))))
+                revisit = min(1.0, max(0.0, float(result.get("revisit", 0.5))))
+                reason = result.get("reason", "평가 완료")
+                
+                total_score = taste + service + value + revisit
+                
+                breakdown = {
+                    "taste": round(taste, 1),
+                    "service": round(service, 1),
+                    "value": round(value, 1),
+                    "revisit": round(revisit, 1),
+                    "total": round(total_score, 2),
+                    "reason": reason
+                }
+                batch_results.append((round(total_score, 2), breakdown))
+        else:
+             # Json parsed but not a list
+            print(f"⚠️ [Batch Scoring] Expected list, got {type(results_json)}")
+            return [_get_default_score("형식 오류") for _ in batch_items]
+
+        return batch_results
+
     except Exception as e:
-        print(f"⚠️ [v4 Scoring] LLM 분석 실패: {e}")
-        # 실패 시 기본값 반환 (중립)
-        default_breakdown = {
-            "taste": 1.0,
-            "service": 1.0,
-            "value": 0.5,
-            "revisit": 0.5,
-            "total": 3.0,
-            "reason": "분석 실패 - 기본값 사용"
-        }
-        return 3.0, default_breakdown
+        print(f"⚠️ [Batch Scoring] LLM 분석 실패: {e}")
+        return [_get_default_score("분석 실패 - 기본값 사용") for _ in batch_items]
 
 
 async def scoring_node(state: AgentState) -> dict[str, Any]:
     """
     v4: enriched_results를 입력으로 받아 LLM 직접 채점을 수행하고 scored_results를 반환합니다.
+    배치 처리를 적용하여 효율성을 높였습니다.
     
     Args:
         state: 현재 에이전트 상태 (enriched_results 포함)
@@ -172,13 +209,13 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
         print("⚠️ [Scoring Node] enriched_results가 없습니다.")
         return {"scored_results": None}
     
-    print(f"\n📊 [Scoring Node v4] LLM 직접 채점 시작: {len(enriched_results)}개 음식점")
+    print(f"\n📊 [Scoring Node v4] LLM 배치 채점 시작: {len(enriched_results)}개 음식점")
     
     # LLM 초기화
     llm = ChatGoogleGenerativeAI(
         model=config.GEMINI_MODEL,
         google_api_key=config.GOOGLE_API_KEY,
-        temperature=0.3,  # 약간의 일관성 향상
+        temperature=0.3,
     )
     
     # 스코어링 시스템 (공공 데이터 점수용)
@@ -186,16 +223,23 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
     data_dir = os.path.join(base_dir, "data")
     scoring_system = get_scoring_system(data_dir)
     
-    # 비동기 병렬 실행
-    print(f"🤖 LLM 직접 채점 비동기 실행 중 ({len(enriched_results)}개)...")
+    # 배치 처리 준비
+    batch_size = 5
+    batches = [enriched_results[i:i + batch_size] for i in range(0, len(enriched_results), batch_size)]
     
-    tasks = [analyze_sentiment_v4(llm, item) for item in enriched_results]
-    sentiment_results = await asyncio.gather(*tasks)
+    print(f"🤖 LLM 배치 채점 실행 중 ({len(batches)} 배치)...")
+    
+    # 비동기 병렬 실행
+    tasks = [analyze_sentiment_batch(llm, batch) for batch in batches]
+    batch_results = await asyncio.gather(*tasks)
+    
+    # 결과 평탄화 (Flatten)
+    flat_sentiment_results = [item for sublist in batch_results for item in sublist]
     
     analyzed_results = []
     
     # 결과 합치기
-    for item, (sentiment_score, sentiment_breakdown) in zip(enriched_results, sentiment_results):
+    for item, (sentiment_score, sentiment_breakdown) in zip(enriched_results, flat_sentiment_results):
         place = item.get("place", {})
         
         # 기본 점수 계산 (공공 데이터 + Google 평점)

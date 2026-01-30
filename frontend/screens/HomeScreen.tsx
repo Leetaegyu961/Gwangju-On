@@ -39,24 +39,6 @@ export const HomeScreen = () => {
                 </div>
 
                 {/* Info Cards - Real data integration needed */}
-                {/* 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50">
-                        <div className="w-10 h-10 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center mb-4">
-                            <MapPin size={20} />
-                        </div>
-                        <h4 className="font-black text-gray-800 text-sm mb-1">추천 장소</h4>
-                        <p className="text-[10px] font-bold text-gray-400">실시간 핫플레이스</p>
-                    </div>
-                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50">
-                        <div className="w-10 h-10 bg-green-50 text-green-500 rounded-xl flex items-center justify-center mb-4">
-                            <Calendar size={20} />
-                        </div>
-                        <h4 className="font-black text-gray-800 text-sm mb-1">내 일정</h4>
-                        <p className="text-[10px] font-bold text-gray-400">관리 중인 코스 0개</p>
-                    </div>
-                </div> 
-                */}
             </div>
         </div>
     );

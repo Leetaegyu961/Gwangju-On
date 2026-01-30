@@ -1,6 +1,6 @@
 
 
-import { CoursePoint, SavedCourse, Message, EvidenceCard } from "../types";
+import { CoursePoint, SavedCourse, Message, EvidenceCard, CourseInfo } from "../types";
 
 export class GeminiService {
   private apiUrl: string;
@@ -37,6 +37,7 @@ export class GeminiService {
         text: data.text,
         isDecisionPoint: data.isDecisionPoint,
         evidenceCards: data.evidenceCards,
+        allCourses: data.allCourses,  // 3개 코스 전체 추가
         status: data.status as 'done'
       };
     } catch (error) {

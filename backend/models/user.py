@@ -1,8 +1,9 @@
 from pydantic import BaseModel
+from datetime import datetime
 
-class UserProfile(BaseModel):
-    gender: str
-    age: str
+class Demographics(BaseModel):
+    age: str | None = None
+    gender: str | None = None
 
 class CoursePoint(BaseModel):
     id: str
@@ -15,12 +16,34 @@ class CoursePoint(BaseModel):
     transport: str | None = None
     img: str | None = None
 
+class SurveyData(BaseModel):
+    region: str | None = None
+    courses: list[CoursePoint] = []
+    themes: list[str] = []
+    companions: list[str] = []
+    budget: list[int] = []
+
+class UserTripSession(BaseModel):
+    userId: str
+    created_at: str | None = None
+    demographics: Demographics
+    survey_data: SurveyData
+    chat_context: list[dict] = []
+    status: str = "pending" # pending or completed
+
+class UserProfile(BaseModel):
+    gender: str
+    age: str
+
 class SurveyResult(BaseModel):
     userId: str
+    region: str | None = None
     courses: list[CoursePoint]
     themes: list[str]
     companions: list[str]
     budget: list[int]
+    chat_log: list[dict] = []
+    has_specific_place: str = "N" # Y or N
 
 class OnboardingResponse(BaseModel):
     userId: str

@@ -19,7 +19,7 @@ TOOLS = [search_tool]
 tool_executor = LangGraphToolNode(TOOLS)
 
 
-def tool_node(state: AgentState) -> dict[str, Any]:
+async def tool_node(state: AgentState) -> dict[str, Any]:
     """
     도구를 실행하고 결과를 반환하는 노드입니다.
 
@@ -30,7 +30,7 @@ def tool_node(state: AgentState) -> dict[str, Any]:
         업데이트된 상태 (messages, tool_results, current_step)
     """
     # LangGraph ToolNode를 사용하여 도구 실행
-    result = tool_executor.invoke(state)
+    result = await tool_executor.ainvoke(state)
 
     return {
         "messages": result["messages"],

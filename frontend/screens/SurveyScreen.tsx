@@ -17,9 +17,14 @@ export const SurveyScreen = () => {
   const [isSideOpen, setIsSideOpen] = useState(false);
   const [selectedThemes, setSelectedThemes] = useState(['데이트', '맛집탐방']);
   const [selectedCompanions, setSelectedCompanions] = useState(['연인']);
+  const [selectedRegion, setSelectedRegion] = useState<string>('수완지구');
+  const [customRegion, setCustomRegion] = useState('');
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
 
   const themes = ['데이트', '힐링', '액티비티', '맛집탐방'];
   const companions = ['혼자', '친구', '연인', '가족'];
+  const regions = ['수완지구', '충장로', '첨단지구', '상무지구', '내 중심', '기타'];
 
   const categories = [
     { type: '식당', icon: Utensils },
@@ -39,6 +44,31 @@ export const SurveyScreen = () => {
   const updateType = (id: string, type: string) => {
     setCourses(courses.map(c => c.id === id ? { ...c, type: type as any } : c));
     setActiveSelect(null);
+  };
+
+  const handleRegionClick = (region: string) => {
+    if (region === '내 중심') {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            setSelectedRegion('내 중심');
+            setIsCustomMode(false);
+            alert("내 위치가 설정되었습니다.");
+          },
+          (err) => {
+            alert("위치 정보를 가져올 수 없습니다. GPS 권한을 확인해주세요.");
+          }
+        );
+      }
+    } else if (region === '기타') {
+      setIsCustomMode(true);
+      setSelectedRegion('기타');
+    } else {
+      setIsCustomMode(false);
+      setSelectedRegion(region);
+      setCoords(null);
+    }
   };
 
   return (
@@ -71,6 +101,34 @@ export const SurveyScreen = () => {
 
         {/* Main Survey Card - Image 1 Style */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 space-y-10">
+
+          {/* Region Selection */}
+          <section className="space-y-4">
+            <h3 className="font-bold text-gray-900 text-lg">지역</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {regions.map(r => (
+                <button
+                  key={r}
+                  onClick={() => handleRegionClick(r)}
+                  className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${selectedRegion === r ? 'bg-blue-50 border-[#0066FF] text-[#0066FF]' : 'bg-white border-gray-50 text-gray-400'}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            {isCustomMode && (
+              <input
+                type="text"
+                placeholder="어디로 가고 싶으신가요?"
+                value={customRegion}
+                onChange={(e) => setCustomRegion(e.target.value)}
+                className="w-full p-4 mt-2 bg-gray-50 border-none rounded-xl font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            )}
+            {coords && selectedRegion === '내 중심' && (
+              <p className="text-[11px] text-[#0066FF] font-bold px-1">위도: {coords.lat.toFixed(4)}, 경도: {coords.lng.toFixed(4)} (GPS 획득 완료)</p>
+            )}
+          </section>
 
           <section className="space-y-6">
             <div className="flex justify-between items-end">
@@ -215,25 +273,30 @@ export const SurveyScreen = () => {
             <button
               onClick={async () => {
                 const userId = localStorage.getItem('temp_user_id');
+                const regionStr = selectedRegion === '기타' ? customRegion : (selectedRegion === '내 중심' && coords ? `${coords.lat},${coords.lng}` : selectedRegion);
+
                 if (userId) {
                   try {
-                    await fetch('http://localhost:8000/api/user/survey', {
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+                    await fetch(`${apiUrl}/user/survey`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         userId,
+                        region: regionStr,
                         courses,
                         themes: selectedThemes,
                         companions: selectedCompanions,
-                        budget
+                        budget,
+                        has_specific_place: "N" // 초기값
                       })
                     });
                   } catch (e) {
                     console.error("Survey sync failed", e);
                   }
                 }
-                // 위치를 물어보는 모드로 진입하기 위해 파라미터 변경
-                router.push('/chat?mode=location_request');
+                // 코스 생성 중 UI를 보여주기 위해 파라미터 전달
+                router.push('/chat?mode=course_init');
               }}
               className="w-full py-6 bg-gradient-to-r from-[#0066FF] to-blue-500 text-white rounded-2xl font-black text-xl shadow-xl shadow-blue-100 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >

@@ -57,13 +57,12 @@ export interface SavedCourse {
   description: string;
 }
 
-// AI가 추천하는 코스 구조 (Backend: RecommendedCourse)
-export interface RecommendedCourse {
+// 코스 정보 (3개 코스 선택용)
+export interface CourseInfo {
   course_id: number;
   course_name: string;
-  course_description: string;
-  places: EvidenceCard[];
-  total_budget: string;
+  course_description?: string;
+  cards: EvidenceCard[];
 }
 
 // AI와 주고받는 메시지 객체
@@ -72,8 +71,8 @@ export interface Message {
   role: 'user' | 'assistant';
   text: string;
   isDecisionPoint?: boolean;
-  evidenceCards?: EvidenceCard[]; // AI 응답 하단에 노출될 근거 카드 목록 (Legacy or Single)
-  courses?: RecommendedCourse[];  // [New] 다중 코스 추천 리스트
+  evidenceCards?: EvidenceCard[]; // AI 응답 하단에 노출될 근거 카드 목록 (첫 번째 코스)
+  allCourses?: CourseInfo[];      // 3개 코스 전체
   status?: 'analyzing' | 'searching' | 'generating' | 'done'; // 진행 단계
   suggestions?: string[]; // 사용자에게 제안할 답변 선택지
 }
