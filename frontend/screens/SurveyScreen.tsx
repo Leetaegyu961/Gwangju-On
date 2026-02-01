@@ -1,13 +1,24 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu, Plus, X, ChevronDown, Mic, Utensils, Coffee, Music, MapPin, Bed } from 'lucide-react';
 import { CoursePoint } from '../types';
 import { DiscoverySideModal } from '../components/DiscoverySideModal';
+import { InvitationPopup } from '../features/experience/InvitationPopup';
 
 export const SurveyScreen = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showInvitation, setShowInvitation] = useState(false);
+
+  useEffect(() => {
+    // 이미 거절하고 돌아온 경우(?reason=decline_invitation)에는 띄우지 않음
+    if (searchParams.get('reason') !== 'decline_invitation') {
+        setShowInvitation(true);
+    }
+  }, [searchParams]);
+
   const [courses, setCourses] = useState<CoursePoint[]>([
     { id: '1', type: '식당', name: '1. ' },
     { id: '2', type: '카페', name: '2. ' },
@@ -73,6 +84,7 @@ export const SurveyScreen = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-44 overflow-y-auto font-['Inter'] hide-scrollbar relative">
+      <InvitationPopup isOpen={showInvitation} onClose={() => setShowInvitation(false)} />
       <DiscoverySideModal isOpen={isSideOpen} onClose={() => setIsSideOpen(false)} />
 
       {/* Header - Image 1 Style (Blue) */}
