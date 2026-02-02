@@ -56,7 +56,10 @@ frontend/
     1.  사용자 입력 -> `aiService.processRequest(input)` 호출.
     2.  서버 응답 확인 (`isDecisionPoint` 체크).
     3.  **코스 생성 시 (`isDecisionPoint: true`)**:
-        *   `evidenceCards` 데이터를 `localStorage`의 `current_course` 키로 저장.
+        *   Backend로부터 3가지 추천 코스(`allCourses`)를 받습니다.
+        *   현재 선택된 코스(기본값: 첫 번째)를 `localStorage`의 `current_course` 키로 저장.
+        *   전체 후보 코스를 `localStorage`의 `all_courses` 키로 저장.
+        *   이미지 URL을 미리 로딩(Preload)하여 UX를 개선.
         *   `router.push('/map')`으로 지도 화면 자동 이동.
 
 ### 2. 지도 시각화 (`MapView.tsx`)
@@ -95,7 +98,8 @@ async processRequest(input: string): Promise<Message> {
     id: data.id,
     role: 'assistant',
     text: data.text,
-    evidenceCards: data.evidenceCards, // 코스 데이터 포함
+    evidenceCards: data.evidenceCards, // 첫 번째 코스 (레거시)
+    allCourses: data.allCourses,       // 3개 코스 전체 (신규)
     // ...
   };
 }
@@ -108,15 +112,15 @@ async processRequest(input: string): Promise<Message> {
 ### Chat Flow
 1.  **Survey**: 사용자 취향 분석 -> `userId` 생성 및 Backend 전송.
 2.  **User Input**: "데이트 코스 추천해줘"
-3.  **Backend Processing**: Agent가 코스 JSON 생성.
+3.  **Backend Processing**: Agent가 3가지 테마의 코스 JSON 생성.
 4.  **Frontend Receive**: 
     ```json
-    // EvidenceCard 예시
     {
-      "placeId": "p1",
-      "name": "오디너리 디저트",
-      "lat": 35.145, "lng": 126.920,
-      "img": "http://localhost:8000/api/photo?name=..."
+      "allCourses": [
+        { "course_id": 1, "course_name": "맛집 코스", "cards": [...] },
+        { "course_id": 2, "course_name": "힐링 코스", "cards": [...] },
+        ...
+      ]
     }
     ```
 5.  **Storage**: 위 데이터를 `localStorage`에 저장.

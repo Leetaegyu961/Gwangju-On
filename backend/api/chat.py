@@ -1,34 +1,36 @@
 from fastapi import APIRouter
 from backend.models.chat import ChatRequest, ChatResponse, EvidenceCard
+from datetime import datetime
 import time
 import uuid
+from backend.db import get_database
 
 router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     input_text = request.message
-    user_id = request.userId # Request에 userId가 있다고 가정 (Typescript Interface 업데이트 필요할 수 있음)
+    user_id = request.userId
     
-    # [Context Retrieval] MongoDB 또는 In-Memory DB에서 Survey Data 조회
-    from backend.api.user import USER_DB
-    from backend.db import get_database
+    db = await get_database()
+    session_doc = await db["user_trip_sessions"].find_one({"userId": user_id})
     
-    survey_data = USER_DB.get(user_id, {})
-    if not survey_data:
-        db = await get_database()
-        session_doc = await db["user_trip_sessions"].find_one({"userId": user_id})
-        if session_doc:
-            session_doc.pop("_id", None)
-            # 평탄화하여 에이전트가 처리하기 쉽게 변환 (필요시)
-            survey_data = {
-                **session_doc.get("demographics", {}),
-                **session_doc.get("survey_data", {}),
-                "created_at": session_doc.get("created_at")
+    survey_data = {}
+    if session_doc:
+        # reward.md 규격에 맞게 intent_context에서 데이터 추출
+        intent_ctx = session_doc.get("intent_context", {})
+        survey_data = intent_ctx.get("survey_data", {})
+        
+        # [NEW Logic] 채팅 히스토리 업데이트
+        chat_msg = {"role": "user", "content": input_text, "timestamp": datetime.now().isoformat()}
+        await db["user_trip_sessions"].update_one(
+            {"userId": user_id},
+            {
+                "$push": {"intent_context.chat_history": chat_msg},
+                "$set": {"last_activity_at": datetime.now().isoformat()}
             }
-            # 메모리 캐싱
-            USER_DB[user_id] = survey_data
-    
+        )
+
     # [REAL AGENT INTEGRATION]
     from langchain_core.messages import HumanMessage
     from src.agent.graph import app as agent_app  # agent_app import 필요 (파일 상단으로 이동 권장)
@@ -158,14 +160,21 @@ async def chat(request: ChatRequest):
         all_courses = []
     # (기존 Mock 로직 제거됨)
     
-    # 4. 코스 생성 완료 시 DB 상태 업데이트 (status: completed)
+    # AI 응답을 history에 추가 및 상태 업데이트
+    ai_msg = {"role": "assistant", "content": response_text, "timestamp": datetime.now().isoformat()}
+    update_fields = {
+        "last_activity_at": datetime.now().isoformat()
+    }
     if is_plan_request:
-        db = await get_database()
-        await db["user_trip_sessions"].update_one(
-            {"userId": user_id},
-            {"$set": {"status": "completed"}}
-        )
-        print(f"🎯 [Status Update] Session for {user_id} set to completed")
+        update_fields["status"] = "COMPLETED" # 코스 생성 완료 시 상태 변경 (COMPLETED)
+    
+    await db["user_trip_sessions"].update_one(
+        {"userId": user_id},
+        {
+            "$push": {"intent_context.chat_history": ai_msg},
+            "$set": update_fields
+        }
+    )
 
     # all_courses를 CourseInfo 모델로 변환
     from backend.models.chat import CourseInfo
@@ -175,7 +184,7 @@ async def chat(request: ChatRequest):
         id=str(uuid.uuid4()),
         role="assistant",
         text=response_text,
-        isDecisionPoint=is_plan_request, # 코스가 있으면 결정 포인트로 간주
+        isDecisionPoint=is_plan_request,
         evidenceCards=evidence_cards,
         allCourses=all_courses_models,
         status="done"

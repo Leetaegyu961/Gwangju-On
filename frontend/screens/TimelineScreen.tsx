@@ -144,8 +144,6 @@ export default function TimelineScreen() {
     };
 
     // Tmap 로드 감지 및 초기화 (슬라이드가 'Ending'일 때 등 트리거)
-    // Tmap 로드 감지 및 초기화 (슬라이드가 'Ending'일 때 등 트리거)
-    // Tmap 로드 감지 및 초기화 (슬라이드가 'Ending'일 때 등 트리거)
     useEffect(() => {
         // 엔딩 슬라이드가 아니거나 다운로드 중이면 중단
         if (currentSlide <= course.length || isDownloading) return;

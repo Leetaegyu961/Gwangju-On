@@ -32,36 +32,38 @@ async def update_survey(survey: SurveyResult):
     db = await get_database()
     
     # 1. 기존 유저 정보(Demographics) 가져오기
-    # In-Memory DB나 DB에서 연령/성별 정보를 가져옴
     profile_data = USER_DB.get(user_id, {})
     
-    demographics = {
-        "age": profile_data.get("age"),
-        "gender": profile_data.get("gender")
-    }
+    from backend.models.user import UserTripSession, IntentContext, SurveyData
     
     # 2. 신규 PRD 구조에 맞춘 데이터 패키징
-    survey_data = {
-        "region": survey.region,
-        "courses": [c.dict() for c in survey.courses],
-        "themes": survey.themes,
-        "companions": survey.companions,
-        "budget": survey.budget
-    }
+    survey_data = SurveyData(
+        region=survey.region,
+        courses=survey.courses,
+        themes=survey.themes,
+        companions=survey.companions,
+        budget=survey.budget,
+        has_specific_place=survey.has_specific_place
+    )
     
-    session_doc = {
-        "userId": user_id,
-        "created_at": datetime.now().isoformat(),
-        "demographics": demographics,
-        "survey_data": survey_data,
-        "chat_context": [],
-        "status": "pending"
-    }
+    # 3. 새로운 세션 구조 (reward.md 기반)
+    session_id = str(uuid.uuid4())
+    intent_context = IntentContext(survey_data=survey_data, chat_history=[])
     
-    # 3. MongoDB 저장 (user_trip_sessions)
+    new_session = UserTripSession(
+        sessionId=session_id,
+        userId=user_id,
+        status="IN_PROGRESS",
+        intent_context=intent_context,
+        album_data=[],
+        created_at=datetime.now().isoformat(),
+        last_activity_at=datetime.now().isoformat()
+    )
+    
+    # 4. MongoDB 저장 (user_trip_sessions)
     await db["user_trip_sessions"].update_one(
         {"userId": user_id},
-        {"$set": session_doc},
+        {"$set": new_session.dict()},
         upsert=True
     )
     
@@ -69,9 +71,13 @@ async def update_survey(survey: SurveyResult):
     if user_id in USER_DB:
         USER_DB[user_id].update(survey.dict(exclude={"userId"}))
     else:
-         USER_DB[user_id] = survey.dict(exclude={"userId"})
+        USER_DB[user_id] = survey.dict(exclude={"userId"})
         
-    return {"status": "success", "message": "Trip session started and saved to MongoDB."}
+    return {
+        "status": "success",
+        "message": "Trip session started with new schema.",
+        "sessionId": session_id
+    }
 
 from backend.db import get_database
 from backend.models.user import UserArchive
@@ -100,7 +106,7 @@ async def get_user_courses(user_id: str):
     db = await get_database()
     # owner_id 또는 userId 필드 확인. Frontend가 'userId'를 보내므로 모델 맞춤
     # 여기서 userId는 archive의 소유자
-    cursor = db["user_archive"].find({"userId": user_id})
+    cursor = db["user_archive"].find({"userId": user_id}).sort("createdAt", -1)
     courses = []
     async for doc in cursor:
         doc.pop("_id", None)

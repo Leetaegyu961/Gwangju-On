@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, MapPin, Navigation, ArrowLeft, Menu, X, ChevronRight, Share2, Camera, Loader2, Locate, Heart, Navigation2 } from 'lucide-react';
+import { Navigation2, ArrowLeft, Locate, Loader2, Heart, Edit3, Check, X, GripVertical, Trash2, Search } from 'lucide-react';
 import Script from 'next/script';
-import html2canvas from 'html2canvas';
-import { motion, useAnimation, PanInfo } from 'framer-motion';
+import { motion, useAnimation, PanInfo, Reorder } from 'framer-motion';
 import { GeminiService } from '../services/geminiService';
 
 const aiService = new GeminiService();
@@ -45,7 +43,15 @@ export const MapView = () => {
   const [allPlaces, setAllPlaces] = useState<any[]>([]);    // Tmap API로 검색된 장소 목록
 
   // 상세 정보 상태
-  const [selectedPlace, setSelectedPlace] = useState<{ name: string, content: string, img?: string } | null>(null); // 선택된 장소의 상세 정보
+  const [selectedPlace, setSelectedPlace] = useState<{
+    name: string;
+    content: string;
+    img?: string;
+    lat?: string | number;
+    lng?: string | number;
+    address?: string;
+    category?: string;
+  } | null>(null); // 선택된 장소의 상세 정보
   const [isDetailLoading, setIsDetailLoading] = useState(false); // AI 상세 정보 로딩 중 여부
   const [isSearching, setIsSearching] = useState(false);       // 장소 검색(POI) 로딩 중 여부
   const [isAutoGenerating, setIsAutoGenerating] = useState(false); // 자동 생성 중 여부
@@ -62,6 +68,29 @@ export const MapView = () => {
   const [selectedCourseIndex, setSelectedCourseIndex] = useState(0); // 선택된 코스 인덱스
   const [pickedSpots, setPickedSpots] = useState<any[]>([]); // 사용자가 '담은' 장소들
 
+  // 키워드 검색 상태
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  // Toast 메시지 상태
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // 편집 모드 상태
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Helper: Ensure IDs for spots
+  const ensureIds = (places: any[]) => {
+    return places.map((p, i) => ({
+      ...p,
+      id: p.id || `spot-${Date.now()}-${i}`
+    }));
+  };
 
   // --------------------------------------------------------------------------
   // 2. Event Listener용 State 참조 (Ref 동기화)
@@ -169,7 +198,7 @@ export const MapView = () => {
   // --------------------------------------------------------------------------
   // 3. AI 상세 정보 조회 (Agent 연동)
   // --------------------------------------------------------------------------
-  const fetchPlaceDetail = async (name: string, address: string = "") => {
+  const fetchPlaceDetail = async (name: string, address: string = "", lat?: number, lng?: number) => {
     // [중복 요청 방지 로직]
     // 1. 이전 요청이 진행 중이라면 취소(abort)시킵니다.
     // 2. 창을 닫거나 다른 마커를 눌렀을 때, 이전 마커의 정보가 늦게 뜨는 것을 방지합니다.
@@ -180,7 +209,18 @@ export const MapView = () => {
     abortControllerRef.current = controller;
 
     setIsDetailLoading(true);
-    setSelectedPlace({ name, content: "" }); // 내용 초기화
+
+    // allPlaces에서 해당 장소의 상세 정보를 찾습니다 (좌표 등)
+    const foundPlace = allPlaces.find(p => p.name === name) || {};
+
+    setSelectedPlace({
+      name,
+      content: "",
+      lat: lat || foundPlace.lat,
+      lng: lng || foundPlace.lng,
+      address: address || foundPlace.address,
+      category: foundPlace.category
+    }); // 내용 초기화 및 기본 정보 설정
 
     try {
       // MiniAgent를 사용하는 /api/place-info 엔드포인트 호출
@@ -202,11 +242,12 @@ export const MapView = () => {
       if (controller.signal.aborted) return;
 
       // 상태 업데이트 (UI에 상세 정보 표시)
-      setSelectedPlace({
+      setSelectedPlace(prev => ({
+        ...prev!, // 기존 lat, lng 유지
         name: data.name || name,
         content: data.content,
         img: data.img
-      });
+      }));
     } catch (e: any) {
       if (e.name === 'AbortError') {
         console.log("🚫 [MapView] Detail fetch aborted");
@@ -305,15 +346,16 @@ export const MapView = () => {
 
             // 첫 번째 코스로 설정
             if (allCoursesForMap[0]?.places) {
-              setSpots(allCoursesForMap[0].places);
+              setSpots(ensureIds(allCoursesForMap[0].places));
               setSelectedCourseIndex(0);
             }
             setViewMode('course');
             console.log("✅ [MapView] Auto-generated 3 courses loaded");
           } else if (response.evidenceCards && response.evidenceCards.length > 0) {
             // fallback: evidenceCards만 있는 경우
-            setSpots(response.evidenceCards);
-            localStorage.setItem('current_course', JSON.stringify(response.evidenceCards));
+            const safeSpots = ensureIds(response.evidenceCards);
+            setSpots(safeSpots);
+            localStorage.setItem('current_course', JSON.stringify(safeSpots));
             setViewMode('course');
             console.log("✅ [MapView] Auto-generated course loaded");
           }
@@ -334,7 +376,7 @@ export const MapView = () => {
 
           // 첫 번째 코스를 기본으로 설정
           if (parsedAllCourses.length > 0 && parsedAllCourses[0].places) {
-            setSpots(parsedAllCourses[0].places);
+            setSpots(ensureIds(parsedAllCourses[0].places));
             setSelectedCourseIndex(0);
             setViewMode('course');
             console.log("✅ [MapView] Loaded all 3 courses, displaying course 1");
@@ -357,7 +399,7 @@ export const MapView = () => {
           const stored = localStorage.getItem('current_course');
           if (stored) {
             const parsed = JSON.parse(stored);
-            setSpots(parsed);
+            setSpots(ensureIds(parsed));
             setViewMode('course');
           } else {
             setViewMode('places');
@@ -366,8 +408,6 @@ export const MapView = () => {
       } catch (e) {
         console.error("❌ [MapView] Failed to load data", e);
       }
-
-
     }
   }, [searchParams]);
 
@@ -419,26 +459,22 @@ export const MapView = () => {
 
     // [지도 빈 공간 클릭 이벤트 핸들러]
     // 지도 배경을 클릭했을 때, 활성화된 UI 요소들을 닫는 역할
-    mapInstance.current.on("Click", () => {
-      // 1. 장소 모드: 열려있는 모든 상세정보 버튼 닫기 (초기화)
-      if (viewModeRef.current === 'places') {
-        document.querySelectorAll('.detail-btn-custom').forEach((b: any) => {
-          b.style.display = 'none';
-        });
-      }
+    mapInstance.current.on("Click", async (evt: any) => {
+      // 기존 상세 버튼들 닫기
+      document.querySelectorAll('.detail-btn-custom').forEach((b: any) => {
+        b.style.display = 'none';
+      });
 
-      // 2. 코스 모드: 하단 바텀 시트 닫기 및 상세 내역 리셋
-      if (viewModeRef.current === 'course') {
-        if (sheetOpenRef.current) {
-          setSheetOpen(false);
-        }
-        // AI 상세정보 요청이 진행 중이었다면 취소
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-          abortControllerRef.current = null;
-        }
-        setIsDetailLoading(false);
-        setSelectedPlace(null);
+      // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
+      console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
+      
+      // 선택된 장소가 있다면 해제
+      setSelectedPlace(null);
+      setIsDetailLoading(false);
+      
+      // 코스 모드일 때 시트 닫기
+      if (viewModeRef.current === 'course' && sheetOpenRef.current) {
+        setSheetOpen(false);
       }
     });
 
@@ -554,7 +590,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-
+            
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -722,9 +758,10 @@ export const MapView = () => {
   const handleCourseSelect = (index: number) => {
     if (allCourses[index] && allCourses[index].places) {
       setSelectedCourseIndex(index);
-      setSpots(allCourses[index].places);
+      setSpots(ensureIds(allCourses[index].places));
       // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
+      setIsEditMode(false); // 코스 변경 시 편집 모드 해제
       console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
     }
   };
@@ -765,21 +802,124 @@ export const MapView = () => {
       localStorage.setItem('current_course_meta', JSON.stringify(allCourses[selectedCourseIndex]));
     }
 
-    // 3. 타임라인 마지막 장을 위한 지도 화면 캡처 및 저장
-    // [변경] 클라이언트 캡처(html2canvas)는 보안(CORS) 문제로 불안정하므로 제거하고,
-    // 타임라인 화면에서 직접 Tmap 미니맵을 렌더링하는 방식으로 변경함.
-    finishConfirmation(pickedSpots.length > 0 ? pickedSpots.length : spots.length);
+    // 3. 완료 메시지
+    alert(`총 ${pickedSpots.length > 0 ? pickedSpots.length : spots.length}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴에서 확인해보세요.`);
   };
 
-  const finishConfirmation = (count: number) => {
-    alert(`총 ${count}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴에서 확인해보세요.`);
+  // 순서 변경 핸들러 (Reorder)
+  const handleReorder = (newSpots: any[]) => {
+    setSpots(newSpots);
+    
+    // 로컬 스토리지 업데이트
+    const updatedAllCourses = [...allCourses];
+    if (updatedAllCourses[selectedCourseIndex]) {
+      updatedAllCourses[selectedCourseIndex].places = newSpots;
+      setAllCourses(updatedAllCourses);
+      localStorage.setItem('all_courses', JSON.stringify(updatedAllCourses));
+    }
+    localStorage.setItem('current_course', JSON.stringify(newSpots));
   };
 
-  // 모바일 감지 헬퍼
-  const IsMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // 장소 삭제 핸들러
+  const handleDeleteSpot = (indexToRemove: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("이 장소를 코스에서 삭제하시겠습니까?")) {
+      const newSpots = spots.filter((_, index) => index !== indexToRemove);
+      handleReorder(newSpots); // Use handleReorder to save changes
+    }
+  };
+
+  // 장소 코스 추가 핸들러
+  const addToCourse = () => {
+    if (!selectedPlace) return;
+
+    // 이미 코스에 있는지 확인 (선택 사항)
+    // const exists = spots.some(s => s.name === selectedPlace.name);
+    // if (exists) {
+    //   alert("이미 코스에 추가된 장소입니다.");
+    //   return;
+    // }
+
+    const newSpot = {
+      id: `spot-${Date.now()}`,
+      type: selectedPlace.category || '놀거리',
+      name: selectedPlace.name,
+      lat: selectedPlace.lat || 0,
+      lng: selectedPlace.lng || 0,
+      desc: selectedPlace.content,
+      tags: [],
+      transport: '이동',
+      img: selectedPlace.img,
+      address: selectedPlace.address,
+      category: selectedPlace.category || '장소'
+    };
+
+    const newSpots = [...spots, newSpot];
+    handleReorder(newSpots);
+    setToastMessage(`'${selectedPlace.name}'이(가) 코스에 추가되었습니다.`);
+  };
+
+  // 키워드 검색 핸들러
+  const handleKeywordSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!searchKeyword.trim()) return;
+    
+    setIsSearching(true);
+    setViewMode('places'); // 결과 확인을 위해 장소 모드로 전환
+    
+    // 키보드 내리기 (모바일 고려)
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    try {
+        const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        
+        if (data.searchPoiInfo?.pois?.poi) {
+             const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
+                name: p.name,
+                lat: p.noorLat,
+                lng: p.noorLon,
+                category: p.lowerAddrName || '장소',
+                address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
+              }));
+              
+              setAllPlaces(pois);
+              setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
+
+              // 첫 번째 결과로 지도 이동
+              if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
+                  const Tmapv3 = (window as any).Tmapv3;
+                  mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
+                  mapInstance.current.setZoom(15);
+              }
+        } else {
+            setAllPlaces([]);
+            setToastMessage("검색 결과가 없습니다.");
+        }
+    } catch (error) {
+        console.error("Search failed", error);
+        setToastMessage("검색 중 오류가 발생했습니다.");
+    } finally {
+        setIsSearching(false);
+    }
+  };
 
   return (
     <div className="h-screen bg-gray-50 relative overflow-hidden font-['Inter']">
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] animate-fade-in-down">
+          <div className="bg-gray-900/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border border-white/10">
+            <Check size={18} className="text-[#00C853]" />
+            <span className="text-sm font-bold">{toastMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Global Loading Overlay for Auto-Generation */}
       {isAutoGenerating && (
@@ -845,8 +985,33 @@ export const MapView = () => {
           </button>
         </div>
 
+        {/* 검색 바 추가 */}
         {viewMode === 'places' && (
-          <div className="px-6 py-4 flex gap-2 overflow-x-auto no-scrollbar bg-gray-50/50">
+          <div className="px-6 pt-4 pb-2 bg-white">
+            <form onSubmit={handleKeywordSearch} className="relative shadow-sm rounded-xl">
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="장소, 주소 검색 (예: 동명동 맛집)"
+                className="w-full pl-10 pr-12 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:bg-white transition-all placeholder:text-gray-400"
+              />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              {searchKeyword && (
+                <button
+                  type="button"
+                  onClick={() => setSearchKeyword('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
+                >
+                  <X size={16} fill="currentColor" className="opacity-50"/>
+                </button>
+              )}
+            </form>
+          </div>
+        )}
+
+        {viewMode === 'places' && (
+          <div className="px-6 py-2 pb-4 flex gap-2 overflow-x-auto no-scrollbar bg-white">
             {['전체', '맛집', '카페', '관광'].map((cat) => (
               <button
                 key={cat}
@@ -1000,15 +1165,21 @@ export const MapView = () => {
                       {selectedPlace?.content}
                     </div>
 
-                    <div className="mt-4">
+                    <div className="mt-4 flex gap-3">
+                      <button
+                        onClick={addToCourse}
+                        className="flex-1 py-4 bg-white border-2 border-[#0066FF] text-[#0066FF] font-black rounded-xl active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-blue-50"
+                      >
+                        <span className="text-lg">+</span> 코스에 추가
+                      </button>
                       <button
                         onClick={() => {
                           setSelectedPlace(null);
                           setIsDetailLoading(false);
                         }}
-                        className="w-full py-4 bg-[#0066FF] text-white font-bold rounded-xl active:scale-95 transition-all shadow-lg shadow-blue-100"
+                        className="flex-1 py-4 bg-[#0066FF] text-white font-bold rounded-xl active:scale-95 transition-all shadow-lg shadow-blue-100"
                       >
-                        확인 완료
+                        닫기
                       </button>
                     </div>
                   </div>
@@ -1025,7 +1196,10 @@ export const MapView = () => {
                   <span className="text-gray-300 font-bold text-sm">다음 장소까지 {spots[activeStep].transport}</span>
                 </div>
                 <button
-                  onClick={() => setSheetOpen(true)}
+                  onClick={() => {
+                    setSheetOpen(true);
+                    setIsCourseDetailExpanded(false);
+                  }}
                   className="w-14 h-14 bg-[#0066FF] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100 active:scale-95 transition-all"
                 >
                   <Navigation2 size={24} fill="currentColor" />
@@ -1036,17 +1210,29 @@ export const MapView = () => {
                 // [2-B] Expanded Detail View (상세 길찾기 및 정보)
                 <div className="animate-fade-in space-y-6 pt-2 h-full flex flex-col overflow-y-auto pb-48 custom-scrollbar">
                   {/* Back Header */}
-                  <div className="flex items-center gap-3 border-b border-gray-50 pb-4 shrink-0">
-                    <button
-                      onClick={() => setIsCourseDetailExpanded(false)}
-                      className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-gray-600"
-                    >
-                      <ArrowLeft size={20} />
-                    </button>
-                    <div>
-                      <h3 className="text-lg font-black text-gray-900">코스 상세 정보</h3>
-                      <p className="text-xs text-gray-400 font-medium">{activeStep + 1}번째 장소 탐색 중</p>
+                  <div className="flex items-center justify-between border-b border-gray-50 pb-4 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setIsCourseDetailExpanded(false)}
+                        className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all text-gray-600"
+                      >
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div>
+                        <h3 className="text-lg font-black text-gray-900">코스 상세 정보</h3>
+                        <p className="text-xs text-gray-400 font-medium">{activeStep + 1}번째 장소 탐색 중</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => {
+                        setIsCourseDetailExpanded(false);
+                        setIsEditMode(true);
+                      }}
+                      className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-200 transition-all flex items-center gap-1.5"
+                    >
+                      <Edit3 size={14} />
+                      편집
+                    </button>
                   </div>
 
                   <div className="space-y-3 shrink-0">
@@ -1068,8 +1254,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                             (e.target as HTMLImageElement).style.display = 'none';
+                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (
@@ -1154,7 +1340,7 @@ export const MapView = () => {
                     </button>
                   </div>
 
-                  <div className="mb-4 shrink-0 pr-24">
+                  <div className="mb-4 shrink-0 pr-24 relative">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold">Recommended</span>
                       <h2 className="text-lg font-bold text-gray-900 line-clamp-1">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
@@ -1165,70 +1351,126 @@ export const MapView = () => {
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
                       <span className="text-xs border border-blue-200 text-blue-500 bg-blue-50 px-2 py-1 rounded-md font-bold">힐링</span>
                     </div>
+
+                    {/* Edit Mode Toggle Button */}
+                    <button
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      className={`absolute top-0 right-0 -mt-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 ${isEditMode ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                    >
+                      {isEditMode ? <Check size={14} /> : <Edit3 size={14} />}
+                      {isEditMode ? '완료' : '코스편집'}
+                    </button>
                   </div>
 
-                  <div className="flex overflow-x-auto gap-3 pb-4 -mx-6 px-6 snap-x no-scrollbar">
-                    {spots.map((spot, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setActiveStep(index);
-                          // 클릭 시 지도 이동
-                          if (mapInstance.current && (window as any).Tmapv3) {
-                            const Tmapv3 = (window as any).Tmapv3;
-                            mapInstance.current.panTo(new Tmapv3.LatLng(spot.lat, spot.lng));
-                          }
-                        }}
-                        className={`snap-center shrink-0 w-[280px] p-3 rounded-xl border bg-white flex gap-3 cursor-pointer transition-all active:scale-95 ${activeStep === index ? 'border-[#0066FF] ring-1 ring-[#0066FF] shadow-md' : 'border-gray-200 shadow-sm'}`}
-                      >
-                        <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                          <span className="absolute top-0 left-0 bg-black/70 text-white text-xs px-2 py-1 rounded-br-lg font-bold z-10">{index + 1}</span>
-                          {spot.img ? (
-                            <img
-                              src={spot.img}
-                              className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
-                              loading="lazy"
-                              onLoad={(e) => (e.target as HTMLImageElement).style.opacity = '1'}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                                (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>';
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>
-                          )}
-                        </div>
-                        <div className="flex flex-col justify-center min-w-0 flex-1">
-                          <h3 className="font-bold text-gray-900 truncate text-base">{spot.name}</h3>
-                          <div className="text-xs text-gray-500 truncate mt-0.5">{spot.address || spot.category}</div>
-                          <div className="flex items-center gap-1 mt-2 text-xs text-gray-400 font-medium">
-                            <span className="text-yellow-400">★</span> <span>4.5</span>
+                  {isEditMode ? (
+                    /* Edit Mode - Vertical Sortable List */
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 -mx-6 px-6">
+                      <Reorder.Group axis="y" values={spots} onReorder={handleReorder} className="space-y-2">
+                        {spots.map((spot, index) => (
+                          <Reorder.Item
+                            key={spot.id}
+                            value={spot}
+                            className="relative select-none"
+                          >
+                            <div className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl shadow-sm active:shadow-md transition-shadow">
+                              <div className="text-gray-400 cursor-grab active:cursor-grabbing p-2 touch-none">
+                                <GripVertical size={20} />
+                              </div>
+
+                              <div className="flex-1 min-w-0 pointer-events-none">
+                                <div className="flex items-center gap-2">
+                                  <span className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                    #{index + 1}
+                                  </span>
+                                  <h3 className="font-bold text-gray-900 truncate text-sm">
+                                    {spot.name}
+                                  </h3>
+                                </div>
+                                <p className="text-xs text-gray-500 truncate mt-0.5">
+                                  {spot.address || spot.category}
+                                </p>
+                              </div>
+
+                              <button
+                                onClick={(e) => handleDeleteSpot(index, e)}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                className="text-red-400 p-2 bg-red-50 rounded-lg hover:bg-red-100 active:scale-95 transition-all pointer-events-auto"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </Reorder.Item>
+                        ))}
+                      </Reorder.Group>
+                      <div className="text-center text-xs text-gray-400 mt-4 font-medium animate-pulse">
+                        💡 순서를 드래그하여 변경하거나 장소를 삭제하세요.
+                      </div>
+                    </div>
+                  ) : (
+                    /* View Mode - Horizontal List */
+                    <div className="flex overflow-x-auto gap-3 pb-4 -mx-6 px-6 snap-x no-scrollbar">
+                      {spots.map((spot, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setActiveStep(index);
+                            // 클릭 시 지도 이동
+                            if (mapInstance.current && (window as any).Tmapv3) {
+                              const Tmapv3 = (window as any).Tmapv3;
+                              mapInstance.current.panTo(new Tmapv3.LatLng(spot.lat, spot.lng));
+                            }
+                          }}
+                          className={`snap-center shrink-0 w-[280px] p-3 rounded-xl border bg-white flex gap-3 cursor-pointer transition-all active:scale-95 ${activeStep === index ? 'border-[#0066FF] ring-1 ring-[#0066FF] shadow-md' : 'border-gray-200 shadow-sm'}`}
+                        >
+                          <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                            <span className="absolute top-0 left-0 bg-black/70 text-white text-xs px-2 py-1 rounded-br-lg font-bold z-10">{index + 1}</span>
+                            {spot.img ? (
+                              <img
+                                src={spot.img}
+                                className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
+                                loading="lazy"
+                                onLoad={(e) => (e.target as HTMLImageElement).style.opacity = '1'}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>
+                            )}
+                          </div>
+                          <div className="flex flex-col justify-center min-w-0 flex-1">
+                            <h3 className="font-bold text-gray-900 truncate text-base">{spot.name}</h3>
+                            <div className="text-xs text-gray-500 truncate mt-0.5">{spot.address || spot.category}</div>
+                            <div className="flex items-center gap-1 mt-2 text-xs text-gray-400 font-medium">
+                              <span className="text-yellow-400">★</span> <span>4.5</span>
+                            </div>
+                          </div>
+
+                          {/* [+ 담기] 버튼 추가 */}
+                          <div className="flex flex-col gap-1 items-center justify-center pl-2 border-l border-gray-100">
+                            <button
+                              onClick={(e) => togglePickSpot(e, spot)}
+                              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${pickedSpots.some(p => p.name === spot.name)
+                                ? 'bg-[#0066FF] text-white shadow-md shadow-blue-200 scale-110'
+                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                }`}
+                            >
+                              {(() => {
+                                const idx = pickedSpots.findIndex(p => p.name === spot.name);
+                                return idx !== -1 ? <span className="text-sm font-black">{idx + 1}</span> : <span className="text-lg font-bold">+</span>;
+                              })()}
+                            </button>
+                            <span className="text-[9px] font-bold text-gray-400">
+                              {pickedSpots.some(p => p.name === spot.name) ? '담김' : '담기'}
+                            </span>
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
 
-                        {/* [+ 담기] 버튼 추가 */}
-                        <div className="flex flex-col gap-1 items-center justify-center pl-2 border-l border-gray-100">
-                          <button
-                            onClick={(e) => togglePickSpot(e, spot)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${pickedSpots.some(p => p.name === spot.name)
-                              ? 'bg-[#0066FF] text-white shadow-md shadow-blue-200 scale-110'
-                              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                              }`}
-                          >
-                            {(() => {
-                              const idx = pickedSpots.findIndex(p => p.name === spot.name);
-                              return idx !== -1 ? <span className="text-sm font-black">{idx + 1}</span> : <span className="text-lg font-bold">+</span>;
-                            })()}
-                          </button>
-                          <span className="text-[9px] font-bold text-gray-400">
-                            {pickedSpots.some(p => p.name === spot.name) ? '담김' : '담기'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 z-20">
+                  <div className="mt-auto flex flex-col gap-3 pb-10">
                     <button
                       onClick={handleConfirmCourse}
                       className="w-full bg-[#0066FF] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2"
@@ -1276,9 +1518,9 @@ export const MapView = () => {
                 </div>
               </div>
             )}
-          </div >
+          </div>
         )}
-      </motion.div >
+      </motion.div>
 
       <div className="fixed bottom-0 left-0 right-0 h-24 bg-white z-[150]" />
     </div >

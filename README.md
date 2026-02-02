@@ -15,15 +15,20 @@
 
 ### **Backend**
 - **Framework**: FastAPI
-- **AI Agent**: LangChain & LangGraph
+- **Main Agent**: LangGraph (Stateful, Complex Workflow)
+- **Mini Agent**: Node-based Lightweight Agent (Quick Search)
 - **LLM**: Google Gemini (via `langchain-google-genai`)
 - **Package Manager**: Poetry
 
-### **AI Agent Pipeline**
-1. **Query Planner**: 사용자 요청을 분석하여 검색 키워드 생성
+### **AI Agent Pipeline (Main Agent)**
+1. **Query Planner**: 사용자 요청 및 설문 데이터를 분석하여 3가지 테마 및 검색 키워드 생성
 2. **Google Place Search**: Google Maps API를 통해 장소 정보 및 평점 검색
-3. **Naver Blog Search**: Naver Search API를 활용하여 최신 블로그 리뷰 및 현지 반응 분석
-4. **Answer Generation**: 수집된 정보를 바탕으로 Gemini가 최종 답변 및 코스(JSON) 생성
+3. **Naver Blog Search**: Naver Search API & RSS를 활용하여 상세 리뷰 본문 수집
+4. **Scoring Node v4**: 
+   - **정량적 평가**: 공공 데이터(모범음식점 등) 및 Google 평점
+   - **정성적 평가**: LLM을 활용한 감성 분석 (맛/서비스/가성비/재방문 의사)
+5. **Parallel Course Generation**: 3가지 테마별 코스를 병렬로 동시 생성
+6. **Aggregator**: 결과 취합 및 최종 답변 생성
 
 ---
 
@@ -74,6 +79,7 @@ GOOGLE_API_KEY=your_google_api_key
 # Google Places / Maps API Key
 GOOGLE_PLACES_API_KEY=your_places_api_key
 GOOGLE_MAPS_API_KEY=your_maps_api_key
+GOOGLE_CLOUD_API_KEY=your_cloud_api_key # Mini Agent용
 
 # Naver Search API Key
 NAVER_CLIENT_ID=your_naver_client_id
@@ -99,15 +105,18 @@ NEXT_PUBLIC_TMAP_APP_KEY=your_tmap_app_key
 │   ├── app/                 # Next.js 페이지 (App Router)
 │   ├── components/          # React 컴포넌트
 │   └── screens/             # 주요 기능별 스크린 (Chat, Map, Survey 등)
-├── src/                     # AI Agent 로직 (LangGraph)
-│   └── agent/
-│       ├── graph.py         # 에이전트 실행 그래프 정의
-│       ├── nodes/           # 각 단계별 노드 (LLM, 검색 등)
-│       └── tools/           # 외부 API 연동 도구
+├── src/                     # AI Agent 로직
+│   ├── agent/               # Main Agent (LangGraph)
+│   │   ├── graph.py         # 에이전트 실행 그래프 (Parallel Pipeline)
+│   │   ├── nodes/           # 각 단계별 노드 (QueryPlanner, Scoring v4 등)
+│   │   └── state.py         # Agent State 정의
+│   └── mini_agent/          # Mini Agent (Lightweight)
+│       ├── mini_agent.py    # Mini Agent Orchestrator
+│       └── nodes/           # Independent Nodes
 ├── main.py                  # Backend 메인 애플리케이션 진입점
 ├── run_backend.py           # Backend 실행 스크립트
 ├── pyproject.toml           # Python 프로젝트 설정 (Poetry)
-└── integration_plan.md      # 통합 계획 문서
+└── mini_agent_structure.md  # Mini Agent 상세 구조 문서
 ```
 
 ---
@@ -116,15 +125,17 @@ NEXT_PUBLIC_TMAP_APP_KEY=your_tmap_app_key
 
 1. **AI 맞춤형 코스 설계**: 
    - 사용자의 취향을 설문(`Survey`)으로 분석.
-   - "동명동 분위기 좋은 카페 추천해줘"와 같은 자연어 질의 처리.
-   - LangGraph 기반의 검색 에이전트가 최신 정보를 반영하여 코스 제안.
+   - 3가지 테마(예: 맛집, 힐링, 가성비)를 자동 추출하여 다양한 옵션 제공.
+   - **Scoring v4**: LLM이 리뷰를 직접 읽고 정성적 평가를 수행하여 "진짜 맛집" 추천.
 
 2. **인터랙티브 지도 (Interactive Map)**:
    - AI가 제안한 장소를 TMAP 위에 마커와 경로로 시각화.
    - `EvidenceCard`를 통해 각 장소의 상세 정보 및 추천 이유 제공.
 
-3. **실시간 정보**:
-   - Google Places의 평점 정보와 Naver Blog의 최신 리뷰를 결합하여 신뢰도 높은 정보 제공.
+3. **고성능 데이터 처리**:
+   - **Parallel Execution**: 코스 생성 단계를 병렬화하여 응답 시간 단축.
+   - **Mini Agent**: 간단한 장소 검색을 위한 경량화 에이전트 별도 탑재.
+   - **Image Proxy**: Google Photos API의 CORS 문제를 해결하는 프록시 서버 내장.
 
 ---
 

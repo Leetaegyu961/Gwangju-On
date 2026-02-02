@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
 from backend.db import get_database
+from backend.models.user import UserTripSession, IntentContext, SurveyData, UserActivityLog
 
 router = APIRouter()
 
@@ -16,41 +17,41 @@ class InvitationAcceptRequest(BaseModel):
 async def accept_invitation(request: InvitationAcceptRequest):
     db = await get_database()
     
-    # 초대장 기반의 초기 코스 데이터 (임시 폴백)
+    # 초대장 기반의 초기 코스 데이터
     initial_course = {
         "course-1": {"title": "예술과 역사 코스", "region": "송정/동명"},
         "course-2": {"title": "예술가거리와 금남로 코스", "region": "금남로"},
         "course-3": {"title": "서구 8경 코스", "region": "서구"}
     }.get(request.invitationId, {"title": "맞춤 코스", "region": "광주전역"})
 
-    new_session = {
-        "userId": request.userId,
-        "invitationId": request.invitationId,
-        "performed_course_id": request.invitationId, # 수락된 코스 기록
-        "status": "IN_PROGRESS",
-        "albumStatus": "IN_PROGRESS",
-        "created_at": datetime.now().isoformat(),
-        "demographics": request.demographics,
-        "survey_data": initial_course,
-        "chat_context": [],
-        "album_data": [],
-        "tasting_notes": None,
-        "rejected_invitations": [], # 반려 이력
-        "picked_places": [],        # 담기 이력
-        "skipped_places": [],       # 물색 이력
-        "tasting_note_raw": {}      # 테이스팅 노트 날것의 데이터
-    }
+    # New Schema based on reward.md
+    session_id = str(uuid.uuid4())
+    survey_data = SurveyData(region=initial_course.get("region"), courses=[])
+    intent_context = IntentContext(survey_data=survey_data, chat_history=[])
+    
+    new_session = UserTripSession(
+        sessionId=session_id,
+        userId=request.userId,
+        status="IN_PROGRESS",
+        intent_context=intent_context,
+        album_data=[],
+        created_at=datetime.now().isoformat(),
+        last_activity_at=datetime.now().isoformat()
+    )
 
-    result = await db["user_trip_sessions"].update_one(
-        {"userId": request.userId},
-        {"$set": new_session},
+    # Convert to dict for MongoDB
+    session_dict = new_session.dict()
+    
+    await db["user_trip_sessions"].update_one(
+        {"userId": request.userId}, # userId당 하나의 활성 세션 (또는 sessionId로 구분 가능)
+        {"$set": session_dict},
         upsert=True
     )
     
     return {
         "status": "success",
         "message": "Invitation accepted and session created",
-        "sessionId": request.userId # userId를 세션 ID로 병행 사용
+        "sessionId": session_id
     }
 
 @router.post("/journey/status")
@@ -58,18 +59,12 @@ async def update_journey_status(user_id: str, status: str):
     db = await get_database()
     await db["user_trip_sessions"].update_one(
         {"userId": user_id},
-        {"$set": {"status": status}}
+        {"$set": {
+            "status": status,
+            "last_activity_at": datetime.now().isoformat()
+        }}
     )
     return {"status": "success", "message": f"Journey status updated to {status}"}
-
-@router.post("/journey/album-status")
-async def update_album_status(user_id: str, status: str):
-    db = await get_database()
-    await db["user_trip_sessions"].update_one(
-        {"userId": user_id},
-        {"$set": {"albumStatus": status}}
-    )
-    return {"status": "success", "message": f"Album status updated to {status}"}
 
 class SaveFinalJourneyRequest(BaseModel):
     userId: str
@@ -82,16 +77,15 @@ async def save_final_journey(request: SaveFinalJourneyRequest):
     
     update_data = {
         "status": "COMPLETED",
-        "albumStatus": "SAVED",
         "album_data": request.pickedPlaces,
         "ai_summary": request.aiSummary,
-        "completed_at": datetime.now().isoformat()
+        "completed_at": datetime.now().isoformat(),
+        "last_activity_at": datetime.now().isoformat()
     }
     
     await db["user_trip_sessions"].update_one(
         {"userId": request.userId},
-        {"$set": update_data},
-        upsert=True
+        {"$set": update_data}
     )
     
     return {
@@ -135,35 +129,29 @@ async def get_session(userId: str):
 
 class LogActionRequest(BaseModel):
     userId: str
-    actionType: str # REJECT_INVITATION, PICK_PLACE, SKIP_PLACE
+    actionType: str # PICK, SKIP, REJECT
     data: Dict
+    sessionId: Optional[str] = None
 
 @router.post("/journey/log-action")
 async def log_silent_action(request: LogActionRequest):
     db = await get_database()
     
-    field_map = {
-        "REJECT_INVITATION": "rejected_invitations",
-        "PICK_PLACE": "picked_places",
-        "SKIP_PLACE": "skipped_places"
+    # 1. user_activity_logs 컬렉션에 사일런트 기록
+    log_entry = {
+        "logId": str(uuid.uuid4()),
+        "userId": request.userId,
+        "sessionId": request.sessionId,
+        "action_type": request.actionType,
+        "data": request.data,
+        "timestamp": datetime.now().isoformat()
     }
+    await db["user_activity_logs"].insert_one(log_entry)
     
-    field = field_map.get(request.actionType)
-    if not field:
-        raise HTTPException(status_code=400, detail="Invalid action type")
-    
-    # 사실 기반 데이터 로깅 (비개입성)
-    update_data = {
-        "$push": {field: {
-            "data": request.data,
-            "logged_at": datetime.now().isoformat()
-        }}
-    }
-    
+    # 2. 세션의 last_activity_at 업데이트
     await db["user_trip_sessions"].update_one(
         {"userId": request.userId},
-        update_data,
-        upsert=True
+        {"$set": {"last_activity_at": datetime.now().isoformat()}}
     )
     
-    return {"status": "success", "message": f"{request.actionType} logged"}
+    return {"status": "success", "message": f"{request.actionType} logged to user_activity_logs"}
