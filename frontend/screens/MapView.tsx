@@ -467,11 +467,11 @@ export const MapView = () => {
 
       // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
       console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
-      
+
       // 선택된 장소가 있다면 해제
       setSelectedPlace(null);
       setIsDetailLoading(false);
-      
+
       // 코스 모드일 때 시트 닫기
       if (viewModeRef.current === 'course' && sheetOpenRef.current) {
         setSheetOpen(false);
@@ -527,8 +527,18 @@ export const MapView = () => {
           }
         }
 
+        const isActive = activeStep === index;
+        const scale = isActive ? 1.2 : 1.0;
+        const zIndex = isActive ? 10 : 1;
+
         const markerContent = viewMode === 'course'
-          ? `<div style="background:#0066FF; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; pointer-events: auto;">${index + 1}</div>`
+          ? `<div style="position: relative; width: 48px; height: 48px; transform: scale(${scale}); transition: transform 0.2s; z-index: ${zIndex}; cursor: pointer; pointer-events: auto;">
+               <img src="/mascot_circle.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+               <div style="position: absolute; bottom: -2px; right: -2px; background: #0066FF; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                 ${index + 1}
+               </div>
+               ${isActive ? `<div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; color: #0066FF; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: bounce 1s infinite;">여기!</div>` : ''}
+             </div>`
           : `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
                <div onclick="window.toggleDetailBtn('marker-detail-btn-${index}'); event.stopPropagation();" 
                     style="background:${markerBg}; color:${markerBorder}; padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid ${markerBorder}; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size:16px; cursor: pointer; pointer-events: auto;">${markerIcon}</div>
@@ -590,7 +600,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-            
+
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -809,7 +819,7 @@ export const MapView = () => {
   // 순서 변경 핸들러 (Reorder)
   const handleReorder = (newSpots: any[]) => {
     setSpots(newSpots);
-    
+
     // 로컬 스토리지 업데이트
     const updatedAllCourses = [...allCourses];
     if (updatedAllCourses[selectedCourseIndex]) {
@@ -863,48 +873,48 @@ export const MapView = () => {
   const handleKeywordSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchKeyword.trim()) return;
-    
+
     setIsSearching(true);
     setViewMode('places'); // 결과 확인을 위해 장소 모드로 전환
-    
+
     // 키보드 내리기 (모바일 고려)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
     try {
-        const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
-        if (!response.ok) throw new Error('Search failed');
-        
-        const data = await response.json();
-        
-        if (data.searchPoiInfo?.pois?.poi) {
-             const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
-                name: p.name,
-                lat: p.noorLat,
-                lng: p.noorLon,
-                category: p.lowerAddrName || '장소',
-                address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
-              }));
-              
-              setAllPlaces(pois);
-              setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
+      const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+      if (!response.ok) throw new Error('Search failed');
 
-              // 첫 번째 결과로 지도 이동
-              if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
-                  const Tmapv3 = (window as any).Tmapv3;
-                  mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
-                  mapInstance.current.setZoom(15);
-              }
-        } else {
-            setAllPlaces([]);
-            setToastMessage("검색 결과가 없습니다.");
+      const data = await response.json();
+
+      if (data.searchPoiInfo?.pois?.poi) {
+        const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
+          name: p.name,
+          lat: p.noorLat,
+          lng: p.noorLon,
+          category: p.lowerAddrName || '장소',
+          address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
+        }));
+
+        setAllPlaces(pois);
+        setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
+
+        // 첫 번째 결과로 지도 이동
+        if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
+          const Tmapv3 = (window as any).Tmapv3;
+          mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
+          mapInstance.current.setZoom(15);
         }
+      } else {
+        setAllPlaces([]);
+        setToastMessage("검색 결과가 없습니다.");
+      }
     } catch (error) {
-        console.error("Search failed", error);
-        setToastMessage("검색 중 오류가 발생했습니다.");
+      console.error("Search failed", error);
+      setToastMessage("검색 중 오류가 발생했습니다.");
     } finally {
-        setIsSearching(false);
+      setIsSearching(false);
     }
   };
 
@@ -1003,7 +1013,7 @@ export const MapView = () => {
                   onClick={() => setSearchKeyword('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
                 >
-                  <X size={16} fill="currentColor" className="opacity-50"/>
+                  <X size={16} fill="currentColor" className="opacity-50" />
                 </button>
               )}
             </form>
@@ -1254,8 +1264,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                             (e.target as HTMLImageElement).style.display = 'none';
-                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (

@@ -41,65 +41,75 @@ export const HistoryScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white font-['Inter']">
+        <div className="min-h-screen bg-[#FDFBF7] font-['Inter']">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-gray-100">
+            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-gray-100">
                 <button
                     onClick={() => router.back()}
-                    className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors"
+                    className="p-2 -ml-2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                    <ChevronLeft size={24} className="text-gray-900" />
+                    <ChevronLeft size={24} />
                 </button>
-                <h1 className="text-lg font-black text-gray-900 tracking-tight">이전 여행 기록</h1>
-                <div className="w-10" /> {/* Spacer */}
-            </div>
+                <h1 className="text-lg font-bold text-gray-800">이전 여행 기록</h1>
+                <div className="w-10" />
+            </header>
 
             {/* Content */}
-            <div className="p-6 space-y-6 pb-20">
+            <div className="p-6 space-y-5 pb-20">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4" />
-                        <p className="text-xs">기록을 불러오는 중...</p>
+                    <div className="flex flex-col items-center justify-center py-32 text-gray-400 gap-4">
+                        <div className="w-12 h-12 border-4 border-blue-100 border-t-[#0066FF] rounded-full animate-spin" />
+                        <p className="text-sm font-medium animate-pulse">추억을 불러오는 중...</p>
                     </div>
                 ) : courses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-300">
-                            <Calendar size={32} />
+                    <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+                        <div className="w-48 h-48 mb-6 relative">
+                            <div className="absolute inset-0 bg-orange-100 rounded-full blur-2xl opacity-50 animate-pulse" />
+                            <img src="/mascot_full.png" alt="Empty" className="w-full h-full object-contain relative z-10 drop-shadow-lg grayscale-[20%]" />
                         </div>
-                        <p className="text-gray-500 font-bold mb-1">저장된 여행 코스가 없습니다</p>
-                        <p className="text-xs text-gray-400">AI와 대화하여 새로운 추억을 만들어보세요!</p>
+                        <h2 className="text-xl font-bold text-gray-800 mb-3">아직 다녀온 여행이 없어요!</h2>
+                        <p className="text-sm text-gray-500 mb-8 max-w-[240px] leading-relaxed font-medium">
+                            AI 큐레이터와 함께<br />광주에서의 첫 번째 추억을 만들어보세요.
+                        </p>
+                        <button
+                            onClick={() => router.push('/chat')}
+                            className="px-8 py-3.5 bg-[#0066FF] text-white rounded-full font-bold shadow-lg shadow-blue-200 hover:bg-[#0052cc] transition-all active:scale-95 flex items-center gap-2 group"
+                        >
+                            <span>지금 여행 시작하기</span>
+                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
                     </div>
                 ) : (
                     courses.map((course) => (
                         <div
                             key={course.id}
                             onClick={() => handleCourseClick(course)}
-                            className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-premium hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group active:scale-[0.98]"
+                            className="bg-white border border-gray-100 rounded-[2rem] p-6 shadow-sm hover:shadow-lg hover:border-blue-100 hover:scale-[1.01] transition-all cursor-pointer group active:scale-[0.98] animate-fade-in"
                         >
                             <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-2 text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">
+                                <div className="flex items-center gap-2 text-xs font-bold text-[#0066FF] bg-blue-50 px-3 py-1.5 rounded-full">
                                     <Clock size={12} />
                                     {course.createdAt.split('T')[0]}
                                 </div>
-                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-[#0066FF] group-hover:text-white transition-all shadow-sm">
                                     <ChevronRight size={16} />
                                 </div>
                             </div>
 
-                            <h3 className="text-xl font-black text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors">
+                            <h3 className="text-lg font-bold text-gray-800 mb-2 leading-tight group-hover:text-[#0066FF] transition-colors line-clamp-1">
                                 {course.title}
                             </h3>
                             <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
                                 {course.description}
                             </p>
 
-                            <div className="flex items-center gap-4 pt-4 border-t border-gray-50 text-xs font-bold text-gray-400">
+                            <div className="flex items-center gap-4 pt-4 border-t border-gray-50 text-xs font-bold text-gray-500">
                                 <div className="flex items-center gap-1.5">
-                                    <MapPin size={14} />
-                                    {course.points.length}개 장소
+                                    <MapPin size={14} className="text-gray-400" />
+                                    {course.points.length}개 스팟
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <DollarSign size={14} />
+                                    <DollarSign size={14} className="text-gray-400" />
                                     {course.totalBudget}
                                 </div>
                             </div>

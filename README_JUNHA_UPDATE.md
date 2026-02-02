@@ -1,54 +1,93 @@
-# 🚀 MapView 코스 확정 및 타임라인 고도화 (v3.0 - 2026.02.02)
+# 🎨 Gwangju-On UI/UX 리뉴얼 보고서 (v3.3)
 
-## 1. 개요 및 주요 변경 사항 (Overview)
-Frontend의 **지도 화면 (`MapView`)** 과 **타임라인 (`TimelineScreen`)** 의 사용자 경험(UX)을 대폭 개선했습니다.
-특히 **"타임라인 공유(저장)"** 기능을 획기적으로 개선하여, 화면 캡처 시 지도가 깨지거나 회색 박스로 나오는 문제를 완벽하게 해결하고 **감성적인 디자인**으로 업그레이드했습니다.
-
-### ✅ MapView: "내 맘대로 코스 DIY"
-- **장소 쏙쏙 골라 담기:** 추천 코스 목록에서 원하는 장소만 **`[+ 담기]`** 버튼으로 선택 가능.
-- **Mix & Match:** 1번 코스 맛집 + 2번 코스 카페 + 3번 코스 명소를 자유롭게 섞어서 조합 가능.
-- **순서 지정 (User-Driven Sort):** 클릭한 순서대로 **`①`**, **`②`**, **`③`** 번호가 표시되어 여행 동선을 직관적으로 설계.
-- **상태 유지 (Persistence):** 타임라인을 확인하고 다시 지도로 돌아와도, 편집 중이던 코스 목록이 그대로 유지됨.
-
-### 🎨 TimelineScreen: "하이브리드 맵 & 감성 캡처"
-- **하이브리드 렌더링 (Hybrid Rendering):**
-  - **평상시:** **Real Tmap v3**를 렌더링하여 확대/축소/이동이 가능한 인터랙티브 지도 제공.
-  - **저장 시:** **Tmap Static Map API** + **SVG Overlay** 모드로 자동 전환되어 고화질/고감성 이미지 생성.
-- **저장 품질 혁신:**
-  - 기존의 불안정한 js 캡처(CORS 문제)를 해결하기 위해, 저장 순간에만 **정적 지도 이미지**를 서버로부터 받아와 배경으로 사용.
-  - 그 위에 **예쁜 마커**, **경로선**, **그라데이션 효과**를 SVG로 덧그려서 마치 디자이너가 만든 듯한 일러스트 지도 제공.
-- **자동 복구 시스템:** 저장(다운로드)이 끝나면 즉시 다시 **인터랙티브 Tmap**으로 부드럽게 복귀.
+## 1. 개요 (Overview)
+본 프로젝트는 **"사용자 친화적(User-Friendly)"**이고 **"감성적인(Emotional)"** 사용자 경험을 제공하기 위해 전면적인 UI/UX 리뉴얼을 진행했습니다.
+마스코트 캐릭터를 적극적으로 활용하여 앱의 가이드 역할을 부각시켰으며, 모든 화면에서 일관된 **Soft & Warm** 디자인 언어를 적용했습니다.
 
 ---
 
-## 2. 사용자 시나리오 (Workflow)
+## 2. 주요 변경 사항 및 코드 상세 (Detailed Changelog)
 
-### Step 1. 코스 탐색 & 믹스(Mix)
-- AI 추천 코스 탭(`[1]`, `[2]`)을 넘나들며 마음에 드는 장소를 **`[+ 담기]`** 버튼으로 선택합니다.
-- 선택한 순서대로 번호가 매겨지며 나만의 동선이 만들어집니다.
+### 🎨 `frontend/app/globals.css`
+**"디자인 시스템 재정의 (Variables & Utilities)"**
+*   **CSS Variables:** `:root`에 따뜻한 미색 배경(`--background-start-rgb: 253, 251, 247`)과 부드러운 텍스트 컬러 정의.
+*   **Utility Classes:**
+    *   `.hide-scrollbar`: `::-webkit-scrollbar { display: none; }`를 사용하여 스크롤바 숨김 처리.
+    *   `.glass-morphism`: `backdrop-filter: blur(10px)`와 `bg-white/30`을 조합한 유리 질감 효과 클래스 추가.
+    *   `.animate-fade-in`: 투명도(`opacity`)와 위치(`transform`)를 조절하는 `@keyframes` 애니메이션 정의.
 
-### Step 2. 코스 확정 및 타임라인 생성
-- **`[✅ 이 코스로 결정하기]`** 버튼을 누르면 내가 만든 코스로 타임라인이 생성됩니다.
-- 타임라인 표(Cover)지는 장소 개수에 따라 폴라로이드/콜라주 레이아웃으로 자동 최적화됩니다.
+### 🐭 `frontend/screens/LoginScreen.tsx`
+**"생동감 있는 마스코트 영상 배경 적용"**
+*   **Video Tag Implementation (L130~):**
+    ```tsx
+    <video autoPlay loop muted playsInline className="...">
+      <source src="/mascot_animation.mp4" type="video/mp4" />
+    </video>
+    ```
+    기존 `<img>` 배경을 `<video>` 태그로 교체하여 루핑 애니메이션 구현.
+*   **Overlay Layer:** 영상 위에 `bg-black/30` 오버레이를 씌워 텍스트 가독성 확보.
+*   **Button Style:** `rounded-full`, `backdrop-blur-md`, `active:scale-95` 클래스를 적용해 터치감 개선.
 
-### Step 3. 추억 저장 (Image Capture)
-- 타임라인 마지막 장(엔딩)에서 **`[이미지로 저장]`** 버튼을 누릅니다.
-- **(Magic Moment):** 화면의 지도가 잠시 **"감성 일러스트 지도"**로 변신하며 찰칵 캡처됩니다.
-- 저장이 완료되면 다시 원래의 움직이는 지도로 돌아옵니다.
+### 👤 `frontend/screens/ProfileSetupScreen.tsx`
+**"인터랙티브한 Grid 레이아웃 도입"**
+*   **Grid Layout Conversion (L98, L125):**
+    기존 `flex-col` 구조를 `grid grid-cols-2 gap-4`(성별), `grid grid-cols-3 gap-3`(연령)으로 변경하여 공간 효율성 증대.
+*   **Conditional Styling (clsx pattern):**
+    ```tsx
+    className={`... ${selectedGender === 'male' ? 'border-[#0066FF] bg-blue-50' : 'border-transparent'}`}
+    ```
+    상태(`state`)에 따라 테두리 색상과 배경색이 즉시 변경되도록 조건부 스타일링 적용.
+
+### 📝 `frontend/screens/SurveyScreen.tsx`
+**"따뜻한 톤앤매너와 슬라이더 UI"**
+*   **Background Color:** 최상위 컨테이너에 `bg-[#FDFBF7]`(Warm Beige) 적용.
+*   **Custom Slider UI:** 예산 설정 부분에 `<input type="range">`를 커스텀 스타일링하여 적용.
+*   **Mascot Greeting:** 헤더 영역에 마스코트 이미지와 말풍선 컴포넌트 추가 (`absolute` 포지셔닝 활용).
+
+### 💬 `frontend/screens/ChatScreen.tsx`
+**"마스코트 페르소나 주입"**
+*   **Avatar Replacement (L184):**
+    `Lucide React`의 `<Bot />` 아이콘을 삭제하고, `<img src="/mascot_circle.png" />`로 교체하여 캐릭터성 부여.
+*   **Loading Component (L259):**
+    단순 로딩 텍스트를 `animate-bounce` 클래스가 적용된 마스코트 이미지와 말풍선 UI(`flex items-center gap-3`)로 전면 교체.
+
+### 📍 `frontend/screens/MapView.tsx`
+**"Tmap 커스텀 오버레이 마커 구현"**
+*   **Marker Logic (L530~):** `Tmapv3.Marker`의 `iconHTML` 속성에 커스텀 HTML 문자열 주입.
+    ```html
+    <div style="...">
+      <img src="/mascot_circle.png" ... /> <!-- 마스코트 얼굴 -->
+      <div style="..."> ${index + 1} </div> <!-- 순서 뱃지 -->
+    </div>
+    ```
+*   **Dynamic Scaling:** `activeStep === index` 조건일 때 `transform: scale(1.2)` 및 `z-index: 10`을 적용하여 현재 단계 강조.
+
+### 📜 `frontend/screens/HistoryScreen.tsx`
+**"빈 상태(Empty State)의 시각화"**
+*   **Conditions (L64):** `courses.length === 0` 조건문 분기 처리 강화.
+*   **Illustration:** 흑백 처리된 마스코트 이미지(`grayscale-[20%] opacity-80`)와 유도 문구 배치.
+*   **CTA Button:** `/chat`으로 이동하는 '여행 시작하기' 버튼 추가 (스타일: `shadow-blue-200`, `rounded-full`).
+
+### 👤 `frontend/screens/MyPage.tsx`
+**"카드형 UI로 정보 구조화"**
+*   **Header SVG Logic:** 프로필 이미지 주변에 장식용 아이콘(`Sparkles`, `TrendingUp`)을 절대 좌표(`absolute`)로 배치.
+*   **Menu Restructuring:** 단순 `<ul>` 리스트를 `border border-gray-100`과 `shadow-sm`을 가진 카드 버튼 컴포넌트로 변경.
 
 ---
 
-## 3. 기술적 상세 및 수정 파일 (Technical Details)
+## 3. 디자인 시스템 (Design System)
 
-### 📄 `frontend/screens/MapView.tsx`
-- **`pickedSpots` State:** 사용자가 선택한 장소들을 배열로 관리하며, 페이지 이동 시에도 상태를 유지.
-- **UX 개선:** 코스 선택UI와 결정 버튼의 접근성 강화.
+| 요소 (Element) | 스타일 (Style) | 코드 예시 (Tailwind) |
+| :--- | :--- | :--- |
+| **Color** | Warm Beige & Trust Blue | `bg-[#FDFBF7]`, `text-[#0066FF]` |
+| **Shape** | Super Rounded (Pill/Circle) | `rounded-full`, `rounded-[2rem]` |
+| **Shadow** | Soft & Diffused | `shadow-sm`, `shadow-blue-100` |
+| **Interaction** | Bounce & Scale | `active:scale-95`, `hover:scale-105`, `animate-bounce` |
+| **Typography** | Pretendard / Inter | `font-bold`, `leading-relaxed` |
 
-### 📄 `frontend/screens/TimelineScreen.tsx` (Major Update)
-- **`isDownloading` State:** 캡처 모드와 뷰 모드를 구분하는 상태 변수 추가.
-- **Dual Map System:**
-  - `View Mode`: `<div id="mini_map_div">` (Tmap v3 JS API)
-  - `Capture Mode`: `Tmap Static Map Image` + `SVG Vector Overlay` (Path, Marker, Shadow)
-- **Tmap Static Map API Integration:** 프론트엔드에서 중심 좌표와 Zoom Level을 동적으로 계산하여 정적 지도 이미지 URL 생성.
-- **Lifecycle Management:** `key` 속성을 활용하여 모드 전환 시 DOM을 깨끗하게 재생성(Re-mount)하고, `useEffect`로 Tmap 인스턴스를 적절히 초기화/파기(Destroy)하여 메모리 누수 방지 및 렌더링 오류 해결.
-- **Design Upgrade:** 단순 캡처를 넘어, 그라데이션 오버레이와 드롭 섀도우(Drop Shadow)를 적용하여 심미성 강화.
+---
+
+## 4. 리소스 (Assets)
+*   **`public/mascot_circle.png`**: 프로필, 지도 마커용 원형 마스코트.
+*   **`public/mascot_full.png`**: 설문조사, 빈 화면용 마스코트 전신.
+*   **`public/mascot_animation.mp4`**: 로그인 화면용 루핑 영상.

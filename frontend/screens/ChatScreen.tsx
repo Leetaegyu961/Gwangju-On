@@ -47,7 +47,7 @@ const ChatContent = () => {
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.isDecisionPoint && lastMsg.evidenceCards) {
-      
+
       // 1. 코스 데이터 생성 (이미지 URL 확정)
       const courses = lastMsg.evidenceCards.map((c, i) => ({
         id: c.placeId || i.toString(),
@@ -161,68 +161,67 @@ const ChatContent = () => {
   };
 
   return (
-    <div className="h-screen bg-[#FDFDFD] flex flex-col font-['Inter'] overflow-hidden">
-      {/* Header */}
-      <header className="bg-white px-6 py-5 flex items-center justify-between sticky top-0 z-[100] border-b border-gray-50 shadow-sm">
-        <button onClick={() => router.push('/survey')} className="p-1 -ml-1 text-gray-400">
+    <div className="h-screen bg-[#FDFBF7] flex flex-col font-['Inter'] overflow-hidden">
+      {/* Header - Soft Style */}
+      <header className="bg-white/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-[100] border-b border-gray-100">
+        <button onClick={() => router.push('/survey')} className="p-2 -ml-2 text-gray-400 hover:text-gray-600 transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <h1 className="text-xl font-bold text-gray-800 tracking-tight">AI 가이드</h1>
+        <div className="flex flex-col items-center">
+          <h1 className="text-lg font-bold text-gray-800">AI 큐레이터</h1>
+          <span className="text-[10px] items-center gap-1 text-[#0066FF] font-medium flex">
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            Online
+          </span>
+        </div>
         <div className="w-8" />
       </header>
 
       {/* Chat Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-10 hide-scrollbar pb-60">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 hide-scrollbar pb-60">
         {messages.map((m) => (
           <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}>
             {m.role === 'assistant' && (
-              <div className="w-10 h-10 bg-[#0066FF] rounded-full flex items-center justify-center shadow-lg mb-3">
-                <Bot size={22} className="text-white" />
+              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-md border border-orange-50 mb-2 overflow-hidden relative shrink-0">
+                <img src="/mascot_circle.png" className="w-full h-full object-cover scale-110" alt="mascot" />
               </div>
             )}
 
-            {/* 텍스트 메시지 표시 (코스 결과가 나온 경우 텍스트 숨기고 바로 이동하므로, 결정 포인트가 아닐 때만 표시하거나, 로딩처럼 처리) */}
+            {/* Message Bubble - Warm Style */}
             {(!m.isDecisionPoint || m.id === 'err') && (
-              <div className={`p-5 rounded-[2rem] text-[15px] font-bold leading-relaxed max-w-[85%] shadow-sm ${m.role === 'user'
-                ? 'bg-[#E9F1FF] text-[#1E6BFF] rounded-tr-none'
-                : 'bg-[#F2F2F2] text-gray-800 rounded-tl-none'
+              <div className={`p-5 rounded-[2rem] text-[15px] leading-relaxed max-w-[85%] shadow-sm border ${m.role === 'user'
+                ? 'bg-[#0066FF] text-white rounded-tr-none border-[#0066FF]'
+                : 'bg-white text-gray-700 rounded-tl-none border-gray-100 font-medium'
                 }`}>
                 {m.text}
               </div>
             )}
 
-            {/* 코스 결과가 나왔을 때 (isDecisionPoint) - 사용자에게 묻지 않고 바로 이동 */}
+            {/* Decision Point Style */}
             {m.isDecisionPoint && (
-              <div className="p-5 bg-blue-50 text-[#0066FF] rounded-2xl font-bold text-sm animate-pulse">
-                코스를 생성했습니다! 지도로 이동합니다...
-                {/* 자동 이동 로직은 useEffect에서 처리 */}
+              <div className="p-5 bg-white text-[#0066FF] rounded-2xl font-bold text-sm animate-pulse border border-blue-100 shadow-sm">
+                ✨ 코스를 완성했습니다! 지도로 이동합니다...
               </div>
             )}
 
-            {/* Suggestions Chips */}
+            {/* Suggestions Chips - Warm Style */}
             {m.suggestions && (
-              <div className="mt-4 flex flex-wrap gap-2 animate-fade-in">
+              <div className="mt-3 flex flex-wrap gap-2 animate-fade-in pl-1">
                 {m.suggestions.map((suggestion, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
-                      // [Branching Logic] "가고 싶은 장소가 있나요?" 에 대한 처리
                       if (suggestion === '아니요, 바로 코스 생성하기') {
-                        // 1. 사용자 메시지 추가 (UI 피드백)
                         const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
                         setMessages(prev => [...prev, userMsg]);
-
-                        // 2. 즉시 페이지 이동 (PRD v2.1)
                         const userId = localStorage.getItem('temp_user_id');
                         router.push(`/map?auto_generate=true&userId=${userId}`);
                         return;
                       }
 
-                      // 칩 클릭 시 바로 전송 처리
                       const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
                       setMessages(prev => [...prev, userMsg]);
 
-                      // 위치 선택 단계였다면 -> 요구사항 물어보는 단계로 진행
                       if (messages.length === 1 && isLocationRequestMode) {
                         setTimeout(() => {
                           setMessages(prev => [...prev, {
@@ -231,21 +230,14 @@ const ChatContent = () => {
                             text: `${suggestion}에서 특별히 원하시는 테마나 메뉴가 있으신가요?\n(예: 조용한 데이트 코스, 가성비 맛집 등)`
                           }]);
                         }, 500);
-                        return; // API 호출 안 함
+                        return;
                       }
 
-                      // 그 외의 경우 (요구사항 칩 등) -> API 호출
                       setLoading(true);
                       setTimeout(async () => {
                         try {
-                          // 이전 대화 맥락을 포함해서 보내야 하지만, 현재 API 구조상 input만 보냄. 
-                          // 실제로는 "광주 동명동 + 조용한 데이트 코스" 형태로 합쳐서 보내거나 Context를 유지해야 함.
-                          // 여기서는 편의상 입력값만 보냄. (개선 필요: 위치 정보를 기억했다가 같이 보냄)
-
-                          // *임시 해결*: 이전 메시지(위치)를 찾아서 결합
                           const lastLocation = messages.find(msg => msg.role === 'user')?.text || "";
                           const fullQuery = lastLocation ? `${lastLocation} ${suggestion}` : suggestion;
-
                           const response = await aiService.processRequest(fullQuery);
                           setMessages(prev => [...prev, response]);
                         } catch (e) {
@@ -255,7 +247,7 @@ const ChatContent = () => {
                         }
                       }, 100);
                     }}
-                    className="px-5 py-3 bg-white border border-[#0066FF]/20 text-[#0066FF] rounded-2xl font-bold text-sm shadow-sm hover:bg-blue-50 active:scale-95 transition-all"
+                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-full font-bold text-sm shadow-sm hover:border-[#0066FF] hover:text-[#0066FF] hover:bg-blue-50/50 active:scale-95 transition-all"
                   >
                     {suggestion}
                   </button>
@@ -264,24 +256,33 @@ const ChatContent = () => {
             )}
           </div>
         ))}
-        {loading && <div className="p-4 bg-gray-50 rounded-2xl self-start animate-pulse text-xs font-bold text-gray-400">최적의 코스를 찾는 중입니다...</div>}
+        {loading && (
+          <div className="flex items-center gap-3 ml-2 animate-fade-in">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md border border-orange-50 relative overflow-hidden animate-bounce">
+              <img src="/mascot_circle.png" className="w-full h-full object-cover scale-110" alt="loading mascot" />
+            </div>
+            <div className="p-3 bg-white border border-gray-100 rounded-2xl rounded-tl-none shadow-sm text-xs font-bold text-gray-500">
+              💭 열심히 코스를 짜고 있어요!
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-6 bg-white absolute bottom-24 left-0 right-0 z-[110] border-t border-gray-50">
-        <div className="flex items-center border-2 border-gray-100 rounded-[2rem] px-6 py-4 transition-all focus-within:border-blue-300">
+      {/* Input Area - Warm Style */}
+      <div className="p-6 bg-[#FDFBF7] absolute bottom-24 left-0 right-0 z-[110]">
+        <div className="flex items-center bg-white border border-gray-200 rounded-[2rem] px-5 py-3 transition-all focus-within:border-[#0066FF] focus-within:ring-4 focus-within:ring-blue-50/50 shadow-sm">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && handleSend()}
-            placeholder="프롬프트를 입력하세요..."
-            className="flex-1 bg-transparent outline-none font-bold text-gray-700 placeholder:text-gray-300 text-base"
+            placeholder="어떤 여행을 원하시나요?"
+            className="flex-1 bg-transparent outline-none font-medium text-gray-700 placeholder:text-gray-400 text-base"
           />
           <button
             onClick={handleSend}
-            className="w-12 h-12 bg-[#0066FF] rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0 ml-2"
+            className="w-10 h-10 bg-[#0066FF] rounded-full flex items-center justify-center text-white shadow-md active:scale-90 transition-all shrink-0 ml-2 hover:bg-[#0052cc]"
           >
-            <Mic size={24} />
+            <Mic size={20} />
           </button>
         </div>
       </div>
