@@ -68,7 +68,7 @@ export const LoginScreen = () => {
             if (typeof window !== 'undefined' && (window as any).google && googleButtonRef.current) {
                 try {
                     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-                    
+
                     if (!clientId) {
                         console.error("Google Client ID is missing");
                         return;
@@ -81,8 +81,7 @@ export const LoginScreen = () => {
                     (window as any).google.accounts.id.initialize({
                         client_id: clientId,
                         callback: handleCredentialResponse,
-                        auto_select: false,
-                        use_fedcm_for_prompt: false,
+                        use_fedcm_for_prompt: true,
                         itp_support: true,
                     });
 
@@ -105,9 +104,9 @@ export const LoginScreen = () => {
                     console.error("GSI Init Error:", e);
                 }
             } else {
-                 if (retryCount < 10) {
-                     setTimeout(() => initializeGoogleSignIn(retryCount + 1), 500);
-                 }
+                if (retryCount < 10) {
+                    setTimeout(() => initializeGoogleSignIn(retryCount + 1), 500);
+                }
             }
         };
 
@@ -119,47 +118,70 @@ export const LoginScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-['Inter'] relative overflow-hidden">
-            {/* Video Background */}
-            <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover z-0"
-            >
-                <source src="/mascot_animation.mp4" type="video/mp4" />
-            </video>
+        <div className="min-h-screen bg-[#FFFDF8] flex flex-col items-center justify-center p-6 font-['Inter'] relative overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                <div className="absolute top-[-10%] right-[-10%] w-80 h-80 bg-orange-100/40 rounded-full blur-3xl opacity-60" />
+                <div className="absolute bottom-[-5%] left-[-10%] w-64 h-64 bg-yellow-100/40 rounded-full blur-3xl opacity-60" />
+            </div>
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/30 z-0" />
-
-            {/* Content Area */}
-            <div className="relative z-10 w-full flex flex-col items-center">
-                <div className="flex flex-col items-center mb-16 animate-fade-in">
-                    <h1 className="text-3xl font-black text-white text-center leading-tight mb-3 drop-shadow-lg">
-                        AI 큐레이터와 함께하는<br />특별한 광주 여행
+            <div className="w-full max-w-[340px] flex flex-col items-center relative z-10">
+                {/* Title Section */}
+                <div className="text-center mb-8 animate-fade-in">
+                    <div className="inline-block px-3 py-1 bg-white border border-orange-100 rounded-full shadow-sm mb-4">
+                        <span className="text-[10px] font-bold text-orange-500 tracking-wider">GWANGJU-ON</span>
+                    </div>
+                    <h1 className="text-[28px] font-black text-gray-900 leading-[1.3] mb-2">
+                        여행의 설렘을<br />
+                        <span className="text-[#FF6B00]">광주-온</span>에서 시작해봐!
                     </h1>
-                    <p className="text-white/90 text-sm font-medium drop-shadow-md">나만의 맞춤형 여행 코스를 발견해보세요</p>
+                    <p className="text-gray-400 text-sm font-medium">
+                        AI 큐레이터가 당신만의 여행을 돕습니다
+                    </p>
                 </div>
 
-                {/* Action Area */}
-                <div className="w-full max-w-[340px] flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                {/* Mascot Hero Image */}
+                {/* Mascot Hero Video */}
+                <div className="relative w-72 h-72 mb-8 flex items-center justify-center">
+                    {/* Background Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-orange-50 to-white rounded-full opacity-50 blur-xl scale-90" />
+
+                    <video
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-contain z-10 drop-shadow-xl"
+                    >
+                        <source src="/mascot_animation.mp4" type="video/mp4" />
+                        {/* Fallback */}
+                        <img src="/mascot_full.png" alt="Mascot Fallback" className="w-full h-full object-contain" />
+                    </video>
+
+                    {/* Shadow */}
+                    <div className="absolute bottom-4 w-32 h-3 bg-orange-900/10 rounded-full blur-md" />
+                </div>
+
+                {/* Login Actions */}
+                <div className="w-full flex flex-col gap-3 animate-fade-in-up delay-100">
                     {/* Google Login Button Container */}
-                    <div ref={googleButtonRef} className="w-full flex justify-center h-[56px]" />
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div ref={googleButtonRef} className="w-full flex justify-center h-[50px] relative z-10" />
+                    </div>
 
                     <button
                         onClick={() => handleStart('guest')}
-                        className="w-full py-4 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full font-bold hover:bg-white/30 active:scale-[0.98] transition-all shadow-lg"
+                        className="w-full py-3.5 bg-white border-2 border-gray-100 text-gray-500 rounded-full font-bold hover:bg-gray-50 hover:border-gray-200 active:scale-[0.98] transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
                     >
-                        계정 없이 시작하기
+                        <span>계정 없이 이용하기</span>
                     </button>
-                </div>
-            </div>
 
-            {/* Footer / Copyright */}
-            <div className="absolute bottom-8 text-white/50 text-[10px] z-10">
-                © 2024 Gwangju-On. All rights reserved.
+                    <p className="text-[10px] text-center text-gray-300 mt-4 leading-relaxed">
+                        계속 진행 시 광주-온의 <span className="underline cursor-pointer hover:text-gray-400">이용약관</span> 및 <br />
+                        <span className="underline cursor-pointer hover:text-gray-400">개인정보처리방침</span>에 동의하게 됩니다.
+                    </p>
+                </div>
             </div>
         </div>
     );

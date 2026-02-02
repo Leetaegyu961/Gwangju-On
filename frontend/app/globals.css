@@ -6,12 +6,11 @@
     --trust-blue: #0066FF;
     --trust-blue-light: #E6F0FF;
     --trust-blue-dark: #0052CC;
-    --background-start-rgb: 253, 251, 247;
 }
 
 body {
     font-family: 'Inter', 'Noto Sans KR', sans-serif;
-    background-color: rgb(var(--background-start-rgb));
+    background-color: #f8fafc;
     color: #1a1a1a;
 }
 
@@ -22,11 +21,6 @@ body {
 
 .shadow-premium {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-}
-
-.glass-morphism {
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -127,4 +121,12 @@ body {
 .animate-draw {
     stroke-dasharray: 1000;
     animation: draw 2s ease-out forwards;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+.animate-float {
+    animation: float 3s ease-in-out infinite;
 }
