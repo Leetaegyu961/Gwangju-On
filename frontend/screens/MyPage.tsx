@@ -3,9 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut } from 'lucide-react';
+import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut, Brain } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import { SavedCourse } from '../types';
+import { AgentContextDashboard } from '../features/dashboard/AgentContextDashboard';
+import GuestSettingsModal from '../components/user/GuestSettingsModal';
+import UserSettingsModal from '../components/user/UserSettingsModal';
 
 const aiService = new GeminiService();
 
@@ -16,6 +19,10 @@ export const MyPage = () => {
    const router = useRouter();
    const [savedCourses, setSavedCourses] = useState<SavedCourse[]>([]);
    const [profile, setProfile] = useState<any>(null);
+   const [statistics, setStatistics] = useState<any>(null);
+   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+   const [showGuestModal, setShowGuestModal] = useState(false);
+   const [showUserModal, setShowUserModal] = useState(false);
 
    useEffect(() => {
       // 1. Load from LocalStorage immediately on mount preventing hydration mismatch
@@ -35,6 +42,8 @@ export const MyPage = () => {
       });
       // Fetch Courses
       aiService.getCourses().then(setSavedCourses);
+      // Fetch Statistics
+      aiService.getUserStatistics().then(setStatistics);
    }, []);
 
    const handleLogout = () => {
@@ -56,14 +65,22 @@ export const MyPage = () => {
 
    return (
       <div className="min-h-screen bg-white pb-40 overflow-y-auto font-['Inter'] hide-scrollbar relative">
-         {/* Top Navigation / Logout */}
+         <AgentContextDashboard isOpen={isDashboardOpen} onClose={() => setIsDashboardOpen(false)} />
+
+         {/* Top Navigation / Settings */}
          <button
-            onClick={handleLogout}
-            className="absolute top-8 right-8 z-10 flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-md border border-gray-100 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm active:scale-95 group"
-            aria-label="로그아웃"
+            onClick={() => {
+               if (!profile || !profile.name) {
+                  setShowGuestModal(true);
+               } else {
+                  setShowUserModal(true);
+               }
+            }}
+            className="absolute top-8 right-8 z-10 flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-md border border-gray-100 rounded-full text-gray-400 hover:text-blue-500 hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm active:scale-95 group"
+            aria-label="설정"
          >
-            <LogOut size={16} className="group-hover:stroke-red-500 transition-colors" />
-            <span className="text-xs font-black tracking-tight">로그아웃</span>
+            <Settings size={16} className="group-hover:stroke-blue-500 transition-colors" />
+            <span className="text-xs font-black tracking-tight">설정</span>
          </button>
 
          {/* Profile Header per Prompt 7 */}
@@ -86,13 +103,29 @@ export const MyPage = () => {
             </div>
 
             {/* Taste Keyword cluster per Prompt 7 */}
-            <div className="flex gap-2.5 flex-wrap justify-center max-w-[300px]">
-               {['#힐링', '#로컬맛집', '#빈티지', '#사진공유', '#도보여행'].map((tag, i) => (
+            <div className="flex gap-2.5 flex-wrap justify-center max-w-[300px] mb-8">
+               {(statistics?.top_themes?.length > 0 ? statistics.top_themes.map((t: any) => `#${t.theme}`) : ['#취향분석중', '#여행을시작해보세요', '#나만의코스']).map((tag: string, i: number) => (
                   <span key={i} className="bg-white px-5 py-2.5 rounded-2xl border border-gray-100 text-sm font-black text-gray-500 shadow-sm hover:shadow-md transition-all cursor-default animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
                      {tag}
                   </span>
                ))}
             </div>
+
+            {/* Statistics Section (New) */}
+            {statistics && (
+               <div className="w-full max-w-sm px-4">
+                  <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+                     <div className="text-center">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">평균 여행 예산</p>
+                        <p className="text-lg font-black text-gray-800">{statistics.average_budget}만원</p>
+                     </div>
+                     <div className="text-center border-l border-gray-100">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">가성비 민감도</p>
+                        <p className="text-lg font-black text-[#0066FF]">{statistics.price_sensitivity_label}</p>
+                     </div>
+                  </div>
+               </div>
+            )}
          </header>
 
          {/* Menu Section per Prompt 7 */}
@@ -101,25 +134,52 @@ export const MyPage = () => {
             <div className="grid grid-cols-1 gap-4">
                <button
                   onClick={() => router.push('/history')}
-                  className="flex items-center justify-between p-8 bg-gray-50/50 hover:bg-white border border-transparent hover:border-blue-100 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl">
+                  className="flex items-center justify-between p-8 bg-white hover:bg-blue-50/30 border border-gray-100 hover:border-blue-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
                   <div className="flex items-center gap-5 font-black text-base tracking-tight">
-                     <div className="p-4 bg-white rounded-2xl shadow-sm text-blue-500 group-hover:bg-[#0066FF] group-hover:text-white transition-all"><History size={22} /></div>
+                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-blue-500 group-hover:bg-[#0066FF] group-hover:text-white transition-all"><History size={22} /></div>
                      이전 여행 기록
                   </div>
                   <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                </button>
 
-               <button className="flex items-center justify-between p-8 bg-gray-50/50 hover:bg-white border border-transparent hover:border-red-100 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl">
+               <button className="flex items-center justify-between p-8 bg-white hover:bg-red-50/30 border border-gray-100 hover:border-red-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
                   <div className="flex items-center gap-5 font-black text-base tracking-tight">
-                     <div className="p-4 bg-white rounded-2xl shadow-sm text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all"><Bookmark size={22} /></div>
+                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all"><Bookmark size={22} /></div>
                      찜한 코스
                   </div>
                   <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                </button>
 
-
+               <button
+                  onClick={() => setIsDashboardOpen(true)}
+                  className="flex items-center justify-between p-8 bg-white hover:bg-purple-50/30 border border-gray-100 hover:border-purple-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
+                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
+                     <div className="p-4 bg-white rounded-2xl shadow-sm text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-all"><Brain size={22} /></div>
+                     에이전트 컨텍스트 (Dashboard)
+                  </div>
+                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+               </button>
             </div>
          </section>
+
+         <GuestSettingsModal
+            isOpen={showGuestModal}
+            onClose={() => setShowGuestModal(false)}
+            onLogout={handleLogout}
+         />
+         <UserSettingsModal
+            isOpen={showUserModal}
+            onClose={() => setShowUserModal(false)}
+            onLogout={handleLogout}
+            userId={profile?.id}
+            initialAge={profile?.age}
+            initialGender={profile?.gender}
+            onProfileUpdate={(age, gender) => {
+               const newProfile = { ...profile, age, gender };
+               setProfile(newProfile);
+               localStorage.setItem('user_profile', JSON.stringify(newProfile));
+            }}
+         />
       </div>
    );
 };

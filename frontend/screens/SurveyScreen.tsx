@@ -15,7 +15,9 @@ export const SurveyScreen = () => {
   useEffect(() => {
     // 이미 거절하고 돌아온 경우(?reason=decline_invitation)에는 띄우지 않음
     if (searchParams.get('reason') !== 'decline_invitation') {
-        setShowInvitation(true);
+      // 컴포넌트 마운트 후 약간의 지연을 주어 팝업이 확실히 뜨도록 함
+      const timer = setTimeout(() => setShowInvitation(true), 100);
+      return () => clearTimeout(timer);
     }
   }, [searchParams]);
 
@@ -83,30 +85,28 @@ export const SurveyScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-44 overflow-y-auto font-['Inter'] hide-scrollbar relative">
+    <div className="min-h-screen bg-[#FDFBF7] pb-44 overflow-y-auto font-['Inter'] hide-scrollbar relative">
       <InvitationPopup isOpen={showInvitation} onClose={() => setShowInvitation(false)} />
       <DiscoverySideModal isOpen={isSideOpen} onClose={() => setIsSideOpen(false)} />
 
-      {/* Header - Image 1 Style (Blue) */}
-      <header className="bg-[#0066FF] px-6 py-5 flex items-center sticky top-0 z-[100] shadow-md">
-        <button onClick={() => setIsSideOpen(true)} className="p-1 -ml-1 text-white">
+      {/* Header */}
+      <header className="px-6 py-5 flex items-center sticky top-0 z-[100] bg-[#FDFBF7]/80 backdrop-blur-md">
+        <button onClick={() => setIsSideOpen(true)} className="p-1 -ml-1 text-gray-800">
           <Menu size={28} />
         </button>
-        <h1 className="flex-1 text-center text-xl font-bold tracking-tight text-white pr-8">AI 여행 가이드</h1>
+        <h1 className="flex-1 text-center text-xl font-black tracking-tight text-gray-800 pr-8">여행 취향 분석</h1>
       </header>
 
-      <div className="p-6 space-y-8 animate-fade-in transition-all">
-        {/* Welcome Message - Image 1 Style (Bot + Blue Bubble) */}
-        <div className="flex gap-4 items-start">
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-blue-100">
-            <img src="https://cdni.iconscout.com/illustration/premium/thumb/robot-assistant-8631166-6872583.png" className="w-12 h-12 object-contain" alt="bot" />
+      <div className="p-6 space-y-8 animate-fade-in transition-all pt-0">
+        {/* Mascot Greeting */}
+        <div className="relative pt-4 pb-2 flex items-center gap-4 z-10">
+          <div className="w-20 h-20 relative shrink-0">
+            <img src="/mascot_full.png" className="w-full h-full object-contain drop-shadow-md" alt="Mascot" />
           </div>
-          <div className="flex-1 bg-[#1E6BFF] p-5 rounded-[2rem] rounded-tl-none shadow-lg relative">
-            {/* Tail */}
-            <div className="absolute top-0 -left-2 w-4 h-4 bg-[#1E6BFF] [clip-path:polygon(100%_0,0_0,100%_100%)]" />
-            <p className="text-sm font-bold text-white leading-relaxed">
+          <div className="bg-white px-6 py-4 rounded-[2rem] rounded-tl-none shadow-sm border border-gray-100 relative">
+            <p className="text-sm font-bold text-gray-800 leading-relaxed">
               안녕하세요! 어떤 여행을 원하시나요?<br />
-              키워드를 선택해주세요.
+              <span className="text-[#0066FF]">키워드</span>를 선택해주세요.
             </p>
           </div>
         </div>

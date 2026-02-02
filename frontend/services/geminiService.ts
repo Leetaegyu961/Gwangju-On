@@ -116,4 +116,32 @@ export class GeminiService {
     const filtered = courses.filter((c: any) => c.id !== id);
     localStorage.setItem('courses', JSON.stringify(filtered));
   }
+
+  async getUserStatistics(): Promise<any> {
+    const userId = localStorage.getItem('temp_user_id');
+    if (!userId) return null;
+    try {
+      const res = await fetch(`${this.apiUrl}/user/${userId}/statistics`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error("Failed to fetch statistics", e);
+    }
+    return null;
+  }
+
+  async getAgentContext(): Promise<any> {
+    const userId = localStorage.getItem('temp_user_id');
+    if (!userId) return null;
+    try {
+      const res = await fetch(`${this.apiUrl}/user/${userId}/agent-context`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error("Failed to fetch agent context", e);
+    }
+    return null;
+  }
 }

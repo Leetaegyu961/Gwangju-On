@@ -303,3 +303,88 @@ def get_scoring_system(data_dir: str = "data") -> RestaurantScoringSystem:
         _scoring_system_instance.load_public_datasets()
     
     return _scoring_system_instance
+
+class PersonalizedScoringSystem(RestaurantScoringSystem):
+    """
+    사용자 개인화 기반 스코어링 시스템 (Soft Boosting 적용)
+    기존 RestaurantScoringSystem을 상속받아 개인화 로직을 추가합니다.
+    """
+    def __init__(self, data_dir: str, user_profile: Dict):
+        super().__init__(data_dir)
+        # 이미 로드된 싱글톤이 있다면 데이터를 공유하거나 다시 로드
+        # 여기서는 안전하게 다시 로드 (또는 싱글톤 패턴 활용 가능하나 독립성 유지)
+        self.load_public_datasets()
+        
+        self.user_profile = user_profile
+        # DB 구조: preference_weights -> themes (Dict[str, float])
+        self.weights = user_profile.get("preference_weights", {}).get("themes", {})
+        
+        # [New] 실시간 세션 테마 가중치
+        self.session_weights = {}
+        
+        # Hyperparameters for Soft Boosting
+        self.MAX_BOOST = 2.0  # 개인화로 얻을 수 있는 최대 가산점 (+/-)
+
+    def set_session_themes(self, themes: List[str]):
+        """현재 세션(대화)에서 도출된 테마 설정"""
+        self.session_weights = {theme: 1.0 for theme in themes}
+
+    def calculate_preference_score(self, place_tags: List[str]) -> float:
+        """
+        Soft Boosting 알고리즘: 태그 가중치 합을 Tanh 함수로 정규화
+        """
+        if not self.weights and not self.session_weights:
+            return 0.0
+            
+        raw_score = 0.0
+        
+        # 1. Long-term Profile Weights
+        for tag in place_tags:
+            for pref_tag, weight in self.weights.items():
+                if pref_tag in tag or tag in pref_tag:
+                    raw_score += weight
+                    
+        # 2. Session Context Weights (Real-time Boost)
+        # 사용자가 방금 언급한 테마는 더 강력하게 반영 (+2.0)
+        for tag in place_tags:
+            for session_tag in self.session_weights:
+                if session_tag in tag or tag in session_tag:
+                    raw_score += 2.0
+        
+        # Soft Boosting: 점수가 무한정 커지지 않도록 tanh 적용
+        # raw_score가 2.0이면 tanh(2.0) ~= 0.96 -> 0.96 * MAX_BOOST(2.0) = 1.92점
+        soft_score = math.tanh(raw_score) * self.MAX_BOOST
+        return round(soft_score, 2)
+
+    def calculate_final_score(self, enriched_item: Dict) -> Tuple[float, Dict]:
+        """
+        기본 품질 점수 + 개인화 가산점
+        """
+        # 1. 기본 품질 점수 (Base Score) - 부모 클래스 메서드 사용
+        base_score, base_breakdown = self.calculate_score(enriched_item)
+        
+        # 2. 태그 수집
+        place = enriched_item.get("place", {})
+        # Google Types
+        types = place.get("types", [])
+        # LLM 분석 결과 키워드 (scoring_node에서 주입 가정)
+        llm_keywords = enriched_item.get("llm_keywords", [])
+        # 블로그 키워드 (있다면)
+        blog_keywords = []
+        for blog in enriched_item.get("blogs", []):
+            # 간단히 제목/본문에서 추출하거나 미리 추출된 키워드 사용
+            pass
+            
+        all_tags = types + llm_keywords
+        
+        # 3. 개인화 가산점 계산
+        preference_boost = self.calculate_preference_score(all_tags)
+        
+        # 4. 최종 점수 합산
+        final_score = base_score + preference_boost
+        
+        # 점수 내역 업데이트
+        base_breakdown["preference_boost"] = preference_boost
+        base_breakdown["final_total"] = round(final_score, 2)
+        
+        return round(final_score, 2), base_breakdown

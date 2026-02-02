@@ -64,17 +64,17 @@ export const ProfileSetupScreen = () => {
                 {/* Gender Selection */}
                 <section className="space-y-4">
                     <h3 className="text-sm font-black text-gray-300 uppercase tracking-widest px-1">성별 선택</h3>
-                    <div className="flex gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={() => setGender('male')}
-                            className={`flex-1 py-5 rounded-3xl font-bold transition-all border-2 ${gender === 'male' ? 'bg-[#0066FF] text-white border-[#0066FF] shadow-xl shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
+                            className={`py-5 rounded-3xl font-bold transition-all border-2 ${gender === 'male' ? 'bg-blue-50 border-[#0066FF] text-[#0066FF] shadow-md shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
                                 }`}
                         >
                             남성
                         </button>
                         <button
                             onClick={() => setGender('female')}
-                            className={`flex-1 py-5 rounded-3xl font-bold transition-all border-2 ${gender === 'female' ? 'bg-[#0066FF] text-white border-[#0066FF] shadow-xl shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
+                            className={`py-5 rounded-3xl font-bold transition-all border-2 ${gender === 'female' ? 'bg-blue-50 border-[#0066FF] text-[#0066FF] shadow-md shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
                                 }`}
                         >
                             여성
@@ -85,12 +85,12 @@ export const ProfileSetupScreen = () => {
                 {/* Age Selection */}
                 <section className="space-y-4">
                     <h3 className="text-sm font-black text-gray-300 uppercase tracking-widest px-1">연령대 선택</h3>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                         {ages.map((a) => (
                             <button
                                 key={a}
                                 onClick={() => setAge(a)}
-                                className={`px-6 py-4 rounded-3xl font-bold transition-all border-2 ${age === a ? 'bg-[#0066FF] text-white border-[#0066FF] shadow-lg shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
+                                className={`py-4 rounded-3xl font-bold transition-all border-2 ${age === a ? 'bg-blue-50 border-[#0066FF] text-[#0066FF] shadow-md shadow-blue-100' : 'bg-gray-50 text-gray-400 border-transparent hover:bg-gray-100'
                                     }`}
                             >
                                 {a}

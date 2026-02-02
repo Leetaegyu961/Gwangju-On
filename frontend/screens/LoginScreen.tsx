@@ -81,7 +81,8 @@ export const LoginScreen = () => {
                     (window as any).google.accounts.id.initialize({
                         client_id: clientId,
                         callback: handleCredentialResponse,
-                        use_fedcm_for_prompt: true,
+                        auto_select: false,
+                        use_fedcm_for_prompt: false,
                         itp_support: true,
                     });
 
@@ -118,44 +119,48 @@ export const LoginScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-['Inter'] relative">
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-['Inter'] relative overflow-hidden">
+            {/* Video Background */}
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover z-0"
+            >
+                <source src="/mascot_animation.mp4" type="video/mp4" />
+            </video>
 
-            {/* Mascot Illustration Area (Image 0) */}
-            <div className="flex flex-col items-center mb-10 animate-fade-in">
-                <div className="w-64 h-64 mb-6 flex items-center justify-center relative">
-                    {/* Replicating the mascot mountain character from Image 0 */}
-                    <Image
-                        src="https://img.freepik.com/free-vector/cute-mountain-character-illustration_23-2148766126.jpg?w=740"
-                        className="object-contain"
-                        alt="ONui Mascot"
-                        fill
-                        priority
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                    {/* Optional: Add a subtle shadow under the mascot */}
-                    <div className="absolute bottom-4 w-32 h-4 bg-gray-100 rounded-full blur-md -z-10" />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/30 z-0" />
+
+            {/* Content Area */}
+            <div className="relative z-10 w-full flex flex-col items-center">
+                <div className="flex flex-col items-center mb-16 animate-fade-in">
+                    <h1 className="text-3xl font-black text-white text-center leading-tight mb-3 drop-shadow-lg">
+                        AI 큐레이터와 함께하는<br />특별한 광주 여행
+                    </h1>
+                    <p className="text-white/90 text-sm font-medium drop-shadow-md">나만의 맞춤형 여행 코스를 발견해보세요</p>
                 </div>
-                <h1 className="text-2xl font-black text-gray-900 text-center leading-tight mb-2">
-                    AI 큐레이터와 함께하는<br />특별한 광주 여행
-                </h1>
-                <p className="text-gray-400 text-sm font-medium">나만의 맞춤형 여행 코스를 발견해보세요</p>
+
+                {/* Action Area */}
+                <div className="w-full max-w-[340px] flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    {/* Google Login Button Container */}
+                    <div ref={googleButtonRef} className="w-full flex justify-center h-[56px]" />
+
+                    <button
+                        onClick={() => handleStart('guest')}
+                        className="w-full py-4 bg-white/20 backdrop-blur-md text-white border border-white/30 rounded-full font-bold hover:bg-white/30 active:scale-[0.98] transition-all shadow-lg"
+                    >
+                        계정 없이 시작하기
+                    </button>
+                </div>
             </div>
 
-            {/* Action Area (Image 0) */}
-            <div className="w-full max-w-[340px] flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                {/* Google Login Button Container */}
-                <div ref={googleButtonRef} className="w-full flex justify-center h-[56px]" />
-
-                <button
-                    onClick={() => handleStart('guest')}
-                    className="w-full py-4 bg-gray-100 text-gray-600 rounded-[2rem] font-bold hover:bg-gray-200 active:scale-[0.98] transition-all"
-                >
-                    계정 없이 시작하기
-                </button>
+            {/* Footer / Copyright */}
+            <div className="absolute bottom-8 text-white/50 text-[10px] z-10">
+                © 2024 Gwangju-On. All rights reserved.
             </div>
-
-            {/* Invisible Spacer for vertical alignment matching Image 0 */}
-            <div className="h-20" />
         </div>
     );
 };

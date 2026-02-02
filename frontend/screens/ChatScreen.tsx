@@ -176,8 +176,8 @@ const ChatContent = () => {
         {messages.map((m) => (
           <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}>
             {m.role === 'assistant' && (
-              <div className="w-10 h-10 bg-[#0066FF] rounded-full flex items-center justify-center shadow-lg mb-3">
-                <Bot size={22} className="text-white" />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-md mb-3 overflow-hidden bg-white border border-gray-100 shrink-0">
+                <img src="/mascot_circle.png" alt="Assistant" className="w-full h-full object-cover" />
               </div>
             )}
 
@@ -264,7 +264,21 @@ const ChatContent = () => {
             )}
           </div>
         ))}
-        {loading && <div className="p-4 bg-gray-50 rounded-2xl self-start animate-pulse text-xs font-bold text-gray-400">최적의 코스를 찾는 중입니다...</div>}
+        {loading && (
+          <div className="flex items-center gap-3 animate-fade-in">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm border border-blue-50 animate-bounce shrink-0">
+              <img src="/mascot_circle.png" alt="Loading" className="w-full h-full object-cover" />
+            </div>
+            <div className="bg-white px-5 py-3 rounded-[2rem] rounded-tl-none shadow-sm border border-gray-100 flex items-center gap-2">
+              <div className="dot-typing">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span className="text-xs font-bold text-gray-400 ml-2">열심히 코스를 짜고 있어요!</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}

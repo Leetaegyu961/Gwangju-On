@@ -62,12 +62,21 @@ export const HistoryScreen = () => {
                         <p className="text-xs">기록을 불러오는 중...</p>
                     </div>
                 ) : courses.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 text-gray-300">
-                            <Calendar size={32} />
+                    <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+                        <div className="w-40 h-40 mb-6 opacity-80 grayscale-[20%]">
+                            <img src="/mascot_full.png" alt="Empty" className="w-full h-full object-contain" />
                         </div>
-                        <p className="text-gray-500 font-bold mb-1">저장된 여행 코스가 없습니다</p>
-                        <p className="text-xs text-gray-400">AI와 대화하여 새로운 추억을 만들어보세요!</p>
+                        <p className="text-gray-900 font-black text-lg mb-2">아직 다녀온 여행이 없어요!</p>
+                        <p className="text-gray-400 text-sm font-medium mb-8 leading-relaxed">
+                            나만의 특별한 여행을<br />
+                            지금 바로 시작해보세요.
+                        </p>
+                        <button
+                            onClick={() => router.push('/chat')}
+                            className="px-8 py-4 bg-[#0066FF] text-white rounded-full font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            여행 시작하기 <ChevronRight size={18} />
+                        </button>
                     </div>
                 ) : (
                     courses.map((course) => (
