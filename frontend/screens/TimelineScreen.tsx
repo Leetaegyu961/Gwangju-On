@@ -293,31 +293,13 @@ export default function TimelineScreen() {
                                 <path d={pathData} fill="none" stroke="#FF6B00" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
                             </svg>
 
-                            {/* Points with Images */}
-                            {points.map((p, i) => {
-                                const spotImg = photos[i] || course[i]?.img || placeholders[i % 3];
-                                return (
-                                    <div key={i} className="absolute flex flex-col items-center z-10" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
-                                        {/* Image Bubble */}
-                                        <div className="relative mb-1">
-                                            <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-gray-100">
-                                                <img src={spotImg} className="w-full h-full object-cover" crossOrigin="anonymous" alt={`map-thumb-${i}`} />
-                                            </div>
-                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45"></div>
-                                        </div>
-
-                                        {/* Marker Number */}
-                                        <div className="w-5 h-5 rounded-full bg-[#FF6B00] text-white text-[9px] font-bold flex items-center justify-center shadow-md border-2 border-white relative z-20">
-                                            {i + 1}
-                                        </div>
-
-                                        {/* Place Name */}
-                                        <span className="text-[8px] font-bold bg-white/90 px-1.5 py-0.5 rounded shadow-sm mt-1 whitespace-nowrap text-gray-700 border border-gray-100">
-                                            {p.name}
-                                        </span>
-                                    </div>
-                                );
-                            })}
+                            {/* Points */}
+                            {points.map((p, i) => (
+                                <div key={i} className="absolute flex flex-col items-center z-10" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
+                                    <div className="w-6 h-6 rounded-full bg-[#FF6B00] text-white text-[10px] font-bold flex items-center justify-center shadow-md border-2 border-white">{i + 1}</div>
+                                    <span className="text-[8px] font-bold bg-white/90 px-1.5 py-0.5 rounded shadow-sm mt-1 whitespace-nowrap">{p.name}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

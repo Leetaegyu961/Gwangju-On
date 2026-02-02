@@ -21,13 +21,13 @@ const ChatContent = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isLocationRequestMode) {
+    if (isLocationRequestMode || searchParams.get('mode') === 'course_init') {
       setMessages([
         {
           id: '1',
           role: 'assistant',
-          text: '어디 위치를 원하세요?',
-          suggestions: ['광주 광역시 동명동', '광주 광역시 광산구', '광주 전체']
+          text: '가고 싶은 장소가 있나요?',
+          suggestions: ['네, 계속 채팅하기', '아니요, 바로 코스 생성하기']
         }
       ]);
     } else {
@@ -36,7 +36,7 @@ const ChatContent = () => {
         { id: '1', role: 'assistant', text: '안녕하세요! 어떤 여행을 도와드릴까요?' }
       ]);
     }
-  }, [isLocationRequestMode]);
+  }, [isLocationRequestMode, searchParams]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -47,19 +47,71 @@ const ChatContent = () => {
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.isDecisionPoint && lastMsg.evidenceCards) {
-      // 자동 코스 생성 및 이동
+      
+      // 1. 코스 데이터 생성 (이미지 URL 확정)
       const courses = lastMsg.evidenceCards.map((c, i) => ({
         id: c.placeId || i.toString(),
-        type: '놀거리' as const, // Strict type
+        type: '놀거리' as const,
         name: c.name || c.placeId,
         lat: c.lat || 0,
         lng: c.lng || 0,
         desc: c.reason,
         tags: c.keywords || [],
         transport: '이동',
-        img: c.img || getCourseImage(c.keywords, c.name)
+        img: c.img || getCourseImage(c.keywords, c.name) // Generate URL ONCE
       }));
+
+      // 2. 전체 후보 코스 데이터 생성 (이미지 URL 확정)
+      let allCoursesForMap: any[] = [];
+      if (lastMsg.allCourses && lastMsg.allCourses.length > 0) {
+        allCoursesForMap = lastMsg.allCourses.map(course => ({
+          course_id: course.course_id,
+          course_name: course.course_name,
+          course_description: course.course_description || '',
+          places: course.cards.map((c, i) => ({
+            id: c.placeId || i.toString(),
+            type: '놀거리',
+            name: c.name || c.placeId,
+            lat: c.lat || 0,
+            lng: c.lng || 0,
+            desc: c.reason,
+            tags: c.keywords || [],
+            transport: '이동',
+            img: c.img || getCourseImage(c.keywords, c.name) // Generate URL ONCE
+          }))
+        }));
+      }
+
+      // 3. [Performance] 확정된 URL로 이미지 미리 로딩 (Preloading)
+      const preloadImages = () => {
+        const urlsToLoad = new Set<string>();
+
+        // 현재 코스 이미지
+        courses.forEach(c => {
+          if (c.img) urlsToLoad.add(c.img);
+        });
+
+        // 전체 후보 코스 이미지
+        allCoursesForMap.forEach(course => {
+          course.places.forEach((p: any) => {
+            if (p.img) urlsToLoad.add(p.img);
+          });
+        });
+
+        // 브라우저 캐시에 이미지 저장
+        urlsToLoad.forEach(url => {
+          const img = new Image();
+          img.src = url;
+        });
+        console.log(`[Preload] Preloaded ${urlsToLoad.size} images.`);
+      };
+      preloadImages();
+
+      // 4. 저장 (localStorage)
       localStorage.setItem('current_course', JSON.stringify(courses));
+      if (allCoursesForMap.length > 0) {
+        localStorage.setItem('all_courses', JSON.stringify(allCoursesForMap));
+      }
 
       // DB/History에 영구 저장
       const savedCourse = {
@@ -154,6 +206,18 @@ const ChatContent = () => {
                   <button
                     key={idx}
                     onClick={() => {
+                      // [Branching Logic] "가고 싶은 장소가 있나요?" 에 대한 처리
+                      if (suggestion === '아니요, 바로 코스 생성하기') {
+                        // 1. 사용자 메시지 추가 (UI 피드백)
+                        const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
+                        setMessages(prev => [...prev, userMsg]);
+
+                        // 2. 즉시 페이지 이동 (PRD v2.1)
+                        const userId = localStorage.getItem('temp_user_id');
+                        router.push(`/map?auto_generate=true&userId=${userId}`);
+                        return;
+                      }
+
                       // 칩 클릭 시 바로 전송 처리
                       const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
                       setMessages(prev => [...prev, userMsg]);

@@ -21,7 +21,7 @@ def search_poi_around(
         raise HTTPException(status_code=500, detail="TMAP_APP_KEY not configured")
 
     # /pois endpoint is better for keyword-focused search within radius
-    url = "https://apis.openapi.sk.com/tmap/pois"
+    url = "https://apis.openapi.sk.com/tmap/pois/search/around"
     
     # Using searchKeyword handles text queries like "맛집", "카페" much better than categories param
     # which expects codes.

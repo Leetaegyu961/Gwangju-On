@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from backend.models.user import UserProfile, OnboardingResponse, SurveyResult
 import uuid
 
+from datetime import datetime
+
 router = APIRouter()
 
 # [In-Memory DB] 서버가 켜져있는 동안만 데이터가 유지됩니다.
@@ -27,16 +29,49 @@ async def onboard_user(profile: UserProfile):
 @router.post("/user/survey")
 async def update_survey(survey: SurveyResult):
     user_id = survey.userId
+    db = await get_database()
+    
+    # 1. 기존 유저 정보(Demographics) 가져오기
+    # In-Memory DB나 DB에서 연령/성별 정보를 가져옴
+    profile_data = USER_DB.get(user_id, {})
+    
+    demographics = {
+        "age": profile_data.get("age"),
+        "gender": profile_data.get("gender")
+    }
+    
+    # 2. 신규 PRD 구조에 맞춘 데이터 패키징
+    survey_data = {
+        "region": survey.region,
+        "courses": [c.dict() for c in survey.courses],
+        "themes": survey.themes,
+        "companions": survey.companions,
+        "budget": survey.budget
+    }
+    
+    session_doc = {
+        "userId": user_id,
+        "created_at": datetime.now().isoformat(),
+        "demographics": demographics,
+        "survey_data": survey_data,
+        "chat_context": [],
+        "status": "pending"
+    }
+    
+    # 3. MongoDB 저장 (user_trip_sessions)
+    await db["user_trip_sessions"].update_one(
+        {"userId": user_id},
+        {"$set": session_doc},
+        upsert=True
+    )
+    
+    # In-Memory DB (USER_DB) 에도 최신 상태 반영
     if user_id in USER_DB:
-        # 기존 프로필 정보에 설문 정보 합치기
         USER_DB[user_id].update(survey.dict(exclude={"userId"}))
-        print(f"✅ [Survey Update] ID: {user_id}, Data: {USER_DB[user_id]}")
-        return {"status": "success", "message": "Survey data updated."}
     else:
-        # 혹시 ID가 없으면 새로 생성해서 저장 (예외 처리)
-        USER_DB[user_id] = survey.dict(exclude={"userId"})
-        print(f"⚠️ [Survey New] ID: {user_id} (Not found in onboard), Data: {USER_DB[user_id]}")
-        return {"status": "success", "message": "Survey data saved (new session)."}
+         USER_DB[user_id] = survey.dict(exclude={"userId"})
+        
+    return {"status": "success", "message": "Trip session started and saved to MongoDB."}
 
 from backend.db import get_database
 from backend.models.user import UserArchive

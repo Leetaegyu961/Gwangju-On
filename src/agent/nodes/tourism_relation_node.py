@@ -89,7 +89,7 @@ def _get_related_tourist_spots(keyword: str, max_rows: int = 5) -> list[dict]:
         return []
 
 
-def tourism_relation_node(state: AgentState) -> dict[str, Any]:
+async def tourism_relation_node(state: AgentState) -> dict[str, Any]:
     """
     사용자 쿼리나 현재 검색된 장소들을 기반으로 '연관 관광지'를 추천받는 노드입니다.
     

@@ -2,11 +2,15 @@ from fastapi import APIRouter, Response, HTTPException
 import requests
 import os
 from dotenv import load_dotenv
+from cachetools import TTLCache
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
 
 router = APIRouter()
+
+# Cache settings: Max 1000 items, TTL 24 hours (86400 seconds)
+photo_cache = TTLCache(maxsize=1000, ttl=86400)
 
 @router.get("/photo")
 async def get_google_photo(name: str):
@@ -21,8 +25,13 @@ async def get_google_photo(name: str):
     if not GOOGLE_API_KEY:
         raise HTTPException(status_code=500, detail="Server Configuration Error")
 
+    # Check Cache
+    if name in photo_cache:
+        cached_data = photo_cache[name]
+        return Response(content=cached_data["content"], media_type=cached_data["media_type"])
+
     # Google Places Photo API URL
-    # 최대 크기 800px로 요청
+    # 최대 크기 800px로 요청 (속도 개선을 위해 사이즈 최적화 고려 가능)
     google_url = f"https://places.googleapis.com/v1/{name}/media?maxHeightPx=800&maxWidthPx=800&key={GOOGLE_API_KEY}"
     
     try:
@@ -32,7 +41,16 @@ async def get_google_photo(name: str):
         if resp.status_code != 200:
              return Response(status_code=resp.status_code, content=resp.content)
         
-        return Response(content=resp.content, media_type=resp.headers.get("Content-Type", "image/jpeg"))
+        content = resp.content
+        media_type = resp.headers.get("Content-Type", "image/jpeg")
+
+        # Save to Cache
+        photo_cache[name] = {
+            "content": content,
+            "media_type": media_type
+        }
+        
+        return Response(content=content, media_type=media_type)
         
     except Exception as e:
         print(f"Photo Proxy Error: {e}")

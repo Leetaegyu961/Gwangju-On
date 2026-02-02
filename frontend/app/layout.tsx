@@ -32,10 +32,6 @@ export default function RootLayout({
                     src="https://toptmaptile1.tmap.co.kr/scriptSDKV3/tmapjs3.min.js?version=20231206"
                     strategy="beforeInteractive"
                 />
-                <Script
-                    src="https://toptmaptile1.tmap.co.kr/scriptSDKV3/lib/tmapjs3-service.min.js?version=20231206"
-                    strategy="beforeInteractive"
-                />
             </body>
         </html>
     );

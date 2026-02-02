@@ -1,6 +1,12 @@
 # 환경 변수 파일
 .env
 .env.*
+*.pem
+*.key
+secrets.json
+
+# Node
+node_modules/
 
 # Python 캐시
 __pycache__/
@@ -33,11 +39,7 @@ visualize_graph.py
 *.png
 !agent_structure.png
 
-# Node.js
-node_modules/
-frontend/node_modules/
-.next/
-out/
-build/
-.pnp
-.pnp.js
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

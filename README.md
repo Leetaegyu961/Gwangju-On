@@ -37,11 +37,8 @@
 ### 1. Backend 설정 (Server)
 
 ```bash
-# Backend 디렉토리 의존성 설치 (Poetry 사용 시)
+# Backend 디렉토리 의존성 설치
 poetry install
-
-# 또는 requirements.txt 사용 시 (venv 활성화 후)
-pip install -r requirements.txt
 
 # 서버 실행 (Root 디렉토리에서)
 python run_backend.py
@@ -118,23 +115,16 @@ NEXT_PUBLIC_TMAP_APP_KEY=your_tmap_app_key
 ## ✨ 주요 기능 (Key Features)
 
 1. **AI 맞춤형 코스 설계**: 
-    - 사용자의 취향을 설문(`Survey`)으로 분석.
-    - LangGraph 기반의 검색 에이전트가 최신 정보를 반영하여 코스 제안.
+   - 사용자의 취향을 설문(`Survey`)으로 분석.
+   - "동명동 분위기 좋은 카페 추천해줘"와 같은 자연어 질의 처리.
+   - LangGraph 기반의 검색 에이전트가 최신 정보를 반영하여 코스 제안.
 
-2. **Google 로그인 & 게스트 모드**:
-    - Google 계정으로 간편하게 로그인하여 기록을 영구 저장.
-    - 계정 없이도 바로 시작할 수 있는 게스트 모드 지원.
+2. **인터랙티브 지도 (Interactive Map)**:
+   - AI가 제안한 장소를 TMAP 위에 마커와 경로로 시각화.
+   - `EvidenceCard`를 통해 각 장소의 상세 정보 및 추천 이유 제공.
 
-3. **마이페이지 & 히스토리**:
-    - '나의 여행 기록'에서 과거에 생성한 AI 코스를 언제든 다시 확인.
-    - 저장된 프로필 정보와 여행 횟수 통계 제공.
-
-4. **인터랙티브 지도 (Interactive Map)**:
-    - AI가 제안한 장소를 TMAP 위에 마커와 경로로 시각화.
-    - `EvidenceCard`를 통해 각 장소의 상세 정보 및 추천 이유 제공.
-
-5. **실시간 정보**:
-    - Google Places의 평점 정보와 Naver Blog의 최신 리뷰를 결합하여 신뢰도 높은 정보 제공.
+3. **실시간 정보**:
+   - Google Places의 평점 정보와 Naver Blog의 최신 리뷰를 결합하여 신뢰도 높은 정보 제공.
 
 ---
 

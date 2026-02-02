@@ -29,12 +29,41 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 async def migrate_user_data(db, guest_id: str, user_id: str):
     """
-    guests 컬렉션에 저장된 데이터를 users 컬렉션으로 마이그레이션합니다.
+    게스트 세션(user_trip_sessions) 및 아카이브 기록을 실제 유저 계정으로 이관합니다.
     """
-    # 1. 설문 및 프로필 데이터 이관
+    # 1. Trip Sessions 이관 (userId 업데이트 및 created_at 확인)
+    trip_session = await db["user_trip_sessions"].find_one({"userId": guest_id})
+    if trip_session:
+        # 기존 세션의 userId를 신규 유저 ID로 변경
+        await db["user_trip_sessions"].update_one(
+            {"userId": guest_id},
+            {"$set": {
+                "userId": user_id,
+                "migrated_at": datetime.utcnow() # 마이그레이션 시점 기록
+            }}
+        )
+        # 만약 기존 users 컬렉션에 profile이 없으면 demographics 정보를 복사함
+        await db["users"].update_one(
+            {"id": user_id},
+            {"$set": {
+                "profile": trip_session.get("demographics"),
+                "survey_data": trip_session.get("survey_data")
+            }}
+        )
+        print(f"📦 [Migration] Trip Session for {guest_id} moved to {user_id}")
+
+    # 2. 여행 아카이브 데이터 마이그레이션 (owner_id 또는 userId 업데이트)
+    # user_archive는 'userId' 필드를 사용함 (user.py 참고)
+    archive_result = await db["user_archive"].update_many(
+        {"userId": guest_id},
+        {"$set": {"userId": user_id}}
+    )
+    if archive_result.modified_count > 0:
+        print(f"📜 [Migration] {archive_result.modified_count} archive items moved to {user_id}")
+
+    # 3. 구형 guests 컬렉션 데이터가 남아있다면 이관 (하위 호환성)
     guest_data = await db["guests"].find_one({"id": guest_id})
     if guest_data:
-        # 로그인 유저 정보에 게스트 정보 병합
         await db["users"].update_one(
             {"id": user_id},
             {"$set": {
@@ -42,16 +71,10 @@ async def migrate_user_data(db, guest_id: str, user_id: str):
                 "survey_data": guest_data.get("survey_data")
             }}
         )
-        # 2. 여행 아카이브 데이터 마이그레이션 (owner_id 업데이트)
-        await db["user_archive"].update_many(
-            {"owner_id": guest_id},
-            {"$set": {"owner_id": user_id}}
-        )
-        # 3. 이관 완료 후 게스트 데이터 삭제
         await db["guests"].delete_one({"id": guest_id})
-        print(f"✅ [Migration] Data moved from Guest({guest_id}) to User({user_id})")
-        return True
-    return False
+        print(f"✅ [Migration] Legacy Guest data moved for {user_id}")
+    
+    return True
 
 @router.post("/auth/google", response_model=TokenResponse)
 async def google_login(request: GoogleLoginRequest, response: Response):

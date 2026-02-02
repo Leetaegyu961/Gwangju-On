@@ -3,6 +3,7 @@ Agent State Definition
 에이전트의 상태를 정의하는 모듈입니다.
 """
 
+import operator
 from typing import Annotated, TypedDict, Sequence
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
@@ -40,11 +41,20 @@ class AgentState(TypedDict):
     # 블로그 + Places 리뷰 통합 데이터
     enriched_results: list | None
 
+    # 스코어링된 결과 (점수 포함)
+    scored_results: list | None
+
     # 최종 응답
     final_answer: str | None
 
     # 사용자 서베이 데이터 (성별, 연령, 테마, 코스 구성 등)
     survey_data: dict | None
+
+    # [New] QueryPlanner가 생성한 3가지 테마
+    themes: list[str] | None
+
+    # [New] 병렬 실행된 LLM 노드들의 결과 수집 (Reducer: 리스트 합치기)
+    generated_courses: Annotated[list, operator.add]
 
 
 

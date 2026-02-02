@@ -1,16 +1,16 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-from backend.db import db
-from backend.api import chat, user, photo, tmap, auth
+from backend.api import chat
+from backend.db import db as mongo_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 앱 시작 시 DB 연결
-    await db.connect_to_storage()
+    # Startup
+    await mongo_db.connect_to_storage()
     yield
-    # 앱 종료 시 DB 연결 해제
-    await db.close_storage()
+    # Shutdown
+    await mongo_db.close_storage()
 
 app = FastAPI(title="Gwangju-On Backend", lifespan=lifespan)
 
@@ -30,11 +30,15 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api")
+from backend.api import user, photo, place_info, tmap, auth, journey
 app.include_router(user.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
-app.include_router(tmap.router, prefix="/api")
+app.include_router(place_info.router, prefix="/api")  # Mini Agent API
+app.include_router(tmap.router, prefix="/api")  # Tmap POI Search
 app.include_router(auth.router, prefix="/api")
+app.include_router(journey.router, prefix="/api")
 
 @app.get("/")
 def read_root():
     return {"message": "Gwangju-On Backend is running!"}
+

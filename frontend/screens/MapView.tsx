@@ -1,13 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Navigation2, ArrowLeft, Locate, Maximize2, Heart } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Navigation2, ArrowLeft, Locate, Loader2, Heart } from 'lucide-react';
 import Script from 'next/script';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
+import { GeminiService } from '../services/geminiService';
+
+const aiService = new GeminiService();
 
 export const MapView = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // --------------------------------------------------------------------------
   // 1. References (Ref) & State 정의
@@ -42,6 +46,7 @@ export const MapView = () => {
   const [selectedPlace, setSelectedPlace] = useState<{ name: string, content: string, img?: string } | null>(null); // 선택된 장소의 상세 정보
   const [isDetailLoading, setIsDetailLoading] = useState(false); // AI 상세 정보 로딩 중 여부
   const [isSearching, setIsSearching] = useState(false);       // 장소 검색(POI) 로딩 중 여부
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false); // 자동 생성 중 여부
 
   // 코스 상세 보기 확장 모드 (가로 리스트 vs 상세 스텝 뷰)
   const [isCourseDetailExpanded, setIsCourseDetailExpanded] = useState(false);
@@ -49,6 +54,10 @@ export const MapView = () => {
   // 기타 UI 상태
   const [isRouteOptionsOpen, setIsRouteOptionsOpen] = useState(false); // 경로 옵션 토글 상태
   const controls = useAnimation(); // Framer Motion 애니메이션 제어
+
+  // 3개 코스 선택 관련 상태
+  const [allCourses, setAllCourses] = useState<any[]>([]); // 3개 코스 전체
+  const [selectedCourseIndex, setSelectedCourseIndex] = useState(0); // 선택된 코스 인덱스
 
   // --------------------------------------------------------------------------
   // 2. Event Listener용 State 참조 (Ref 동기화)
@@ -169,25 +178,14 @@ export const MapView = () => {
     setIsDetailLoading(true);
     setSelectedPlace({ name, content: "" }); // 내용 초기화
 
-    // [주소 컨텍스트 추출]
-    // AI에게 더 정확한 정보를 요청하기 위해 주소에서 '동(Dong)' 정보를 추출합니다.
-    let locationContext = "광주에 있는";
-    if (address) {
-      const parts = address.split(" ");
-      const dong = parts.find(p => p.endsWith("동") || p.endsWith("가") || p.endsWith("로"));
-      if (dong) {
-        locationContext = `${dong}에 있는`;
-      }
-    }
-
     try {
-      // AI Backend에 질문 전송
-      const response = await fetch('http://localhost:8000/api/chat', {
+      // MiniAgent를 사용하는 /api/place-info 엔드포인트 호출
+      const response = await fetch('http://localhost:8000/api/place-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `${locationContext} ${name}에 대해 간단히 소개해줘. 특징 1가지와 방문객 리뷰 핵심 1가지만 짧은 개조식(bullet point)으로 알려줘.`,
-          userId: "user_map_view"
+          place_name: name,
+          address: address
         }),
         signal: controller.signal // AbortController Signal 연결
       });
@@ -199,14 +197,12 @@ export const MapView = () => {
       // 요청이 취소된 상태라면 결과 무시
       if (controller.signal.aborted) return;
 
-      // 이미지 데이터 추출 (EvidenceCards 활용)
-      let imgUrl = undefined;
-      if (data.evidenceCards && data.evidenceCards.length > 0) {
-        imgUrl = data.evidenceCards[0].img;
-      }
-
       // 상태 업데이트 (UI에 상세 정보 표시)
-      setSelectedPlace({ name, content: data.text, img: imgUrl });
+      setSelectedPlace({
+        name: data.name || name,
+        content: data.content,
+        img: data.img
+      });
     } catch (e: any) {
       if (e.name === 'AbortError') {
         console.log("🚫 [MapView] Detail fetch aborted");
@@ -253,22 +249,108 @@ export const MapView = () => {
   const OPEN_HEIGHT = 440;
   const CLOSED_HEIGHT = 180;
 
-  // Load spots from localStorage
+  // Load spots from localStorage or Auto-generate
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('current_course');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setSpots(parsed);
-        setViewMode('course'); // 코스가 있으면 코스 모드로 시작
-      } else {
-        // 코스가 없으면 장소 모드로 시작하고 초기 검색 시도 (지도가 로드된 후)
-        setViewMode('places');
-      }
-    } catch (e) {
-      console.error("❌ [MapView] Failed to load data", e);
+    // [FIX] Stale Data Cleanup
+    // 이전 버전의(혹은 잘못된) 데이터가 localStorage에 남아있을 경우 강제로 초기화합니다.
+    const DATA_VERSION = "v2_fix_photo_mapping";
+    const currentVersion = localStorage.getItem("data_version");
+
+    if (currentVersion !== DATA_VERSION) {
+      console.warn("🧹 [MapView] Detected stale data version. Clearing localStorage...");
+      localStorage.removeItem("all_courses");
+      localStorage.removeItem("current_course");
+      localStorage.removeItem("spots");
+      // 필요하다면 다른 키들도 삭제
+      localStorage.setItem("data_version", DATA_VERSION);
     }
-  }, []);
+
+    const autoGen = searchParams.get('auto_generate');
+    const qUserId = searchParams.get('userId');
+
+    if (qUserId) {
+      localStorage.setItem('temp_user_id', qUserId);
+    }
+
+    if (autoGen === 'true') {
+      const runAutoGen = async () => {
+        setIsAutoGenerating(true);
+        try {
+          const response = await aiService.processRequest("설문 데이터를 기반으로 바로 코스를 짜줘.");
+
+          // allCourses 처리 (3개 코스)
+          if (response.allCourses && response.allCourses.length > 0) {
+            const allCoursesForMap = response.allCourses.map((course: any) => ({
+              course_id: course.course_id,
+              course_name: course.course_name,
+              course_description: course.course_description || '',
+              places: course.cards.map((c: any, i: number) => ({
+                id: c.placeId || i.toString(),
+                type: '놀거리',
+                name: c.name || c.placeId,
+                lat: c.lat || 0,
+                lng: c.lng || 0,
+                desc: c.reason,
+                tags: c.keywords || [],
+                transport: '이동',
+                img: c.img
+              }))
+            }));
+            setAllCourses(allCoursesForMap);
+            localStorage.setItem('all_courses', JSON.stringify(allCoursesForMap));
+
+            // 첫 번째 코스로 설정
+            if (allCoursesForMap[0]?.places) {
+              setSpots(allCoursesForMap[0].places);
+              setSelectedCourseIndex(0);
+            }
+            setViewMode('course');
+            console.log("✅ [MapView] Auto-generated 3 courses loaded");
+          } else if (response.evidenceCards && response.evidenceCards.length > 0) {
+            // fallback: evidenceCards만 있는 경우
+            setSpots(response.evidenceCards);
+            localStorage.setItem('current_course', JSON.stringify(response.evidenceCards));
+            setViewMode('course');
+            console.log("✅ [MapView] Auto-generated course loaded");
+          }
+        } catch (e) {
+          console.error("❌ [MapView] Auto-generation failed", e);
+        } finally {
+          setIsAutoGenerating(false);
+        }
+      };
+      runAutoGen();
+    } else {
+      try {
+        // 3개 코스 전체 로드
+        const storedAllCourses = localStorage.getItem('all_courses');
+        if (storedAllCourses) {
+          const parsedAllCourses = JSON.parse(storedAllCourses);
+          setAllCourses(parsedAllCourses);
+
+          // 첫 번째 코스를 기본으로 설정
+          if (parsedAllCourses.length > 0 && parsedAllCourses[0].places) {
+            setSpots(parsedAllCourses[0].places);
+            setSelectedCourseIndex(0);
+            setViewMode('course');
+            console.log("✅ [MapView] Loaded all 3 courses, displaying course 1");
+          }
+        } else {
+          // fallback: 기존 current_course 로드
+          const stored = localStorage.getItem('current_course');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setSpots(parsed);
+            setViewMode('course');
+          } else {
+            setViewMode('places');
+          }
+        }
+      } catch (e) {
+        console.error("❌ [MapView] Failed to load data", e);
+      }
+    }
+  }, [searchParams]);
 
   // --------------------------------------------------------------------------
   // 5. Tmap 초기화 (최초 1회 실행)
@@ -390,23 +472,9 @@ export const MapView = () => {
           }
         }
 
-        // 현재 활성화된 코스 단계인지 확인
-        const isActiveStep = viewMode === 'course' && index === activeStep;
-
-        let markerContent = "";
-
-        if (viewMode === 'course') {
-          // 코스 모드 마커 디자인 (활성화 시 빨간색 강조)
-          const bgColor = isActiveStep ? '#FF4444' : '#0066FF';
-          const scale = isActiveStep ? 'scale(1.25)' : 'scale(1)';
-          const zIndex = isActiveStep ? '300' : '200';
-          const border = isActiveStep ? '3px solid white' : '2px solid white';
-          const boxShadow = isActiveStep ? '0 6px 16px rgba(255, 68, 68, 0.4)' : '0 4px 12px rgba(0,0,0,0.1)';
-
-          markerContent = `<div style="transform: ${scale}; z-index:${zIndex}; background:${bgColor}; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:${border}; box-shadow: ${boxShadow}; cursor: pointer; pointer-events: auto; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">${index + 1}</div>`;
-        } else {
-          // 장소 모드 마커 디자인
-          markerContent = `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
+        const markerContent = viewMode === 'course'
+          ? `<div style="background:#0066FF; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; pointer-events: auto;">${index + 1}</div>`
+          : `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
                <div onclick="window.toggleDetailBtn('marker-detail-btn-${index}'); event.stopPropagation();" 
                     style="background:${markerBg}; color:${markerBorder}; padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid ${markerBorder}; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size:16px; cursor: pointer; pointer-events: auto;">${markerIcon}</div>
                <span style="background:white; margin-top:4px; padding:3px 8px; border-radius:8px; border:1px solid #eee; font-size:11px; font-weight:bold; color:#333; box-shadow:0 2px 4px rgba(0,0,0,0.05); white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; pointer-events:none;">${spot.name}</span>
@@ -418,7 +486,6 @@ export const MapView = () => {
                  상세정보 👉
                </button>
              </div>`;
-        }
 
         const marker = new Tmapv3.Marker({
           position: position,
@@ -461,21 +528,27 @@ export const MapView = () => {
       }
 
       if (displayData.length > 0) {
-        // 마커 렌더링 후 지도 범위 재설정 (약간의 지연 필요)
+        // 마커 렌더링 후 지도 범위 재설정
+        // 지도가 렌더링된 직후 fitBounds를 호출하여 전체 마커가 보이도록 조정
         setTimeout(() => {
           if (mapInstance.current) {
-            mapInstance.current.fitBounds(bounds);
-
-            // fitBounds 직후 panBy가 무시되는 경우를 방지하기 위해 2차 지연
-            setTimeout(() => {
-              const yOffset = viewMode === 'course' ? -120 : -60;
-              mapInstance.current.panBy(0, yOffset);
-            }, 100);
+            // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
+            // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
+            const bottomPadding = viewMode === 'course' ? 320 : 150;
+            
+            // Tmapv3 fitBounds(bounds, margin) 사용
+            // margin: { top, right, bottom, left }
+            mapInstance.current.fitBounds(bounds, {
+              top: 80,
+              bottom: bottomPadding,
+              left: 40,
+              right: 40
+            });
           }
-        }, 200);
+        }, 150);
       }
     }
-  }, [spots, allPlaces, viewMode, activeCategory, isMapReady, activeStep]);
+  }, [spots, allPlaces, viewMode, activeCategory, isMapReady]);
 
   // Route mode state: 'pedestrian' or 'car'
   const [routeMode, setRouteMode] = useState<'pedestrian' | 'car'>('pedestrian');
@@ -626,8 +699,32 @@ export const MapView = () => {
     return () => clearInterval(checkTmap);
   }, []);
 
+  // 코스 선택 핸들러
+  const handleCourseSelect = (index: number) => {
+    if (allCourses[index] && allCourses[index].places) {
+      setSelectedCourseIndex(index);
+      setSpots(allCourses[index].places);
+      setActiveStep(0);
+      console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
+    }
+  };
+
   return (
     <div className="h-screen bg-gray-50 relative overflow-hidden font-['Inter']">
+
+      {/* Global Loading Overlay for Auto-Generation */}
+      {isAutoGenerating && (
+        <div className="fixed inset-0 z-[1000] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 animate-fade-in">
+          <div className="relative">
+            <Loader2 size={48} className="text-[#0066FF] animate-spin" />
+            <div className="absolute inset-0 bg-blue-400 blur-2xl opacity-20 animate-pulse" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-black text-gray-900">최적의 코스를 설계 중입니다</h2>
+            <p className="text-gray-500 font-bold animate-pulse">잠시만 기다려 주세요...</p>
+          </div>
+        </div>
+      )}
 
       <div
         ref={mapRef}
@@ -635,6 +732,27 @@ export const MapView = () => {
         className="absolute inset-0 z-0 bg-[#E5E7EB]"
         style={{ height: "100vh" }}
       />
+
+      {/* 3개 코스 선택 버튼 (우측 상단) - Updated Layout */}
+      {allCourses.length > 1 && viewMode === 'course' && (
+        <div className="absolute top-32 right-4 z-[100] flex flex-col gap-2.5 items-end animate-fade-in-right">
+          {allCourses.map((course, idx) => (
+            <button
+              key={course.course_id}
+              onClick={() => handleCourseSelect(idx)}
+              className={`px-4 py-3 rounded-2xl font-bold text-xs shadow-lg transition-all flex items-center gap-2.5 ${selectedCourseIndex === idx
+                ? 'bg-[#0066FF] text-white scale-105 ring-4 ring-blue-500/20 shadow-blue-500/30'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                }`}
+            >
+              <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black ${selectedCourseIndex === idx ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                {idx + 1}
+              </span>
+              <span className="truncate max-w-[120px]">{course.course_name}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <header className="absolute top-0 left-0 right-0 z-50 bg-white shadow-sm flex flex-col pointer-events-auto">
         <div className="flex items-center px-6 py-4">
@@ -756,8 +874,8 @@ export const MapView = () => {
             코스 정보가 없습니다.<br />채팅에서 여행 코스를 생성해주세요.
           </div>
         ) : (
-          <div className="px-6 flex flex-col h-full overflow-hidden">
-            {/* 1. Detail View Overlay (공통) */}
+          <div className="px-8 flex flex-col h-full overflow-hidden">
+            {/* 1. Detail View Mode */}
             {(selectedPlace || isDetailLoading) ? (
               <div className="animate-fade-in space-y-4 pt-2 h-full flex flex-col">
                 {/* Header with Back Button */}
@@ -788,7 +906,9 @@ export const MapView = () => {
                 {isDetailLoading ? (
                   <div className="flex flex-col items-center justify-center py-10 gap-4">
                     <div className="w-10 h-10 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm text-gray-500 font-medium animate-pulse">AI 에이전트가 정보를 찾고 있어요...</p>
+                    <p className="text-sm text-gray-500 font-medium animate-pulse">
+                      AI 에이전트가 정보를 찾고 있어요...
+                    </p>
                   </div>
                 ) : (
                   /* Content State */
@@ -798,22 +918,49 @@ export const MapView = () => {
                         <img
                           src={selectedPlace.img}
                           alt={selectedPlace.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover animate-fade-in"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
 
-                    <div className="prose prose-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    <div className="bg-gray-50 p-5 rounded-2xl text-sm text-gray-700 leading-relaxed whitespace-pre-line border border-gray-100 font-medium shadow-sm">
                       {selectedPlace?.content}
                     </div>
 
-                    <div className="mt-8 pt-4 border-t border-gray-100 flex gap-3">
-                      <button onClick={() => { setSelectedPlace(null); setIsDetailLoading(false); }} className="flex-1 bg-[#0066FF] text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition-all">
+                    <div className="mt-4">
+                      <button
+                        onClick={() => {
+                          setSelectedPlace(null);
+                          setIsDetailLoading(false);
+                        }}
+                        className="w-full py-4 bg-[#0066FF] text-white font-bold rounded-xl active:scale-95 transition-all shadow-lg shadow-blue-100"
+                      >
                         확인 완료
                       </button>
                     </div>
                   </div>
                 )}
+              </div>
+            ) : !sheetOpen && viewMode === 'course' ? (
+              // 2. Collapsed Course View
+              <div className="flex items-center justify-between py-4 animate-fade-in">
+                <div className="flex-1">
+                  <span className="text-[10px] font-black text-[#0066FF] uppercase tracking-widest mb-1 block">최적 경로 분석 완료</span>
+                  <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                    {activeStep + 1}. {spots[activeStep].name}
+                  </h2>
+                  <span className="text-gray-300 font-bold text-sm">다음 장소까지 {spots[activeStep].transport}</span>
+                </div>
+                <button
+                  onClick={() => setSheetOpen(true)}
+                  className="w-14 h-14 bg-[#0066FF] text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100 active:scale-95 transition-all"
+                >
+                  <Navigation2 size={24} fill="currentColor" />
+                </button>
               </div>
             ) : viewMode === 'course' ? (
               isCourseDetailExpanded ? (
@@ -844,8 +991,21 @@ export const MapView = () => {
                   </div>
 
                   <div className="flex gap-4 items-start shrink-0">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-md shrink-0 border border-gray-100">
-                      <img src={spots[activeStep].img} className="w-full h-full object-cover" alt="place" />
+                    <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-md shrink-0 border border-gray-100 bg-gray-50">
+                      {spots[activeStep].img ? (
+                        <img
+                          src={spots[activeStep].img}
+                          className="w-full h-full object-cover animate-fade-in"
+                          alt="place"
+                          loading="lazy"
+                          onError={(e) => {
+                             (e.target as HTMLImageElement).style.display = 'none';
+                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-3xl">📍</div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-black text-gray-900 mb-2 truncate">{spots[activeStep].name}</h3>
@@ -928,7 +1088,7 @@ export const MapView = () => {
                   <div className="mb-4 shrink-0 pr-24">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold">Recommended</span>
-                      <h2 className="text-lg font-bold text-gray-900 line-clamp-1">광주 핫플레이스 코스</h2>
+                      <h2 className="text-lg font-bold text-gray-900 line-clamp-1">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
                     </div>
                     <p className="text-sm text-gray-500 font-medium line-clamp-1">동구 동명동 · 34,900원 · 4시간 50분</p>
                     <div className="flex gap-2 mt-3 flex-wrap">
@@ -954,7 +1114,20 @@ export const MapView = () => {
                       >
                         <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                           <span className="absolute top-0 left-0 bg-black/70 text-white text-xs px-2 py-1 rounded-br-lg font-bold z-10">{index + 1}</span>
-                          {spot.img ? (<img src={spot.img} className="w-full h-full object-cover" />) : (<div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>)}
+                          {spot.img ? (
+                            <img
+                              src={spot.img}
+                              className="w-full h-full object-cover transition-opacity duration-300 opacity-0"
+                              loading="lazy"
+                              onLoad={(e) => (e.target as HTMLImageElement).style.opacity = '1'}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-2xl bg-gray-50">📍</div>
+                          )}
                         </div>
                         <div className="flex flex-col justify-center min-w-0 flex-1">
                           <h3 className="font-bold text-gray-900 truncate text-base">{spot.name}</h3>

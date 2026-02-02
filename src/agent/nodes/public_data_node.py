@@ -47,7 +47,7 @@ def _load_food_list_from_json(file_path: str) -> list[dict]:
         return []
 
 
-def public_data_search_node(state: AgentState) -> dict[str, Any]:
+async def public_data_search_node(state: AgentState) -> dict[str, Any]:
     """
     JSON 기반의 공공데이터(맛집 리스트)를 조회하여 후보군을 제공하는 노드입니다.
     
