@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Navigation2, ArrowLeft, Locate, Loader2, Heart } from 'lucide-react';
+import { Search, MapPin, Navigation, ArrowLeft, Menu, X, ChevronRight, Share2, Camera, Loader2, Locate, Heart, Navigation2 } from 'lucide-react';
 import Script from 'next/script';
+import html2canvas from 'html2canvas';
 import { motion, useAnimation, PanInfo } from 'framer-motion';
 import { GeminiService } from '../services/geminiService';
 
@@ -58,6 +60,8 @@ export const MapView = () => {
   // 3개 코스 선택 관련 상태
   const [allCourses, setAllCourses] = useState<any[]>([]); // 3개 코스 전체
   const [selectedCourseIndex, setSelectedCourseIndex] = useState(0); // 선택된 코스 인덱스
+  const [pickedSpots, setPickedSpots] = useState<any[]>([]); // 사용자가 '담은' 장소들
+
 
   // --------------------------------------------------------------------------
   // 2. Event Listener용 State 참조 (Ref 동기화)
@@ -334,6 +338,19 @@ export const MapView = () => {
             setSelectedCourseIndex(0);
             setViewMode('course');
             console.log("✅ [MapView] Loaded all 3 courses, displaying course 1");
+
+            // [상태 복구] 이전에 확정(저장)한 장소들이 있다면 pickedSpots에 복구
+            const savedPicks = localStorage.getItem('current_course');
+            if (savedPicks) {
+              try {
+                const parsedPicks = JSON.parse(savedPicks);
+                // 배열인지 확인 후 복구
+                if (Array.isArray(parsedPicks) && parsedPicks.length > 0) {
+                  setPickedSpots(parsedPicks);
+                  console.log(`♻️ [MapView] Restored ${parsedPicks.length} picked spots`);
+                }
+              } catch (e) { console.error("Failed to restore picked spots", e); }
+            }
           }
         } else {
           // fallback: 기존 current_course 로드
@@ -349,6 +366,8 @@ export const MapView = () => {
       } catch (e) {
         console.error("❌ [MapView] Failed to load data", e);
       }
+
+
     }
   }, [searchParams]);
 
@@ -535,7 +554,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-            
+
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -704,10 +723,60 @@ export const MapView = () => {
     if (allCourses[index] && allCourses[index].places) {
       setSelectedCourseIndex(index);
       setSpots(allCourses[index].places);
+      // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
       console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
     }
   };
+
+  // 장소 담기/빼기 토글 핸들러
+  const togglePickSpot = (e: React.MouseEvent, spot: any) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 방지
+
+    // 이미 담겼는지 확인
+    const isPicked = pickedSpots.some(p => p.name === spot.name && p.lat === spot.lat);
+
+    if (isPicked) {
+      // 이미 담겼으면 제거
+      setPickedSpots(prev => prev.filter(p => !(p.name === spot.name && p.lat === spot.lat)));
+    } else {
+      // 안 담겼으면 추가
+      setPickedSpots(prev => [...prev, spot]);
+    }
+  };
+
+  // 코스 확정 및 타임라인 생성 핸들러
+  const handleConfirmCourse = () => {
+    // 1. 유효성 검사: 담은 장소가 없으면 경고
+    if (pickedSpots.length === 0) {
+      if (confirm("담은 장소가 없습니다. 현재 코스의 모든 장소로 타임라인을 만들까요?")) {
+        // 사용자가 '확인' 누르면 전체 코스 저장
+        localStorage.setItem('current_course', JSON.stringify(spots));
+      } else {
+        return; // 취소하면 아무것도 안 함
+      }
+    } else {
+      // 담은 장소가 있으면 그것만 저장
+      localStorage.setItem('current_course', JSON.stringify(pickedSpots));
+    }
+
+    // 2. 선택된 코스의 메타 데이터도 저장 (제목 등)
+    if (allCourses[selectedCourseIndex]) {
+      localStorage.setItem('current_course_meta', JSON.stringify(allCourses[selectedCourseIndex]));
+    }
+
+    // 3. 타임라인 마지막 장을 위한 지도 화면 캡처 및 저장
+    // [변경] 클라이언트 캡처(html2canvas)는 보안(CORS) 문제로 불안정하므로 제거하고,
+    // 타임라인 화면에서 직접 Tmap 미니맵을 렌더링하는 방식으로 변경함.
+    finishConfirmation(pickedSpots.length > 0 ? pickedSpots.length : spots.length);
+  };
+
+  const finishConfirmation = (count: number) => {
+    alert(`총 ${count}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴에서 확인해보세요.`);
+  };
+
+  // 모바일 감지 헬퍼
+  const IsMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   return (
     <div className="h-screen bg-gray-50 relative overflow-hidden font-['Inter']">
@@ -999,8 +1068,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                             (e.target as HTMLImageElement).style.display = 'none';
-                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (
@@ -1136,13 +1205,35 @@ export const MapView = () => {
                             <span className="text-yellow-400">★</span> <span>4.5</span>
                           </div>
                         </div>
+
+                        {/* [+ 담기] 버튼 추가 */}
+                        <div className="flex flex-col gap-1 items-center justify-center pl-2 border-l border-gray-100">
+                          <button
+                            onClick={(e) => togglePickSpot(e, spot)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${pickedSpots.some(p => p.name === spot.name)
+                              ? 'bg-[#0066FF] text-white shadow-md shadow-blue-200 scale-110'
+                              : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                              }`}
+                          >
+                            {(() => {
+                              const idx = pickedSpots.findIndex(p => p.name === spot.name);
+                              return idx !== -1 ? <span className="text-sm font-black">{idx + 1}</span> : <span className="text-lg font-bold">+</span>;
+                            })()}
+                          </button>
+                          <span className="text-[9px] font-bold text-gray-400">
+                            {pickedSpots.some(p => p.name === spot.name) ? '담김' : '담기'}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-auto flex flex-col gap-3">
-                    <button className="w-full bg-[#FF4444] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-red-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                      <span className="text-lg">📥</span> 코스 저장
+                  <div className="mt-4 z-20">
+                    <button
+                      onClick={handleConfirmCourse}
+                      className="w-full bg-[#0066FF] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">✅</span> 이 코스로 결정하기
                     </button>
                   </div>
                 </div>
@@ -1185,9 +1276,9 @@ export const MapView = () => {
                 </div>
               </div>
             )}
-          </div>
+          </div >
         )}
-      </motion.div>
+      </motion.div >
 
       <div className="fixed bottom-0 left-0 right-0 h-24 bg-white z-[150]" />
     </div >
