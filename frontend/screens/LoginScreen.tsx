@@ -3,6 +3,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 /**
  * [Image 0 Reference: Clean White Login with Mascot]
@@ -123,10 +124,13 @@ export const LoginScreen = () => {
             <div className="flex flex-col items-center mb-10 animate-fade-in">
                 <div className="w-64 h-64 mb-6 flex items-center justify-center relative">
                     {/* Replicating the mascot mountain character from Image 0 */}
-                    <img
+                    <Image
                         src="https://img.freepik.com/free-vector/cute-mountain-character-illustration_23-2148766126.jpg?w=740"
-                        className="w-full h-full object-contain"
+                        className="object-contain"
                         alt="ONui Mascot"
+                        fill
+                        priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     {/* Optional: Add a subtle shadow under the mascot */}
                     <div className="absolute bottom-4 w-32 h-4 bg-gray-100 rounded-full blur-md -z-10" />

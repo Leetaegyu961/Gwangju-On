@@ -13,14 +13,15 @@ graph TD
     Client[Frontend (Next.js)] -->|REST API| API[FastAPI Server]
     API -->|Validation| Models[Pydantic Models]
     API -->|Session| UserDB[In-Memory User DB]
-    API -->|Invoke| Agent[AI Agent (LangGraph)]
-    Agent -->|Context| External[Google/Naver APIs]
+    API -->|Invoke| MainAgent[Main Agent (LangGraph)]
+    API -->|Invoke| MiniAgent[Mini Agent (Optional)]
+    MainAgent -->|Context| External[Google/Naver APIs]
 ```
 
 ### 주요 컴포넌트
 1.  **FastAPI App (`main.py`)**: 서버 진입점, CORS 설정, 라우터 등록.
 2.  **Routers (`api/`)**: 기능별 엔드포인트 분리.
-    *   `chat.py`: AI 채팅 및 코스 생성 요청 처리.
+    *   `chat.py`: AI 채팅 및 코스 생성 요청 처리. Main Agent를 실행합니다.
     *   `user.py`: 사용자 온보딩 및 설문 데이터 관리.
     *   `photo.py`: Google Photo API 이미지 프록시 (CORS 우회용).
 3.  **Models (`models/`)**: Pydantic을 이용한 데이터 유효성 검사 및 스키마 정의.
@@ -85,31 +86,46 @@ Frontend가 실제 호출하는 주요 API 엔드포인트에 대한 설명입�
 
 *   **Internal Process (Backend 처리 과정)**:
     1.  `request.userId`로 `USER_DB`에서 설문 데이터 조회.
-    2.  `src.agent.graph`의 `agent_app.invoke()` 실행 (메시지 + 설문 데이터 주입).
-    3.  Agent가 내부적으로 Google/Naver 검색 후 **JSON 문자열** 리턴.
-    4.  Backend는 이 JSON을 파싱하여 `EvidenceCard` 리스트로 변환.
-        *   사진 URL은 `http://localhost:8000/api/photo?name=...` 형태의 Proxy URL로 변환하여 Frontend의 CORS 에러 방지.
+    2.  `src.agent.graph`의 `agent_app.ainvoke()` 실행 (메시지 + 설문 데이터 주입).
+    3.  Agent가 내부적으로 Google/Naver 검색 및 Scoring v4 수행 후 병렬로 3가지 코스 생성.
+    4.  Backend는 결과 JSON을 파싱하여 `allCourses` 및 `EvidenceCard` 리스트로 변환.
 
 *   **Response (`ChatResponse`)**:
     ```json
     {
       "id": "msg-uuid",
       "role": "assistant",
-      "text": "동명동의 **00카페**와 **00식당**을 추천해요! 지도를 확인해보세요.",
+      "text": "동명동의 핫한 장소들을 모아 3가지 코스로 준비했어요! 💖",
       "status": "done",
       "isDecisionPoint": true,
-      "evidenceCards": [
+      "evidenceCards": [ ... ], // 첫 번째 코스의 장소들 (Legacy 호환용)
+      "allCourses": [
         {
-          "placeId": "p1",
-          "name": "오디너리 디저트",
-          "description": "케이크가 맛있는 카페",
-          "lat": 35.145,
-          "lng": 126.920,
-          "img": "http://localhost:8000/api/photo?name=places/...",
-          "score": 90,
-          "reason": "티라미수 맛집"
+          "course_id": 1,
+          "course_name": "맛집 탐방 코스",
+          "course_description": "실패 없는 찐맛집 위주",
+          "cards": [
+            {
+              "placeId": "p1",
+              "name": "오디너리 디저트",
+              "description": "케이크가 맛있는 카페",
+              "img": "http://localhost:8000/api/photo?name=...",
+              "score": 90,
+              "reason": "티라미수 맛집"
+            },
+            ...
+          ]
         },
-        ...
+        {
+          "course_id": 2,
+          "course_name": "힐링 산책 코스",
+          ...
+        },
+        {
+          "course_id": 3,
+          "course_name": "인스타 핫플 코스",
+          ...
+        }
       ]
     }
     ```
@@ -138,7 +154,7 @@ backend/
 │   ├── user.py      # /api/user (In-Memory DB)
 │   └── photo.py     # /api/photo (Image Proxy)
 ├── models/          # Pydantic 데이터 모델
-│   ├── chat.py      # ChatRequest, ChatResponse, EvidenceCard
+│   ├── chat.py      # ChatRequest, ChatResponse, EvidenceCard, CourseInfo
 │   └── user.py      # UserProfile, SurveyResult
 └── run.py           # uvicorn 실행 스크립트
 ```
