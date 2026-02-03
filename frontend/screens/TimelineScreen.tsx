@@ -2,10 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Plus, FolderArchive, Images } from 'lucide-react';
+import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Plus, FolderArchive, Images, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import Script from 'next/script';
+
+
+// Fix for Framer Motion + React 19 type mismatch
+const MotionDiv = motion.div as any;
 
 // 앨범 데이터 타입 정의
 interface Album {
@@ -37,133 +41,73 @@ export default function TimelineScreen() {
     const hiddenSlidesRef = useRef<HTMLDivElement>(null); // Ref for hidden all-slides
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // [New] Tmap 미니맵 관련 상태
-    const miniMapRef = useRef<HTMLDivElement>(null);
-    const miniMapInstance = useRef<any>(null);
-    const [isMiniMapReady, setIsMiniMapReady] = useState(false);
-    // [New] 다운로드 중인지 여부 (True면 Tmap 대신 SVG 지도를 렌더링)
-    const [isDownloading, setIsDownloading] = useState(false);
+    // [New] Static Map Image State
+    const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
 
+    // [Restored] Load Course Data from LocalStorage
     useEffect(() => {
-        // 1. 저장된 코스(최근 코스) 불러오기
         const stored = localStorage.getItem('current_course');
         const currentCourseSpots = stored ? JSON.parse(stored) : [];
         const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
 
-        // 2. 더미 데이터 (지난 여행) 생성 - 제거됨
-        const pastAlbums: Album[] = [];
-
-        // 3. 현재 코스가 있다면 최상단에 추가
         if (currentCourseSpots.length > 0) {
             const currentAlbum: Album = {
                 id: 'current',
                 title: '광주에서 보낸 오후',
                 date: today,
-                location: '광주 동구', // 임시 위치
+                location: '광주 동구',
                 description: '#혼행 #힐링',
                 spots: currentCourseSpots,
                 isNew: true
             };
-            setAlbums([currentAlbum, ...pastAlbums]);
-        } else {
-            setAlbums(pastAlbums);
+            setAlbums([currentAlbum]);
         }
     }, []);
 
-    // [New] Tmap 초기화 함수 (미니맵용)
-    const initMiniMap = () => {
-        if (!miniMapRef.current || !(window as any).Tmapv3 || miniMapInstance.current) return;
-
-        console.log("🗺️ [Timeline] Initializing MiniMap...");
-        const Tmapv3 = (window as any).Tmapv3;
-
-        // 1. 초기 중심 좌표 계산 (첫 번째 장소)
-        let centerLat = 35.1595;
-        let centerLng = 126.8526;
-
-        // 현재 보여지는 코스 데이터 가져오기
-        const currentCourse = selectedAlbum ? selectedAlbum.spots : (albums.length > 0 ? albums[0].spots : []);
-
-        if (currentCourse.length > 0) {
-            centerLat = parseFloat(currentCourse[0].lat);
-            centerLng = parseFloat(currentCourse[0].lng);
-        }
-
-        // 2. 지도 생성 (줌 컨트롤 등 불필요한 UI 제거)
-        miniMapInstance.current = new Tmapv3.Map(miniMapRef.current, {
-            center: new Tmapv3.LatLng(centerLat, centerLng),
-            width: "100%",
-            height: "100%",
-            zoom: 14,
-            zoomControl: false,
-            scrollwheel: false, // 스크롤 줌 방지
-            draggable: false,   // 드래그 방지 (정적 지도처럼 보이게)
-        });
-
-        // 3. 마커 및 경로 그리기
-        const bounds = new Tmapv3.LatLngBounds();
-        const path: any[] = [];
-
-        currentCourse.forEach((spot: any, idx: number) => {
-            const lat = parseFloat(spot.lat);
-            const lng = parseFloat(spot.lng);
-            const position = new Tmapv3.LatLng(lat, lng);
-
-            path.push(position);
-            bounds.extend(position);
-
-            // 심플한 숫자 마커
-            const markerContent = `<div style="background:#FF6B00; color:white; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:10px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${idx + 1}</div>`;
-
-            new Tmapv3.Marker({
-                position: position,
-                map: miniMapInstance.current,
-                iconHTML: markerContent
-            });
-        });
-
-        // 경로 선 그리기
-        if (path.length > 1) {
-            new Tmapv3.Polyline({
-                path: path,
-                strokeColor: "#FF6B00",
-                strokeWeight: 3,
-                map: miniMapInstance.current,
-                strokeStyle: "dashed" // 점선 스타일
-            });
-        }
-
-        // 4. 지도 영역 맞춤
-        setTimeout(() => {
-            if (miniMapInstance.current) {
-                miniMapInstance.current.fitBounds(bounds, { top: 20, bottom: 20, left: 20, right: 20 });
-            }
-        }, 100);
-
-        setIsMiniMapReady(true);
-    };
-
-    // Tmap 로드 감지 및 초기화 (슬라이드가 'Ending'일 때 등 트리거)
+    // Fetch Static Map from Backend
     useEffect(() => {
-        // 엔딩 슬라이드가 아니거나 다운로드 중이면 중단
-        if (currentSlide <= course.length || isDownloading) return;
+        const fetchStaticMap = async () => {
+            const currentCourse = selectedAlbum ? selectedAlbum.spots : (albums.length > 0 ? albums[0].spots : []);
+            if (!currentCourse || currentCourse.length === 0) return;
 
-        // 다운로드가 끝나고 돌아왔을 때, 기존 인스턴스 초기화 (DOM이 새로 생겼으므로)
-        if (miniMapInstance.current) {
-            miniMapInstance.current = null;
-            setIsMiniMapReady(false);
-        }
+            setMapImageUrl(null); // Reset
 
-        // 지도 초기화 시도
-        const checkMap = setInterval(() => {
-            // miniMapRef가 존재하고, Tmap 스크립트가 로드되었으며, 인스턴스가 없을 때
-            if (miniMapRef.current && (window as any).Tmapv3 && !miniMapInstance.current) {
-                initMiniMap();
-                clearInterval(checkMap);
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+                // Construct payload
+                const markers = currentCourse.map((s: any) => ({
+                    lat: parseFloat(s.lat),
+                    lng: parseFloat(s.lng)
+                }));
+                const path = currentCourse.map((s: any) => ({
+                    lat: parseFloat(s.lat),
+                    lng: parseFloat(s.lng)
+                }));
+
+                const res = await fetch(`${API_URL}/api/maps/static`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        markers: markers,
+                        path: path,
+                        size: "600x600",
+                        maptype: "roadmap"
+                    })
+                });
+
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    setMapImageUrl(url);
+                }
+            } catch (e) {
+                console.error("Failed to fetch static map", e);
             }
-        }, 500);
-        return () => clearInterval(checkMap);
-    }, [currentSlide, isDownloading]); // isDownloading이 false가 되면 다시 실행됨
+        };
+
+        fetchStaticMap();
+    }, [selectedAlbum, albums]);
 
     const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -190,12 +134,70 @@ export default function TimelineScreen() {
         });
     };
 
+    // Share Current Slide Logic
+    const handleShare = async () => {
+        if (!cardRef.current || isGenerating) return;
+        setIsGenerating(true);
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
+            const canvas = await html2canvas(cardRef.current, {
+                scale: 2,
+                backgroundColor: '#FDFBF7',
+                useCORS: true,
+                logging: false,
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    setIsGenerating(false);
+                    return;
+                }
+                const file = new File([blob], "gwangju-trip.png", { type: "image/png" });
+
+                // 1. 네이티브 공유 시도 (모바일 등)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: '광주 여행 코스',
+                            text: '나만의 광주 여행 코스를 확인해보세요!'
+                        });
+                    } catch (shareError) {
+                        // 사용자가 취소한 경우 등
+                        console.log("Share cancelled or failed", shareError);
+                    }
+                }
+                // 2. 클립보드 복사 시도 (PC 등)
+                else {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({
+                                [blob.type]: blob
+                            })
+                        ]);
+                        alert("이미지가 클립보드에 복사되었습니다.\n채팅방에 붙여넣기(Ctrl+V) 하세요!");
+                    } catch (clipError) {
+                        console.error("Clipboard failed", clipError);
+                        alert("이 브라우저에서는 공유 기능을 지원하지 않습니다.\n'저장' 기능을 이용해주세요.");
+                    }
+                }
+                setIsGenerating(false);
+            }, 'image/png');
+
+        } catch (e) {
+            console.error("Share failed", e);
+            setIsGenerating(false);
+            alert("공유하기 실패");
+        }
+    };
+
     // Save Current Slide Logic
     const handleDownloadCard = async () => {
         if (!cardRef.current) return;
         setIsGenerating(true);
 
-        setIsDownloading(true); // 캡처 모드 시작 (Tmap -> SVG 전환)
+        setIsGenerating(true);
 
         try {
             // DOM이 SVG로 전환될 때까지 충분히 대기
@@ -222,7 +224,6 @@ export default function TimelineScreen() {
             console.error("Failed to generate image", err);
             alert("이미지 생성에 실패했습니다.");
         } finally {
-            setIsDownloading(false); // 캡처 모드 종료 (SVG -> Tmap 복귀)
             setIsGenerating(false);
         }
     };
@@ -302,37 +303,6 @@ export default function TimelineScreen() {
     const renderEndingSlideContent = () => {
         const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
 
-        // [SVG Map Calculation for Capture Mode]
-        let pathData = "";
-        let svgPoints: { x: number, y: number, name: string }[] = [];
-
-        if (isDownloading) {
-            const validSpots = course.filter(s => s.lat && s.lng);
-            if (validSpots.length >= 2) {
-                const lats = validSpots.map(s => parseFloat(s.lat));
-                const lngs = validSpots.map(s => parseFloat(s.lng));
-                let minLat = Math.min(...lats); let maxLat = Math.max(...lats);
-                let minLng = Math.min(...lngs); let maxLng = Math.max(...lngs);
-
-                // 좌표 범위가 너무 좁으면(한 장소 근처) 확대
-                if (maxLat - minLat < 0.001) { minLat -= 0.005; maxLat += 0.005; }
-                if (maxLng - minLng < 0.001) { minLng -= 0.005; maxLng += 0.005; }
-
-                const padding = 0.25;
-                svgPoints = validSpots.map(s => {
-                    let x = (parseFloat(s.lng) - minLng) / ((maxLng - minLng) || 1);
-                    let y = (parseFloat(s.lat) - minLat) / ((maxLat - minLat) || 1);
-                    y = 1 - y; // Y축 반전
-                    x = x * (1 - padding * 2) + padding;
-                    y = y * (1 - padding * 2) + padding;
-                    return { x: x * 100, y: y * 100, name: s.place_name };
-                });
-            } else {
-                svgPoints = course.map((s, i) => ({ x: 20 + i * 30, y: 80 - i * 25, name: s.place_name })).slice(0, 3);
-            }
-            pathData = svgPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x}% ${p.y}%`).join(' ');
-        }
-
         return (
             <div className="w-full h-full bg-[#FDFBF7] p-6 flex flex-col">
                 {/* Header */}
@@ -346,20 +316,23 @@ export default function TimelineScreen() {
                 </div>
 
                 {/* Photo Grid (Adaptive: up to 4) */}
-                <div className={`grid gap-2 mb-6 ${course.length === 1 ? 'grid-cols-1' : course.length === 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
+                {/* Photo Grid (2x2 wide) */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
                     {course.slice(0, 4).map((spot, i) => {
                         const img = photos[i] || spot.img || placeholders[i % 3];
-                        // 3개일 때 마지막 칸을 꽉 채우기 위한 로직 (옵션)
+                        // 3개일 때 마지막 사진을 가로로 길게 (옵션)
                         const isLastAndOdd = course.length === 3 && i === 2;
 
                         return (
-                            <div key={i} className={`flex flex-col gap-2 ${isLastAndOdd ? 'col-span-2 w-1/2 mx-auto' : ''}`}>
-                                <div className="w-full aspect-[16/9] rounded-xl overflow-hidden shadow-sm relative">
+                            <div key={i} className={`flex flex-col gap-2 ${isLastAndOdd ? 'col-span-2' : ''}`}>
+                                <div className="w-full aspect-[2.5/1] rounded-lg overflow-hidden shadow-sm relative">
                                     <img src={img} className="w-full h-full object-cover" crossOrigin="anonymous" alt={`spot-${i}`} />
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 text-white pt-6">
-                                        <div className="flex items-center gap-1 mb-0.5">
-                                            <div className="w-3.5 h-3.5 rounded-full bg-white text-black flex items-center justify-center text-[9px] font-black">{i + 1}</div>
-                                            <span className="text-[9px] font-bold truncate">{spot.place_name}</span>
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-8">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-5 h-5 rounded-full bg-white text-black flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0 leading-none pb-[1px]">
+                                                {i + 1}
+                                            </div>
+                                            <span className="text-white text-[11px] font-bold truncate drop-shadow-md">{spot.place_name}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -376,89 +349,24 @@ export default function TimelineScreen() {
                         <div className="h-[1px] bg-gray-200 flex-1"></div>
                     </div>
 
-                    <div className="flex-1 bg-white rounded-xl border border-gray-100 relative overflow-hidden shadow-sm p-4">
-                        {isDownloading ? (
-                            <div key="capture-mode-map" className="w-full h-full relative bg-[#FDFBF7] z-50 overflow-hidden">
-                                {/* 1. Tmap Static Image (Real Map) */}
-                                {/* 1. Tmap Static Image (Real Map) */}
-                                {(() => {
-                                    const validSpots = course.filter(s => s.lat && s.lng);
-                                    if (validSpots.length < 1) return <div className="absolute inset-0 bg-gray-100" />;
-
-                                    const lats = validSpots.map(s => parseFloat(s.lat));
-                                    const lngs = validSpots.map(s => parseFloat(s.lng));
-                                    const minLat = Math.min(...lats); const maxLat = Math.max(...lats);
-                                    const minLng = Math.min(...lngs); const maxLng = Math.max(...lngs);
-                                    const centerLat = (minLat + maxLat) / 2;
-                                    const centerLng = (minLng + maxLng) / 2;
-                                    const maxSpan = Math.max(maxLat - minLat, maxLng - minLng);
-
-                                    let zoom = 14;
-                                    if (maxSpan > 0.1) zoom = 10;
-                                    else if (maxSpan > 0.05) zoom = 11;
-                                    else if (maxSpan > 0.02) zoom = 12;
-                                    else if (maxSpan > 0.01) zoom = 13;
-
-                                    const url = `https://apis.openapi.sk.com/tmap/staticMap?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_APP_KEY}&format=PNG&width=700&height=350&zoom=${zoom}&longitude=${centerLng}&latitude=${centerLat}`;
-
-                                    return (
-                                        <img
-                                            src={url}
-                                            className="absolute inset-0 w-full h-full object-cover opacity-90"
-                                            crossOrigin="anonymous"
-                                            alt="Tmap Background"
-                                        />
-                                    );
-                                })()}
-
-                                {/* 2. 그라데이션 오버레이 (가독성 확보) */}
-                                <div className="absolute inset-0 bg-white/20 pointer-events-none"></div>
-
-                                {/* 3. 데이터 경로 (점선 + 그림자) */}
-                                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{ filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.1))' }}>
-                                    <path d={pathData} fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                                    <path d={pathData} fill="none" stroke="#FF6B00" strokeWidth="3" strokeDasharray="6 4" strokeLinecap="round" />
-                                </svg>
-
-                                {/* 4. 마커 및 장소명 */}
-                                {svgPoints.map((p, i) => (
-                                    <div key={i} className="absolute flex flex-col items-center z-20" style={{ left: `${p.x}%`, top: `${p.y}%`, transform: 'translate(-50%, -50%)' }}>
-                                        <div className="relative">
-                                            <div className="w-8 h-8 rounded-full bg-[#FF6B00] text-white text-xs font-black flex items-center justify-center shadow-lg border-2 border-white z-10 relative">
-                                                {i + 1}
-                                            </div>
-                                            {/* 마커 그림자 */}
-                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-1 bg-black/20 rounded-full blur-[1px]"></div>
-                                        </div>
-                                        <div className="mt-1.5 px-2 py-1 bg-white/95 rounded-md shadow-sm border border-orange-100 flex flex-col items-center">
-                                            <span className="text-[9px] font-bold text-gray-800 whitespace-nowrap">{p.name}</span>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* 5. 로고 워터마크 (우측 하단) */}
-                                <div className="absolute bottom-3 right-3 flex items-center gap-1 opacity-60">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                    <span className="text-[9px] text-gray-400 font-bold tracking-wider">Gwangju-On Map</span>
-                                </div>
+                    <div className="flex-1 bg-white rounded-xl border border-gray-100 relative overflow-hidden shadow-sm p-2 min-h-[180px]">
+                        {mapImageUrl ? (
+                            <div className="w-full h-full relative z-10 overflow-hidden rounded-lg">
+                                <img
+                                    src={mapImageUrl}
+                                    className="w-full h-full object-cover"
+                                    alt="Travel Route Map"
+                                />
                             </div>
                         ) : (
-                            <div key="interactive-mode-map" id="mini_map_div" ref={miniMapRef} className="w-full h-full rounded-lg overflow-hidden bg-gray-100 relative">
-                                {!isMiniMapReady && (
-                                    <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs bg-gray-50">
-                                        지도를 불러오는 중...
-                                    </div>
-                                )}
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50 rounded-lg">
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-400 rounded-full animate-spin"></div>
+                                    <span className="text-[10px] text-gray-400">지도 생성 중...</span>
+                                </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Tmap Script Load */}
-                    <Script
-                        src={`https://apis.openapi.sk.com/tmap/jsv2?version=1&appKey=${process.env.NEXT_PUBLIC_TMAP_APP_KEY}`}
-                        onLoad={() => console.log("✅ [Timeline] Tmap Loaded")}
-                        strategy="afterInteractive"
-                    />
 
                     <div className="text-center mt-3">
                         <span className="text-[9px] text-gray-300 font-serif italic">{today} · Gwangju-On</span>
@@ -490,35 +398,42 @@ export default function TimelineScreen() {
                     </button>
 
                     {albums.map((album, index) => {
+                        const spots = album.spots || [];
+                        const count = spots.length;
+
                         // 앨범 표지용 이미지 소스 결정
-                        const mainImg = album.spots && album.spots.length > 0 && album.spots[0].img ? album.spots[0].img : album.coverImg || placeholders[0];
-                        const subImg1 = album.spots && album.spots.length > 1 && album.spots[1].img ? album.spots[1].img : placeholders[1];
-                        const subImg2 = album.spots && album.spots.length > 2 && album.spots[2].img ? album.spots[2].img : placeholders[2];
+                        const mainImg = spots.length > 0 && spots[0].img ? spots[0].img : album.coverImg || placeholders[0];
+                        const subImg1 = spots.length > 1 && spots[1].img ? spots[1].img : placeholders[1];
+                        const subImg2 = spots.length > 2 && spots[2].img ? spots[2].img : placeholders[2];
 
                         return (
-                            <motion.div
+                            <MotionDiv
                                 key={album.id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.15 }}
                                 onClick={() => handleAlbumClick(album)}
-                                className="group cursor-pointer relative pb-4 pr-4" // Padding for the stacked photos to be visible
+                                className="group cursor-pointer relative pb-4 pr-4"
                             >
-                                {/* --- Behind Stacked Photos (One Direction: Right/Bottom) --- */}
+                                {/* --- Behind Stacked Photos --- */}
 
-                                {/* Photo 3 (Back-most) */}
-                                <div className="absolute top-4 left-6 w-[90%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[6deg] z-0 transition-transform duration-500 group-hover:rotate-[12deg] group-hover:translate-x-8 group-hover:translate-y-2 border border-gray-200">
-                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.2]">
-                                        <img src={subImg2} className="w-full h-full object-cover opacity-80" alt="back" />
+                                {/* Photo 3 (Back-most) - 3개 이상일 때만 */}
+                                {count > 2 && (
+                                    <div className="absolute top-4 left-6 w-[90%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[6deg] z-0 transition-transform duration-500 group-hover:rotate-[12deg] group-hover:translate-x-8 group-hover:translate-y-2 border border-gray-200">
+                                        <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.2]">
+                                            <img src={subImg2} className="w-full h-full object-cover opacity-80" alt="back" />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                {/* Photo 2 (Middle) */}
-                                <div className="absolute top-2 left-3 w-[95%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[3deg] z-10 transition-transform duration-500 group-hover:rotate-[6deg] group-hover:translate-x-4 group-hover:translate-y-1 border border-gray-200">
-                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1]">
-                                        <img src={subImg1} className="w-full h-full object-cover opacity-90" alt="middle" />
+                                {/* Photo 2 (Middle) - 2개 이상일 때만 */}
+                                {count > 1 && (
+                                    <div className="absolute top-2 left-3 w-[95%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[3deg] z-10 transition-transform duration-500 group-hover:rotate-[6deg] group-hover:translate-x-4 group-hover:translate-y-1 border border-gray-200">
+                                        <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1]">
+                                            <img src={subImg1} className="w-full h-full object-cover opacity-90" alt="middle" />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* --- Main Cover Card (Front) --- */}
                                 <div className="relative z-20 bg-white p-6 shadow-xl shadow-gray-200/50 transition-all duration-500 max-w-[340px] w-full aspect-[3/4.5] flex flex-col items-center overflow-hidden border border-gray-50 transform group-hover:-translate-y-1"
@@ -541,26 +456,59 @@ export default function TimelineScreen() {
 
                                     {/* 2. Photo Layout (Collage) */}
                                     <div className="relative w-full flex-1 mb-8 z-10">
-                                        {/* Main Photo (Left, Large) */}
-                                        <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
-                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1] contrast-[1.05]">
-                                                <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                        {/* Case 1: 1 Photo */}
+                                        {count === 1 && (
+                                            <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
+                                                    <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        {/* Sub Photo 1 (Top Right) */}
-                                        <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
-                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                <img src={subImg1} className="w-full h-full object-cover" alt="sub1" />
-                                            </div>
-                                        </div>
+                                        {/* Case 2: 2 Photos */}
+                                        {count === 2 && (
+                                            <>
+                                                <div className="absolute top-[10%] right-[5%] w-[60%] h-[70%] bg-white p-2 pb-6 shadow-md transform rotate-[5deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                        <img src={subImg1} className="w-full h-full object-cover" alt="sub" />
+                                                    </div>
+                                                </div>
+                                                <div className="absolute top-[5%] left-[5%] w-[65%] h-[80%] bg-white p-2 pb-6 shadow-xl transform rotate-[-3deg] z-20 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
 
-                                        {/* Sub Photo 2 (Bottom Right) */}
-                                        <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
-                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                <img src={subImg2} className="w-full h-full object-cover" alt="sub2" />
+                                        {/* Case 3+: 3 Photos (Default) */}
+                                        {count >= 3 && (
+                                            <>
+                                                <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1] contrast-[1.05]">
+                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                    </div>
+                                                </div>
+                                                <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                        <img src={subImg1} className="w-full h-full object-cover" alt="sub1" />
+                                                    </div>
+                                                </div>
+                                                <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
+                                                        <img src={subImg2} className="w-full h-full object-cover" alt="sub2" />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                        {/* (Fallback for 0 photos: same as Case 1 but with placeholder) */}
+                                        {count === 0 && (
+                                            <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
+                                                    <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     {/* 3. Footer */}
@@ -575,7 +523,7 @@ export default function TimelineScreen() {
                                     <div className="absolute inset-0 bg-[#FF6B00] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
                                     {album.isNew && <div className="absolute top-4 left-4 bg-[#FF6B00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-50">NEW</div>}
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         );
                     })}
                 </div>
@@ -691,7 +639,7 @@ export default function TimelineScreen() {
                 <div className="space-y-12 relative">
                     <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-gray-200 -z-10 bg-repeat-y" style={{ backgroundImage: 'linear-gradient(to bottom, #E5E7EB 50%, transparent 50%)', backgroundSize: '2px 10px' }}></div>
                     {course.map((spot, index) => (
-                        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} key={index} className="flex gap-5">
+                        <MotionDiv initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} key={index} className="flex gap-5">
                             <div className="shrink-0 relative">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-sm border-4 border-[#FDFBF7] ${photos[index] ? 'bg-[#FF6B00] text-white' : 'bg-white text-gray-400'}`}>
                                     {photos[index] ? <CheckCircle2 size={18} /> : <span className="text-sm font-black">{index + 1}</span>}
@@ -729,7 +677,7 @@ export default function TimelineScreen() {
                                     )}
                                 </label>
                             </div>
-                        </motion.div>
+                        </MotionDiv>
                     ))}
                 </div>
             </section>
@@ -751,10 +699,10 @@ export default function TimelineScreen() {
             <AnimatePresence>
                 {isCardModalOpen && (
                     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCardModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                        <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCardModalOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
-                        {/* Carousel Area - Centered Vertically */}
-                        <div className="flex-1 flex items-center justify-center w-full z-10 overflow-hidden relative">
+                        {/* Carousel Area - Adjusted for safe area */}
+                        <div className="flex-1 w-full z-10 relative overflow-y-auto py-10 flex flex-col items-center">
                             {/* Close Button - Top Right */}
                             <div className="absolute top-4 right-4 z-50">
                                 <button onClick={() => setIsCardModalOpen(false)} className="p-3 bg-white/20 rounded-full hover:bg-white/30 backdrop-blur-md text-white transition-all">
@@ -762,7 +710,7 @@ export default function TimelineScreen() {
                                 </button>
                             </div>
 
-                            <motion.div
+                            <MotionDiv
                                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -792,7 +740,7 @@ export default function TimelineScreen() {
                                         <AnimatePresence mode="wait">
                                             {/* 1. Cover Slide */}
                                             {currentSlide === 0 && (
-                                                <motion.div
+                                                <MotionDiv
                                                     key="cover"
                                                     initial={{ opacity: 0, x: 20 }}
                                                     animate={{ opacity: 1, x: 0 }}
@@ -884,7 +832,7 @@ export default function TimelineScreen() {
                                                         </div>
                                                     </div>
                                                     <div className="absolute inset-0 bg-[#FF6B00] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
-                                                </motion.div>
+                                                </MotionDiv>
                                             )}
 
                                             {/* 2. Spot Slides */}
@@ -892,7 +840,7 @@ export default function TimelineScreen() {
                                                 const spot = course[currentSlide - 1];
                                                 const displayImg = photos[currentSlide - 1] || spot.img || placeholders[(currentSlide - 1) % 3];
                                                 return (
-                                                    <motion.div
+                                                    <MotionDiv
                                                         key={`spot-${currentSlide}`}
                                                         initial={{ opacity: 0, x: 20 }}
                                                         animate={{ opacity: 1, x: 0 }}
@@ -923,13 +871,13 @@ export default function TimelineScreen() {
                                                         <div className="mt-6 text-center">
                                                             <span className="text-[10px] font-bold text-gray-300">- {currentSlide} / {course.length} -</span>
                                                         </div>
-                                                    </motion.div>
+                                                    </MotionDiv>
                                                 );
                                             })()}
 
                                             {/* 3. Ending Slide */}
                                             {currentSlide > course.length && (
-                                                <motion.div
+                                                <MotionDiv
                                                     key="ending"
                                                     initial={{ opacity: 0, x: 20 }}
                                                     animate={{ opacity: 1, x: 0 }}
@@ -938,7 +886,7 @@ export default function TimelineScreen() {
                                                     className="w-full h-full"
                                                 >
                                                     {renderEndingSlideContent()}
-                                                </motion.div>
+                                                </MotionDiv>
                                             )}
                                         </AnimatePresence>
                                     </div>
@@ -958,12 +906,21 @@ export default function TimelineScreen() {
                                     ))}
                                 </div>
 
-                                {/* Download Buttons - Moved Here */}
-                                <div className="flex gap-4 animate-fade-in-up mt-2">
+                                {/* Download & Share Buttons */}
+                                <div className="flex gap-3 animate-fade-in-up mt-2">
+                                    <button
+                                        onClick={handleShare}
+                                        disabled={isGenerating}
+                                        className="w-12 h-12 bg-white text-gray-900 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-gray-50 border border-gray-100"
+                                        title="공유하기"
+                                    >
+                                        <Share2 size={20} className="text-gray-600" />
+                                    </button>
+
                                     <button
                                         onClick={handleDownloadCard}
                                         disabled={isGenerating}
-                                        className="px-6 py-3 bg-white text-gray-900 font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-2 hover:bg-gray-50"
+                                        className="px-5 py-3 bg-white text-gray-900 font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center gap-2 hover:bg-gray-50"
                                     >
                                         {isGenerating ? (
                                             <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
@@ -977,19 +934,19 @@ export default function TimelineScreen() {
                                     <button
                                         onClick={handleDownloadAll}
                                         disabled={isGenerating}
-                                        className="px-6 py-3 bg-[#FF6B00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/30 active:scale-95 transition-all flex items-center gap-2 hover:bg-[#ff7b1a]"
+                                        className="px-5 py-3 bg-[#FF6B00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/30 active:scale-95 transition-all flex items-center gap-2 hover:bg-[#ff7b1a]"
                                     >
                                         {isGenerating ? (
                                             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                         ) : (
                                             <>
                                                 <Images size={18} />
-                                                <span className="text-xs">전체 이미지 저장</span>
+                                                <span className="text-xs">전체 저장</span>
                                             </>
                                         )}
                                     </button>
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         </div>
                     </div>
                 )}

@@ -56,11 +56,12 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api")
-from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note
+from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps
 app.include_router(user.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
 app.include_router(place_info.router, prefix="/api")  # Mini Agent API
 app.include_router(tmap.router, prefix="/api")  # Tmap POI Search
+app.include_router(maps.router, prefix="/api")  # Google Static Maps
 app.include_router(auth.router, prefix="/api")
 app.include_router(journey.router, prefix="/api")
 app.include_router(tasting_note.router, prefix="/api")

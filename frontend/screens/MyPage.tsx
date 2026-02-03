@@ -1,16 +1,18 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut, Brain } from 'lucide-react';
+import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut, Brain, ArrowLeft } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import { SavedCourse } from '../types';
 import { AgentContextDashboard } from '../features/dashboard/AgentContextDashboard';
 import GuestSettingsModal from '../components/user/GuestSettingsModal';
 import UserSettingsModal from '../components/user/UserSettingsModal';
+import { motion } from 'framer-motion';
 
 const aiService = new GeminiService();
+// Fix for React 19 type mismatch
+const MotionDiv = motion.div as any;
 
 /**
  * [Prompt 7: My Page Screen Refinement]
@@ -25,7 +27,6 @@ export const MyPage = () => {
    const [showUserModal, setShowUserModal] = useState(false);
 
    useEffect(() => {
-      // 1. Load from LocalStorage immediately on mount preventing hydration mismatch
       if (typeof window !== 'undefined') {
          const saved = localStorage.getItem('user_profile');
          if (saved) {
@@ -33,16 +34,13 @@ export const MyPage = () => {
          }
       }
 
-      // 2. Fetch fresh Profile from server
       aiService.getUserProfile().then(p => {
          if (p) {
             setProfile(p);
             localStorage.setItem('user_profile', JSON.stringify(p));
          }
       });
-      // Fetch Courses
       aiService.getCourses().then(setSavedCourses);
-      // Fetch Statistics
       aiService.getUserStatistics().then(setStatistics);
    }, []);
 
@@ -60,106 +58,153 @@ export const MyPage = () => {
    const userName = profile?.name || 'GUEST';
    const userImage = (profile && profile.picture && profile.picture !== "")
       ? profile.picture
-      : "https://ui-avatars.com/api/?name=Guest&background=F3F4F6&color=9CA3AF&bold=true&length=1";
+      : "https://ui-avatars.com/api/?name=Guest&background=EFF6FF&color=3B82F6&bold=true&length=1"; // Blue theme avatar
    const tripCount = savedCourses.length;
 
    return (
-      <div className="min-h-screen bg-white pb-40 overflow-y-auto font-['Inter'] hide-scrollbar relative">
+      <div className="min-h-screen bg-[#F5F8FF] pb-40 overflow-y-auto font-['Inter'] hide-scrollbar relative">
          <AgentContextDashboard isOpen={isDashboardOpen} onClose={() => setIsDashboardOpen(false)} />
 
-         {/* Top Navigation / Settings */}
-         <button
-            onClick={() => {
-               if (!profile || !profile.name) {
-                  setShowGuestModal(true);
-               } else {
-                  setShowUserModal(true);
-               }
-            }}
-            className="absolute top-8 right-8 z-10 flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-md border border-gray-100 rounded-full text-gray-400 hover:text-blue-500 hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm active:scale-95 group"
-            aria-label="설정"
-         >
-            <Settings size={16} className="group-hover:stroke-blue-500 transition-colors" />
-            <span className="text-xs font-black tracking-tight">설정</span>
-         </button>
+         {/* Mascot Decoration (Background) */}
+         <div className="absolute top-20 right-[-20px] w-32 opacity-20 pointer-events-none animate-float">
+            <img src="/mascot_full.png" alt="Mascot" className="w-full" />
+         </div>
+         <div className="absolute bottom-40 left-[-30px] w-40 opacity-10 pointer-events-none rotate-12">
+            <img src="/mascot_full.png" alt="Mascot" className="w-full grayscale" />
+         </div>
 
-         {/* Profile Header per Prompt 7 */}
-         <header className="pt-24 px-10 pb-16 flex flex-col items-center bg-gradient-to-b from-blue-50/50 to-white rounded-b-[4rem]">
-            <div className="relative mb-10">
-               <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-8 ring-white">
+         {/* Top Navigation */}
+         <div className="flex justify-between items-center px-6 pt-6 relative z-10 transition-all">
+            <button
+               onClick={() => router.back()}
+               className="w-10 h-10 bg-white border border-blue-50 rounded-full flex items-center justify-center text-gray-400 hover:text-[#3B82F6] hover:border-blue-100 transition-colors shadow-sm"
+            >
+               <ArrowLeft size={20} />
+            </button>
+            <button
+               onClick={() => {
+                  if (!profile || !profile.name) {
+                     setShowGuestModal(true);
+                  } else {
+                     setShowUserModal(true);
+                  }
+               }}
+               className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-50 rounded-full text-gray-500 hover:text-[#3B82F6] hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm active:scale-95 group"
+            >
+               <Settings size={18} className="group-hover:rotate-45 transition-transform duration-500" />
+               <span className="text-xs font-bold">설정</span>
+            </button>
+         </div>
+
+         {/* Profile Header */}
+         <header className="pt-10 px-8 pb-12 flex flex-col items-center relative z-10">
+            <MotionDiv
+               initial={{ scale: 0.9, opacity: 0 }}
+               animate={{ scale: 1, opacity: 1 }}
+               transition={{ duration: 0.5 }}
+               className="relative mb-8"
+            >
+               <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-4 ring-white border border-blue-100 relative bg-white">
                   <img src={userImage} className="w-full h-full object-cover" alt="Profile" />
                </div>
-               <div className="absolute -bottom-1 -right-1 bg-[#0066FF] w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200 border-4 border-white">
-                  <Sparkles size={20} />
+               <div className="absolute -bottom-2 -right-2 bg-[#3B82F6] w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg border-4 border-white">
+                  <Sparkles size={16} fill="white" />
+               </div>
+            </MotionDiv>
+
+            <div className="text-center mb-8">
+               <h2 className="text-2xl font-black text-gray-800 mb-2">{userName}</h2>
+               <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-blue-100 shadow-sm">
+                  <TrendingUp size={14} className="text-[#3B82F6]" />
+                  <p className="text-xs font-bold text-gray-500">나의 여행 횟수: <span className="text-[#3B82F6]">{tripCount}회</span></p>
                </div>
             </div>
 
-            <div className="text-center mb-10">
-               <h2 className="text-3xl font-black text-gray-900 tracking-tighter mb-2 italic uppercase">{userName}</h2>
-               <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-2xl border border-gray-100 shadow-sm">
-                  <TrendingUp size={14} className="text-[#0066FF]" />
-                  <p className="text-sm font-black text-gray-400 uppercase tracking-widest">나의 여행 횟수: <span className="text-[#0066FF]">{tripCount}회</span></p>
-               </div>
-            </div>
-
-            {/* Taste Keyword cluster per Prompt 7 */}
-            <div className="flex gap-2.5 flex-wrap justify-center max-w-[300px] mb-8">
-               {(statistics?.top_themes?.length > 0 ? statistics.top_themes.map((t: any) => `#${t.theme}`) : ['#취향분석중', '#여행을시작해보세요', '#나만의코스']).map((tag: string, i: number) => (
-                  <span key={i} className="bg-white px-5 py-2.5 rounded-2xl border border-gray-100 text-sm font-black text-gray-500 shadow-sm hover:shadow-md transition-all cursor-default animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            {/* Tags */}
+            <div className="flex gap-2 flex-wrap justify-center max-w-xs mb-8">
+               {(statistics?.top_themes?.length > 0 ? statistics.top_themes.map((t: any) => `#${t.theme}`) : ['#취향분석중', '#여행시작', '#나만의코스']).map((tag: string, i: number) => (
+                  <MotionDiv
+                     key={i}
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: i * 0.1 }}
+                     className="bg-white px-4 py-2 rounded-xl border border-blue-50 text-xs font-bold text-gray-600 shadow-sm hover:text-[#3B82F6] hover:border-blue-100 transition-colors cursor-default"
+                  >
                      {tag}
-                  </span>
+                  </MotionDiv>
                ))}
             </div>
 
-            {/* Statistics Section (New) */}
+            {/* Stats Cards */}
             {statistics && (
-               <div className="w-full max-w-sm px-4">
-                  <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+               <MotionDiv
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="w-full max-w-sm"
+               >
+                  <div className="bg-white p-5 rounded-3xl shadow-lg shadow-blue-100/50 border border-blue-100 grid grid-cols-2 gap-4 relative overflow-hidden group">
+                     {/* Decorative bg */}
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-3xl -z-10 opacity-60 group-hover:bg-blue-100 transition-colors"></div>
+
                      <div className="text-center">
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">평균 여행 예산</p>
                         <p className="text-lg font-black text-gray-800">{statistics.average_budget}만원</p>
                      </div>
-                     <div className="text-center border-l border-gray-100">
+                     <div className="text-center border-l border-blue-50">
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">가성비 민감도</p>
-                        <p className="text-lg font-black text-[#0066FF]">{statistics.price_sensitivity_label}</p>
+                        <p className="text-lg font-black text-[#3B82F6]">{statistics.price_sensitivity_label}</p>
                      </div>
                   </div>
-               </div>
+               </MotionDiv>
             )}
          </header>
 
-         {/* Menu Section per Prompt 7 */}
-         <section className="px-10 py-12 space-y-6">
-            <h3 className="text-sm font-black text-gray-300 uppercase tracking-[0.3em] mb-4">Account Menu</h3>
-            <div className="grid grid-cols-1 gap-4">
+         {/* Menu Section */}
+         <section className="px-6 space-y-4 max-w-md mx-auto relative z-10">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-4 mb-2">My Menu</h3>
+
+            <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
                <button
                   onClick={() => router.push('/history')}
-                  className="flex items-center justify-between p-8 bg-white hover:bg-blue-50/30 border border-gray-100 hover:border-blue-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
-                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
-                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-blue-500 group-hover:bg-[#0066FF] group-hover:text-white transition-all"><History size={22} /></div>
+                  className="w-full flex items-center justify-between p-5 bg-white hover:bg-blue-50/50 border border-transparent hover:border-blue-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md"
+               >
+                  <div className="flex items-center gap-4 font-bold text-sm">
+                     <div className="p-3 bg-gray-50 rounded-2xl text-gray-600 group-hover:bg-[#3B82F6] group-hover:text-white transition-all">
+                        <History size={20} />
+                     </div>
                      이전 여행 기록
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight size={18} className="text-gray-300 group-hover:text-[#3B82F6] group-hover:translate-x-1 transition-transform" />
                </button>
+            </MotionDiv>
 
-               <button className="flex items-center justify-between p-8 bg-white hover:bg-red-50/30 border border-gray-100 hover:border-red-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
-                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
-                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all"><Bookmark size={22} /></div>
+            <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+               <button className="w-full flex items-center justify-between p-5 bg-white hover:bg-blue-50/50 border border-transparent hover:border-blue-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md">
+                  <div className="flex items-center gap-4 font-bold text-sm">
+                     <div className="p-3 bg-gray-50 rounded-2xl text-gray-600 group-hover:bg-[#3B82F6] group-hover:text-white transition-all">
+                        <Bookmark size={20} />
+                     </div>
                      찜한 코스
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight size={18} className="text-gray-300 group-hover:text-[#3B82F6] group-hover:translate-x-1 transition-transform" />
                </button>
+            </MotionDiv>
 
+            <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
                <button
                   onClick={() => setIsDashboardOpen(true)}
-                  className="flex items-center justify-between p-8 bg-white hover:bg-purple-50/30 border border-gray-100 hover:border-purple-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
-                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
-                     <div className="p-4 bg-white rounded-2xl shadow-sm text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-all"><Brain size={22} /></div>
-                     에이전트 컨텍스트 (Dashboard)
+                  className="w-full flex items-center justify-between p-5 bg-white hover:bg-blue-50/50 border border-transparent hover:border-blue-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md"
+               >
+                  <div className="flex items-center gap-4 font-bold text-sm">
+                     <div className="p-3 bg-gray-50 rounded-2xl text-gray-600 group-hover:bg-[#3B82F6] group-hover:text-white transition-all">
+                        <Brain size={20} />
+                     </div>
+                     에이전트 대시보드
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight size={18} className="text-gray-300 group-hover:text-[#3B82F6] group-hover:translate-x-1 transition-transform" />
                </button>
-            </div>
+            </MotionDiv>
          </section>
 
          <GuestSettingsModal

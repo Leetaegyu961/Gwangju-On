@@ -118,22 +118,22 @@ export const LoginScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#FFFDF8] flex flex-col items-center justify-center p-6 font-['Inter'] relative overflow-hidden">
+        <div className="min-h-screen bg-[#F5F8FF] flex flex-col items-center justify-center p-6 font-['Inter'] relative overflow-hidden">
             {/* Background Decorations */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                <div className="absolute top-[-10%] right-[-10%] w-80 h-80 bg-orange-100/40 rounded-full blur-3xl opacity-60" />
-                <div className="absolute bottom-[-5%] left-[-10%] w-64 h-64 bg-yellow-100/40 rounded-full blur-3xl opacity-60" />
+                <div className="absolute top-[-10%] right-[-10%] w-80 h-80 bg-blue-100/40 rounded-full blur-3xl opacity-60" />
+                <div className="absolute bottom-[-5%] left-[-10%] w-64 h-64 bg-indigo-100/40 rounded-full blur-3xl opacity-60" />
             </div>
 
             <div className="w-full max-w-[340px] flex flex-col items-center relative z-10">
                 {/* Title Section */}
                 <div className="text-center mb-8 animate-fade-in">
-                    <div className="inline-block px-3 py-1 bg-white border border-orange-100 rounded-full shadow-sm mb-4">
-                        <span className="text-[10px] font-bold text-orange-500 tracking-wider">GWANGJU-ON</span>
+                    <div className="inline-block px-3 py-1 bg-white border border-blue-100 rounded-full shadow-sm mb-4">
+                        <span className="text-[10px] font-bold text-blue-500 tracking-wider">GWANGJU-ON</span>
                     </div>
                     <h1 className="text-[28px] font-black text-gray-900 leading-[1.3] mb-2">
                         여행의 설렘을<br />
-                        <span className="text-[#FF6B00]">광주-온</span>에서 시작해봐!
+                        <span className="text-[#3B82F6]">광주-온</span>에서 시작해봐!
                     </h1>
                     <p className="text-gray-400 text-sm font-medium">
                         AI 큐레이터가 당신만의 여행을 돕습니다
@@ -144,7 +144,7 @@ export const LoginScreen = () => {
                 {/* Mascot Hero Video */}
                 <div className="relative w-72 h-72 mb-8 flex items-center justify-center">
                     {/* Background Glow */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-orange-50 to-white rounded-full opacity-50 blur-xl scale-90" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white rounded-full opacity-50 blur-xl scale-90" />
 
                     <video
                         autoPlay
@@ -159,7 +159,7 @@ export const LoginScreen = () => {
                     </video>
 
                     {/* Shadow */}
-                    <div className="absolute bottom-4 w-32 h-3 bg-orange-900/10 rounded-full blur-md" />
+                    <div className="absolute bottom-4 w-32 h-3 bg-blue-900/10 rounded-full blur-md" />
                 </div>
 
                 {/* Login Actions */}
