@@ -47,6 +47,10 @@
   - `initTmap` 등 클라이언트 SDK 로직을 제거하고, `useEffect`에서 `/api/maps/static`을 호출하여 지도 이미지를 Blob으로 받아옵니다.
   - `<div id="map">` 대신 `<img src={mapImageUrl} />` 태그를 사용하여 캡처 호환성을 완벽하게 확보했습니다.
 
+#### ⚠️ 중요: API 활성화 필요 (Required Setup)
+- Google Cloud Console의 [APIs & Services] > [Library] 메뉴에서 **"Maps Static API"**를 검색하여 반드시 **사용 설정(Enable)** 해야 합니다.
+- 단순히 API Key만 있다고 작동하지 않으며, 해당 프로젝트에 이 특정 API 서비스가 켜져 있어야 이미지가 정상적으로 로드됩니다.
+
 ---
 
 ## 2. 📤 공유하기 기능 추가 (Share Functionality)
