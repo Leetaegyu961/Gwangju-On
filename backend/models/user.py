@@ -94,6 +94,7 @@ class UserAccount(BaseModel):
     is_onboarded: bool = False
     age: str | None = None
     gender: str | None = None
+    has_seen_invitation: bool = False
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -107,3 +108,29 @@ class UserArchive(BaseModel):
     totalBudget: str
     createdAt: str
     description: str | None = None
+
+# --- New Personalization Models ---
+
+class PreferenceWeights(BaseModel):
+    themes: Dict[str, float] = {}
+    price_sensitivity: float = 0.5
+
+class BehaviorStats(BaseModel):
+    avg_spend_per_meal: int = 0
+    total_trips: int = 0
+    most_visited_category: Optional[str] = None
+
+class UserPreferenceProfile(BaseModel):
+    userId: str
+    last_updated: str = Field(default_factory=lambda: datetime.now().isoformat())
+    preference_weights: PreferenceWeights = PreferenceWeights()
+    behavior_stats: BehaviorStats = BehaviorStats()
+
+class DetailedInteractionLog(BaseModel):
+    logId: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    userId: str
+    sessionId: str
+    targetPlaceId: str
+    action: str # PICK, CLICK_DETAIL, REJECT, TIME_DWELL
+    context_snapshot: Dict[str, Any] = {}
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())

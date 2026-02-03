@@ -6,6 +6,8 @@ import { Navigation2, ArrowLeft, Locate, Loader2, Heart, Edit3, Check, X, GripVe
 import Script from 'next/script';
 import { motion, useAnimation, PanInfo, Reorder } from 'framer-motion';
 import { GeminiService } from '../services/geminiService';
+import LoginInducementModal from '../components/auth/LoginModal';
+import InvitationModal from '../components/invitation/InvitationModal';
 
 const aiService = new GeminiService();
 
@@ -83,6 +85,23 @@ export const MapView = () => {
 
   // 편집 모드 상태
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Guest Login Modal State
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalFeature, setModalFeature] = useState("");
+
+  // Invitation State
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [invitationCourses, setInvitationCourses] = useState<any[]>([]);
+
+  // Helper to check guest status
+  const checkIsGuest = () => {
+    // If no access token, consider guest
+    return !localStorage.getItem('access_token');
+  };
+
+  // 줌 제어용 Ref (검색 시 자동 fitBounds 방지)
+  const skipFitBoundsRef = useRef(false);
 
   // Helper: Ensure IDs for spots
   const ensureIds = (places: any[]) => {
@@ -411,6 +430,96 @@ export const MapView = () => {
     }
   }, [searchParams]);
 
+  // Invitation Check Effect
+  useEffect(() => {
+    const checkInvitation = async () => {
+      const userId = localStorage.getItem('temp_user_id');
+      const token = localStorage.getItem('access_token');
+
+      // Guest check (if no token, assumed guest, skip invitation)
+      if (!userId || !token) return;
+
+      try {
+        // 1. Check Profile for has_seen_invitation
+        const profile = await aiService.getUserProfile();
+        // Note: profile might be null if fetch fails
+        if (profile && !profile.has_seen_invitation) {
+          console.log("💌 [Invitation] Fetching personalized courses...");
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+          // 2. Generate Courses
+          const res = await fetch(`${API_URL}/api/invitation/generate/${userId}`);
+          if (res.ok) {
+            const courses = await res.json();
+            if (courses && courses.length > 0) {
+              setInvitationCourses(courses);
+              setShowInvitationModal(true);
+
+              // 3. Mark as seen immediately
+              await fetch(`${API_URL}/api/invitation/seen/${userId}`, { method: 'PATCH' });
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to process invitation", e);
+      }
+    };
+
+    // Slight delay to allow hydration/mounting
+    const timer = setTimeout(checkInvitation, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleApplyInvitation = (course: any) => {
+    // Convert InvitationCourseCard to MapView course format
+    // course has: course_id, title, description, places
+    const mappedCourse = {
+      course_id: course.course_id,
+      course_name: course.title,
+      course_description: course.description,
+      places: course.places.map((p: any, i: number) => ({
+        id: p.id || `inv-${i}`,
+        name: p.name,
+        lat: p.lat || 0,
+        lng: p.lng || 0,
+        type: p.type || '장소',
+        desc: p.desc,
+        img: p.img,
+        tags: p.tags || []
+      }))
+    };
+
+    // Let's reload all 3 invitation courses into 'allCourses' but select the specific one.
+    const mappedAll = invitationCourses.map(c => ({
+      course_id: c.course_id,
+      course_name: c.title,
+      course_description: c.description,
+      places: c.places.map((p: any, i: number) => ({
+        id: p.id || `inv-${c.course_id}-${i}`,
+        name: p.name,
+        lat: p.lat || 0,
+        lng: p.lng || 0,
+        type: p.type || '장소',
+        desc: p.desc,
+        img: p.img,
+        tags: p.tags || []
+      }))
+    }));
+
+    setAllCourses(mappedAll);
+    localStorage.setItem('all_courses', JSON.stringify(mappedAll));
+
+    const selectedIdx = mappedAll.findIndex(c => c.course_id === course.course_id);
+    setSelectedCourseIndex(selectedIdx >= 0 ? selectedIdx : 0);
+    setSpots(ensureIds(mappedAll[selectedIdx >= 0 ? selectedIdx : 0].places));
+
+    setViewMode('course');
+    setShowInvitationModal(false);
+
+    // Toast or Notification
+    setToastMessage(`'${course.title}' 코스가 적용되었습니다.`);
+  };
+
   // --------------------------------------------------------------------------
   // 5. Tmap 초기화 (최초 1회 실행)
   // --------------------------------------------------------------------------
@@ -467,11 +576,11 @@ export const MapView = () => {
 
       // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
       console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
-
+      
       // 선택된 장소가 있다면 해제
       setSelectedPlace(null);
       setIsDetailLoading(false);
-
+      
       // 코스 모드일 때 시트 닫기
       if (viewModeRef.current === 'course' && sheetOpenRef.current) {
         setSheetOpen(false);
@@ -527,18 +636,8 @@ export const MapView = () => {
           }
         }
 
-        const isActive = activeStep === index;
-        const scale = isActive ? 1.2 : 1.0;
-        const zIndex = isActive ? 10 : 1;
-
         const markerContent = viewMode === 'course'
-          ? `<div style="position: relative; width: 48px; height: 48px; transform: scale(${scale}); transition: transform 0.2s; z-index: ${zIndex}; cursor: pointer; pointer-events: auto;">
-               <img src="/mascot_circle.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
-               <div style="position: absolute; bottom: -2px; right: -2px; background: #0066FF; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                 ${index + 1}
-               </div>
-               ${isActive ? `<div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; color: #0066FF; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: bounce 1s infinite;">여기!</div>` : ''}
-             </div>`
+          ? `<div style="background:#0066FF; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; pointer-events: auto;">${index + 1}</div>`
           : `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
                <div onclick="window.toggleDetailBtn('marker-detail-btn-${index}'); event.stopPropagation();" 
                     style="background:${markerBg}; color:${markerBorder}; padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid ${markerBorder}; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size:16px; cursor: pointer; pointer-events: auto;">${markerIcon}</div>
@@ -593,6 +692,12 @@ export const MapView = () => {
       }
 
       if (displayData.length > 0) {
+        // 검색으로 인한 수동 이동 시 fitBounds 건너뛰기
+        if (skipFitBoundsRef.current) {
+          skipFitBoundsRef.current = false;
+          return;
+        }
+
         // 마커 렌더링 후 지도 범위 재설정
         // 지도가 렌더링된 직후 fitBounds를 호출하여 전체 마커가 보이도록 조정
         setTimeout(() => {
@@ -600,7 +705,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-
+            
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -780,6 +885,13 @@ export const MapView = () => {
   const togglePickSpot = (e: React.MouseEvent, spot: any) => {
     e.stopPropagation(); // 카드 클릭 이벤트 방지
 
+    // [Guest Check]
+    if (checkIsGuest()) {
+      setModalFeature("장소 담기");
+      setShowLoginModal(true);
+      return;
+    }
+
     // 이미 담겼는지 확인
     const isPicked = pickedSpots.some(p => p.name === spot.name && p.lat === spot.lat);
 
@@ -794,6 +906,13 @@ export const MapView = () => {
 
   // 코스 확정 및 타임라인 생성 핸들러
   const handleConfirmCourse = () => {
+    // [Guest Check]
+    if (checkIsGuest()) {
+      setModalFeature("코스 확정 및 저장");
+      setShowLoginModal(true);
+      return;
+    }
+
     // 1. 유효성 검사: 담은 장소가 없으면 경고
     if (pickedSpots.length === 0) {
       if (confirm("담은 장소가 없습니다. 현재 코스의 모든 장소로 타임라인을 만들까요?")) {
@@ -819,7 +938,7 @@ export const MapView = () => {
   // 순서 변경 핸들러 (Reorder)
   const handleReorder = (newSpots: any[]) => {
     setSpots(newSpots);
-
+    
     // 로컬 스토리지 업데이트
     const updatedAllCourses = [...allCourses];
     if (updatedAllCourses[selectedCourseIndex]) {
@@ -843,12 +962,12 @@ export const MapView = () => {
   const addToCourse = () => {
     if (!selectedPlace) return;
 
-    // 이미 코스에 있는지 확인 (선택 사항)
-    // const exists = spots.some(s => s.name === selectedPlace.name);
-    // if (exists) {
-    //   alert("이미 코스에 추가된 장소입니다.");
-    //   return;
-    // }
+    // 중복 추가 방지
+    const exists = spots.some(s => s.name === selectedPlace.name);
+    if (exists) {
+      setToastMessage("이미 코스에 추가된 장소입니다.");
+      return;
+    }
 
     const newSpot = {
       id: `spot-${Date.now()}`,
@@ -865,6 +984,8 @@ export const MapView = () => {
     };
 
     const newSpots = [...spots, newSpot];
+    // 추가 시에는 현재 지도 뷰 유지 (fitBounds 방지)
+    skipFitBoundsRef.current = true;
     handleReorder(newSpots);
     setToastMessage(`'${selectedPlace.name}'이(가) 코스에 추가되었습니다.`);
   };
@@ -873,48 +994,50 @@ export const MapView = () => {
   const handleKeywordSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchKeyword.trim()) return;
-
+    
     setIsSearching(true);
     setViewMode('places'); // 결과 확인을 위해 장소 모드로 전환
-
+    
     // 키보드 내리기 (모바일 고려)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
-      if (!response.ok) throw new Error('Search failed');
+        const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        
+        if (data.searchPoiInfo?.pois?.poi) {
+             const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
+                name: p.name,
+                lat: p.noorLat,
+                lng: p.noorLon,
+                category: p.lowerAddrName || '장소',
+                address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
+              }));
+              
+              // 줌 제어 Ref 설정 (useEffect의 fitBounds 방지)
+              skipFitBoundsRef.current = true;
+              setAllPlaces(pois);
+              setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
 
-      const data = await response.json();
-
-      if (data.searchPoiInfo?.pois?.poi) {
-        const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
-          name: p.name,
-          lat: p.noorLat,
-          lng: p.noorLon,
-          category: p.lowerAddrName || '장소',
-          address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
-        }));
-
-        setAllPlaces(pois);
-        setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
-
-        // 첫 번째 결과로 지도 이동
-        if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
-          const Tmapv3 = (window as any).Tmapv3;
-          mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
-          mapInstance.current.setZoom(15);
+              // 첫 번째 결과로 지도 이동
+              if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
+                  const Tmapv3 = (window as any).Tmapv3;
+                  mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
+                  mapInstance.current.setZoom(15);
+              }
+        } else {
+            setAllPlaces([]);
+            setToastMessage("검색 결과가 없습니다.");
         }
-      } else {
-        setAllPlaces([]);
-        setToastMessage("검색 결과가 없습니다.");
-      }
     } catch (error) {
-      console.error("Search failed", error);
-      setToastMessage("검색 중 오류가 발생했습니다.");
+        console.error("Search failed", error);
+        setToastMessage("검색 중 오류가 발생했습니다.");
     } finally {
-      setIsSearching(false);
+        setIsSearching(false);
     }
   };
 
@@ -954,7 +1077,7 @@ export const MapView = () => {
 
       {/* 3개 코스 선택 버튼 (우측 상단) - Updated Layout */}
       {allCourses.length > 1 && viewMode === 'course' && (
-        <div className="absolute top-32 right-4 z-[100] flex flex-col gap-2.5 items-end animate-fade-in-right">
+        <div className="absolute top-48 right-4 z-[100] flex flex-col gap-2.5 items-end animate-fade-in-right">
           {allCourses.map((course, idx) => (
             <button
               key={course.course_id}
@@ -996,29 +1119,27 @@ export const MapView = () => {
         </div>
 
         {/* 검색 바 추가 */}
-        {viewMode === 'places' && (
-          <div className="px-6 pt-4 pb-2 bg-white">
-            <form onSubmit={handleKeywordSearch} className="relative shadow-sm rounded-xl">
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="장소, 주소 검색 (예: 동명동 맛집)"
-                className="w-full pl-10 pr-12 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:bg-white transition-all placeholder:text-gray-400"
-              />
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              {searchKeyword && (
-                <button
-                  type="button"
-                  onClick={() => setSearchKeyword('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
-                >
-                  <X size={16} fill="currentColor" className="opacity-50" />
-                </button>
-              )}
-            </form>
-          </div>
-        )}
+        <div className="px-6 pt-4 pb-2 bg-white">
+          <form onSubmit={handleKeywordSearch} className="relative shadow-sm rounded-xl">
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="장소, 주소 검색 (예: 동명동 맛집)"
+              className="w-full pl-10 pr-12 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:bg-white transition-all placeholder:text-gray-400"
+            />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            {searchKeyword && (
+              <button
+                type="button"
+                onClick={() => setSearchKeyword('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
+              >
+                <X size={16} fill="currentColor" className="opacity-50"/>
+              </button>
+            )}
+          </form>
+        </div>
 
         {viewMode === 'places' && (
           <div className="px-6 py-2 pb-4 flex gap-2 overflow-x-auto no-scrollbar bg-white">
@@ -1264,8 +1385,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                             (e.target as HTMLImageElement).style.display = 'none';
+                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (
@@ -1334,14 +1455,31 @@ export const MapView = () => {
               ) : (
                 // [2-A] Summary View (Horizontal Scroll List)
                 <div className="flex flex-col h-full pb-6 pt-2 relative">
-                  {/* Top Right Buttons (찜하기 & 상세보기) */}
+                  {/* Top Right Buttons (찜하기, 편집, 상세보기) */}
                   <div className="absolute top-0 right-0 flex gap-2 z-10">
                     <button
                       className="w-10 h-10 bg-white border border-gray-100 text-gray-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all shadow-sm"
-                      onClick={(e) => { e.stopPropagation(); /* 찜하기 기능 추후 구현 */ }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (checkIsGuest()) {
+                          setModalFeature("나만의 코스 찜하기");
+                          setShowLoginModal(true);
+                        } else {
+                          alert("구현 예정: 찜하기 성공!");
+                        }
+                      }}
                     >
                       <Heart size={20} />
                     </button>
+                    
+                    <button
+                      onClick={() => setIsEditMode(!isEditMode)}
+                      className={`h-10 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all shadow-sm border font-bold text-xs ${isEditMode ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      {isEditMode ? <Check size={16} /> : <Edit3 size={16} />}
+                      <span>{isEditMode ? '완료' : '편집'}</span>
+                    </button>
+
                     <button
                       onClick={() => setIsCourseDetailExpanded(true)}
                       className="h-10 px-4 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all active:scale-95 text-xs font-bold gap-1"
@@ -1350,26 +1488,20 @@ export const MapView = () => {
                     </button>
                   </div>
 
-                  <div className="mb-4 shrink-0 pr-24 relative">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold">Recommended</span>
-                      <h2 className="text-lg font-bold text-gray-900 line-clamp-1">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
+                  <div className="mb-4 shrink-0 pr-4 relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold shrink-0">Recommended</span>
+                        <h2 className="text-lg font-bold text-gray-900 truncate">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
+                      </div>
                     </div>
+                    
                     <p className="text-sm text-gray-500 font-medium line-clamp-1">동구 동명동 · 34,900원 · 4시간 50분</p>
                     <div className="flex gap-2 mt-3 flex-wrap">
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">연인과</span>
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
                       <span className="text-xs border border-blue-200 text-blue-500 bg-blue-50 px-2 py-1 rounded-md font-bold">힐링</span>
                     </div>
-
-                    {/* Edit Mode Toggle Button */}
-                    <button
-                      onClick={() => setIsEditMode(!isEditMode)}
-                      className={`absolute top-0 right-0 -mt-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 ${isEditMode ? 'bg-gray-800 text-white border-gray-800' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                    >
-                      {isEditMode ? <Check size={14} /> : <Edit3 size={14} />}
-                      {isEditMode ? '완료' : '코스편집'}
-                    </button>
                   </div>
 
                   {isEditMode ? (
@@ -1480,7 +1612,7 @@ export const MapView = () => {
                     </div>
                   )}
 
-                  <div className="mt-auto flex flex-col gap-3 pb-10">
+                  <div className="mt-4 flex flex-col gap-3 pb-6">
                     <button
                       onClick={handleConfirmCourse}
                       className="w-full bg-[#0066FF] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2"
@@ -1533,6 +1665,21 @@ export const MapView = () => {
       </motion.div>
 
       <div className="fixed bottom-0 left-0 right-0 h-24 bg-white z-[150]" />
+      <LoginInducementModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        featureName={modalFeature}
+      />
+
+      <InvitationModal
+        isOpen={showInvitationModal}
+        onClose={() => {
+          setShowInvitationModal(false);
+          // router.push('/survey'); // Optional: redirect to survey if closed? Or just stay on map
+        }}
+        invitationCourses={invitationCourses}
+        onApply={handleApplyInvitation}
+      />
     </div >
   );
 };

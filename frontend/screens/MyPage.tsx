@@ -3,9 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut } from 'lucide-react';
+import { History, Bookmark, Settings, ChevronRight, Sparkles, TrendingUp, User, LogOut, Brain } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import { SavedCourse } from '../types';
+import { AgentContextDashboard } from '../features/dashboard/AgentContextDashboard';
+import GuestSettingsModal from '../components/user/GuestSettingsModal';
+import UserSettingsModal from '../components/user/UserSettingsModal';
 
 const aiService = new GeminiService();
 
@@ -16,6 +19,10 @@ export const MyPage = () => {
    const router = useRouter();
    const [savedCourses, setSavedCourses] = useState<SavedCourse[]>([]);
    const [profile, setProfile] = useState<any>(null);
+   const [statistics, setStatistics] = useState<any>(null);
+   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+   const [showGuestModal, setShowGuestModal] = useState(false);
+   const [showUserModal, setShowUserModal] = useState(false);
 
    useEffect(() => {
       // 1. Load from LocalStorage immediately on mount preventing hydration mismatch
@@ -35,6 +42,8 @@ export const MyPage = () => {
       });
       // Fetch Courses
       aiService.getCourses().then(setSavedCourses);
+      // Fetch Statistics
+      aiService.getUserStatistics().then(setStatistics);
    }, []);
 
    const handleLogout = () => {
@@ -55,91 +64,122 @@ export const MyPage = () => {
    const tripCount = savedCourses.length;
 
    return (
-      <div className="min-h-screen bg-[#FDFBF7] pb-40 overflow-y-auto font-['Inter'] hide-scrollbar relative">
-         {/* Top Navigation / Logout */}
+      <div className="min-h-screen bg-white pb-40 overflow-y-auto font-['Inter'] hide-scrollbar relative">
+         <AgentContextDashboard isOpen={isDashboardOpen} onClose={() => setIsDashboardOpen(false)} />
+
+         {/* Top Navigation / Settings */}
          <button
-            onClick={handleLogout}
-            className="absolute top-6 right-6 z-20 flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-orange-100 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm active:scale-95 group"
-            aria-label="로그아웃"
+            onClick={() => {
+               if (!profile || !profile.name) {
+                  setShowGuestModal(true);
+               } else {
+                  setShowUserModal(true);
+               }
+            }}
+            className="absolute top-8 right-8 z-10 flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-md border border-gray-100 rounded-full text-gray-400 hover:text-blue-500 hover:bg-blue-50 hover:border-blue-100 transition-all shadow-sm active:scale-95 group"
+            aria-label="설정"
          >
-            <LogOut size={16} className="group-hover:stroke-red-500 transition-colors" />
-            <span className="text-xs font-bold">로그아웃</span>
+            <Settings size={16} className="group-hover:stroke-blue-500 transition-colors" />
+            <span className="text-xs font-black tracking-tight">설정</span>
          </button>
 
-         {/* Profile Header */}
-         <header className="pt-24 pb-12 px-6 flex flex-col items-center bg-white rounded-b-[3rem] shadow-sm border-b border-gray-50 relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-orange-50/50 to-transparent pointer-events-none" />
-
-            <div className="relative mb-6 z-10">
-               <div className="w-28 h-28 rounded-full overflow-hidden shadow-lg border-4 border-white ring-1 ring-gray-100 relative bg-gray-50">
-                  {/* If userImage is default, maybe show mascot? For now keeping userImage logic */}
+         {/* Profile Header per Prompt 7 */}
+         <header className="pt-24 px-10 pb-16 flex flex-col items-center bg-gradient-to-b from-blue-50/50 to-white rounded-b-[4rem]">
+            <div className="relative mb-10">
+               <div className="w-32 h-32 rounded-full overflow-hidden shadow-2xl ring-8 ring-white">
                   <img src={userImage} className="w-full h-full object-cover" alt="Profile" />
                </div>
-               <div className="absolute -bottom-2 -right-2 bg-white p-1.5 rounded-full shadow-md border border-gray-100">
-                  <div className="bg-[#FF6B00] w-8 h-8 rounded-full flex items-center justify-center text-white">
-                     <Sparkles size={16} />
-                  </div>
+               <div className="absolute -bottom-1 -right-1 bg-[#0066FF] w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-200 border-4 border-white">
+                  <Sparkles size={20} />
                </div>
             </div>
 
-            <div className="text-center mb-8 z-10">
-               <h2 className="text-2xl font-bold text-gray-800 mb-2">{userName}님, 안녕하세요!</h2>
-               <div className="inline-flex items-center gap-2 bg-[#F8FAFC] px-4 py-2 rounded-full border border-gray-100">
-                  <span className="w-2 h-2 rounded-full bg-[#0066FF]" />
-                  <p className="text-sm font-medium text-gray-500">
-                     나의 여행 횟수 <span className="text-[#0066FF] font-bold ml-1">{tripCount}회</span>
-                  </p>
+            <div className="text-center mb-10">
+               <h2 className="text-3xl font-black text-gray-900 tracking-tighter mb-2 italic uppercase">{userName}</h2>
+               <div className="flex items-center gap-2 bg-white px-5 py-2 rounded-2xl border border-gray-100 shadow-sm">
+                  <TrendingUp size={14} className="text-[#0066FF]" />
+                  <p className="text-sm font-black text-gray-400 uppercase tracking-widest">나의 여행 횟수: <span className="text-[#0066FF]">{tripCount}회</span></p>
                </div>
             </div>
 
-            {/* Taste Keywords */}
-            <div className="flex gap-2 flex-wrap justify-center max-w-[320px] z-10">
-               {['#힐링', '#로컬맛집', '#빈티지', '#사진공유', '#도보여행'].map((tag, i) => (
-                  <span key={i} className="bg-white px-4 py-2 rounded-full border border-orange-100/50 text-xs font-bold text-gray-600 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-default animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
+            {/* Taste Keyword cluster per Prompt 7 */}
+            <div className="flex gap-2.5 flex-wrap justify-center max-w-[300px] mb-8">
+               {(statistics?.top_themes?.length > 0 ? statistics.top_themes.map((t: any) => `#${t.theme}`) : ['#취향분석중', '#여행을시작해보세요', '#나만의코스']).map((tag: string, i: number) => (
+                  <span key={i} className="bg-white px-5 py-2.5 rounded-2xl border border-gray-100 text-sm font-black text-gray-500 shadow-sm hover:shadow-md transition-all cursor-default animate-fade-in" style={{ animationDelay: `${i * 0.1}s` }}>
                      {tag}
                   </span>
                ))}
             </div>
+
+            {/* Statistics Section (New) */}
+            {statistics && (
+               <div className="w-full max-w-sm px-4">
+                  <div className="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 grid grid-cols-2 gap-4">
+                     <div className="text-center">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">평균 여행 예산</p>
+                        <p className="text-lg font-black text-gray-800">{statistics.average_budget}만원</p>
+                     </div>
+                     <div className="text-center border-l border-gray-100">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">가성비 민감도</p>
+                        <p className="text-lg font-black text-[#0066FF]">{statistics.price_sensitivity_label}</p>
+                     </div>
+                  </div>
+               </div>
+            )}
          </header>
 
-         {/* Menu Section */}
-         <section className="px-6 py-10 space-y-6">
-            <div className="px-2 flex items-center gap-2 mb-2">
-               <h3 className="text-lg font-bold text-gray-800">계정 관리</h3>
-               <div className="h-px flex-1 bg-gray-100" />
-            </div>
-
+         {/* Menu Section per Prompt 7 */}
+         <section className="px-10 py-12 space-y-6">
+            <h3 className="text-sm font-black text-gray-300 uppercase tracking-[0.3em] mb-4">Account Menu</h3>
             <div className="grid grid-cols-1 gap-4">
                <button
                   onClick={() => router.push('/history')}
-                  className="flex items-center justify-between p-6 bg-white border border-gray-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md hover:border-blue-100 active:scale-[0.98]"
-               >
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#0066FF] group-hover:bg-[#0066FF] group-hover:text-white transition-colors">
-                        <History size={20} />
-                     </div>
-                     <span className="font-bold text-base">이전 여행 기록</span>
+                  className="flex items-center justify-between p-8 bg-white hover:bg-blue-50/30 border border-gray-100 hover:border-blue-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
+                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
+                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-blue-500 group-hover:bg-[#0066FF] group-hover:text-white transition-all"><History size={22} /></div>
+                     이전 여행 기록
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 group-hover:text-[#0066FF] group-hover:translate-x-1 transition-all" />
+                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                </button>
 
-               <button className="flex items-center justify-between p-6 bg-white border border-gray-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md hover:border-red-100 active:scale-[0.98]">
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
-                        <Bookmark size={20} />
-                     </div>
-                     <span className="font-bold text-base">찜한 코스</span>
+               <button className="flex items-center justify-between p-8 bg-white hover:bg-red-50/30 border border-gray-100 hover:border-red-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
+                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
+                     <div className="p-4 bg-gray-50 rounded-2xl shadow-sm text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all"><Bookmark size={22} /></div>
+                     찜한 코스
                   </div>
-                  <ChevronRight size={20} className="text-gray-300 group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
+                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
+               </button>
+
+               <button
+                  onClick={() => setIsDashboardOpen(true)}
+                  className="flex items-center justify-between p-8 bg-white hover:bg-purple-50/30 border border-gray-100 hover:border-purple-200 text-gray-900 rounded-[2.5rem] transition-all group shadow-sm hover:shadow-xl active:scale-[0.98]">
+                  <div className="flex items-center gap-5 font-black text-base tracking-tight">
+                     <div className="p-4 bg-white rounded-2xl shadow-sm text-purple-500 group-hover:bg-purple-500 group-hover:text-white transition-all"><Brain size={22} /></div>
+                     에이전트 컨텍스트 (Dashboard)
+                  </div>
+                  <ChevronRight size={20} className="text-gray-300 group-hover:translate-x-1 transition-transform" />
                </button>
             </div>
          </section>
 
-         {/* Mascot Decor */}
-         <div className="fixed bottom-24 right-4 pointer-events-none opacity-20 filter grayscale z-0">
-            <img src="/mascot_circle.png" className="w-32 h-32 object-contain" alt="Decor" />
-         </div>
+         <GuestSettingsModal
+            isOpen={showGuestModal}
+            onClose={() => setShowGuestModal(false)}
+            onLogout={handleLogout}
+         />
+         <UserSettingsModal
+            isOpen={showUserModal}
+            onClose={() => setShowUserModal(false)}
+            onLogout={handleLogout}
+            userId={profile?.id}
+            initialAge={profile?.age}
+            initialGender={profile?.gender}
+            onProfileUpdate={(age, gender) => {
+               const newProfile = { ...profile, age, gender };
+               setProfile(newProfile);
+               localStorage.setItem('user_profile', JSON.stringify(newProfile));
+            }}
+         />
       </div>
    );
 };

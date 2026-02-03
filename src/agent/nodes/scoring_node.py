@@ -10,7 +10,7 @@ import asyncio
 from typing import Any, List, Dict, Tuple
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..state import AgentState
-from ..scoring_system import get_scoring_system
+from ..scoring_system import get_scoring_system, PersonalizedScoringSystem
 from ..config import config
 
 
@@ -218,10 +218,36 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
         temperature=0.3,
     )
     
-    # 스코어링 시스템 (공공 데이터 점수용)
+    # 사용자 프로필 조회 (Personalization)
+    user_id = state.get("userId")
+    user_profile = {}
+    if user_id:
+        try:
+            from backend.db import get_database
+            # Async DB call inside sync/async node
+            db = await get_database()
+            profile = await db["user_preferences"].find_one({"userId": user_id})
+            if profile:
+                user_profile = profile
+                print(f"👤 [Scoring Node] User Profile Found: {user_id}")
+        except Exception as e:
+            print(f"⚠️ [Scoring Node] Failed to fetch user profile: {e}")
+
+    # 스코어링 시스템 초기화
     base_dir = os.getcwd()
     data_dir = os.path.join(base_dir, "data")
-    scoring_system = get_scoring_system(data_dir)
+    
+    if user_profile:
+        scoring_system = PersonalizedScoringSystem(data_dir, user_profile)
+        
+        # [New] 실시간 세션 테마 반영 (QueryPlanner가 생성한 Themes)
+        session_themes = state.get("themes", [])
+        if session_themes:
+            scoring_system.set_session_themes(session_themes)
+            print(f"🔥 [Scoring Node] Session Themes Applied (Real-time Context): {session_themes}")
+            
+    else:
+        scoring_system = get_scoring_system(data_dir)
     
     # 배치 처리 준비
     batch_size = 5
@@ -242,16 +268,32 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
     for item, (sentiment_score, sentiment_breakdown) in zip(enriched_results, flat_sentiment_results):
         place = item.get("place", {})
         
-        # 기본 점수 계산 (공공 데이터 + Google 평점)
-        base_score, base_breakdown = scoring_system.calculate_score(item)
-        
-        # 감성 점수 통합
-        base_breakdown["sentiment"] = sentiment_score
-        base_breakdown["sentiment_breakdown"] = sentiment_breakdown
-        base_breakdown["sentiment_summary"] = sentiment_breakdown.get("reason", "")
-        
-        # 총점 = 기본 점수 + 감성 점수
-        total_score = base_score + sentiment_score
+        if isinstance(scoring_system, PersonalizedScoringSystem):
+            # 개인화 스코어링 (Base + Preference)
+            # LLM 키워드를 태그로 활용하기 위해 주입
+            item["llm_keywords"] = [k.strip() for k in sentiment_breakdown.get("reason", "").split(" ") if len(k) > 1]
+            
+            p_score, base_breakdown = scoring_system.calculate_final_score(item)
+            
+            # 감성 점수 추가 (Base + Preference + Sentiment)
+            total_score = p_score + sentiment_score
+            
+            base_breakdown["sentiment"] = sentiment_score
+            base_breakdown["sentiment_breakdown"] = sentiment_breakdown
+            base_breakdown["sentiment_summary"] = sentiment_breakdown.get("reason", "")
+            base_breakdown["final_total"] = round(total_score, 2)
+            
+        else:
+            # 기본 스코어링
+            base_score, base_breakdown = scoring_system.calculate_score(item)
+            
+            # 감성 점수 통합
+            base_breakdown["sentiment"] = sentiment_score
+            base_breakdown["sentiment_breakdown"] = sentiment_breakdown
+            base_breakdown["sentiment_summary"] = sentiment_breakdown.get("reason", "")
+            
+            # 총점 = 기본 점수 + 감성 점수
+            total_score = base_score + sentiment_score
         
         analyzed_results.append({
             **item,

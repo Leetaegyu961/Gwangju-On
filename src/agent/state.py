@@ -56,5 +56,8 @@ class AgentState(TypedDict):
     # [New] 병렬 실행된 LLM 노드들의 결과 수집 (Reducer: 리스트 합치기)
     generated_courses: Annotated[list, operator.add]
 
+    # [New] 사용자 ID (개인화 스코어링용)
+    userId: str | None
+
 
 
