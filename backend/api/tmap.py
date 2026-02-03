@@ -2,12 +2,70 @@ from fastapi import APIRouter, HTTPException, Query
 import requests
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from typing import Optional
 
 load_dotenv()
 
 router = APIRouter()
 
 TMAP_APP_KEY = os.getenv("TMAP_APP_KEY")
+
+class RouteRequest(BaseModel):
+    startX: str
+    startY: str
+    endX: str
+    endY: str
+    startName: str
+    endName: str
+    reqCoordType: str = "WGS84GEO"
+    resCoordType: str = "WGS84GEO"
+    searchOption: Optional[int] = None
+
+@router.post("/tmap/routes")
+async def get_routes_car(req: RouteRequest):
+    if not TMAP_APP_KEY:
+        raise HTTPException(status_code=500, detail="TMAP_APP_KEY not configured")
+
+    url = "https://apis.openapi.sk.com/tmap/routes?version=1&format=json"
+    headers = {
+        "appKey": TMAP_APP_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.post(url, json=req.dict(exclude_none=True), headers=headers)
+        # Tmap returns 200 even on some errors, but usually 200 is OK.
+        if response.status_code != 200:
+            print(f"Tmap Error: {response.text}")
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+            
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Tmap Request Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/tmap/routes/pedestrian")
+async def get_routes_pedestrian(req: RouteRequest):
+    if not TMAP_APP_KEY:
+        raise HTTPException(status_code=500, detail="TMAP_APP_KEY not configured")
+
+    url = "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json"
+    headers = {
+        "appKey": TMAP_APP_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.post(url, json=req.dict(exclude_none=True), headers=headers)
+        if response.status_code != 200:
+            print(f"Tmap Pedestrian Error: {response.text}")
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+            
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Tmap Pedestrian Request Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/tmap/poi/around")
 def search_poi_around(

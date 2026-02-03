@@ -11,6 +11,11 @@ import InvitationModal from '../components/invitation/InvitationModal';
 
 const aiService = new GeminiService();
 
+// Fix for React 19 / Framer Motion type mismatch
+const MotionDiv = motion.div as any;
+const ReorderGroup = Reorder.Group as any;
+const ReorderItem = Reorder.Item as any;
+
 export const MapView = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,6 +31,7 @@ export const MapView = () => {
   // 마커 및 경로 객체 관리 (지도에서 제거/추가를 위해 저장)
   const markersRef = useRef<any[]>([]);       // 현재 표시된 마커들
   const polylinesRef = useRef<any[]>([]);     // 경로(선) 객체들
+  const timeMarkersRef = useRef<any[]>([]);   // 시간 표시 마커 관리 (Time Badges)
 
   // 상세정보 검색 취소용 컨트롤러 (중복 요청 방지 및 취소 처리)
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -130,7 +136,7 @@ export const MapView = () => {
 
     const Tmapv3 = (window as any).Tmapv3;
     const center = mapInstance.current.getCenter();
-    const API_BASE_URL = "http://localhost:8000";
+    const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api\/?$/, "");
 
     // 현재 요청하는 카테고리 캡처
     const targetCategory = activeCategoryRef.current;
@@ -242,8 +248,9 @@ export const MapView = () => {
     }); // 내용 초기화 및 기본 정보 설정
 
     try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
       // MiniAgent를 사용하는 /api/place-info 엔드포인트 호출
-      const response = await fetch('http://localhost:8000/api/place-info', {
+      const response = await fetch(`${API_URL}/place-info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -576,11 +583,11 @@ export const MapView = () => {
 
       // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
       console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
-
+      
       // 선택된 장소가 있다면 해제
       setSelectedPlace(null);
       setIsDetailLoading(false);
-
+      
       // 코스 모드일 때 시트 닫기
       if (viewModeRef.current === 'course' && sheetOpenRef.current) {
         setSheetOpen(false);
@@ -705,7 +712,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-
+            
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -720,178 +727,186 @@ export const MapView = () => {
     }
   }, [spots, allPlaces, viewMode, activeCategory, isMapReady]);
 
-  // --------------------------------------------------------------------------
-  // [NEW] Real-time Pedestrian Navigation (User Location -> Target Spot)
-  // --------------------------------------------------------------------------
-  const [isNavigationActive, setIsNavigationActive] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
-  const watchIdRef = useRef<number | null>(null);
-  const userMarkerRef = useRef<any>(null); // Tmap Marker의 인스턴스
-  const [totalTime, setTotalTime] = useState<number>(0);
+  // Route mode state: 'pedestrian' or 'car'
+  const [routeMode, setRouteMode] = useState<'pedestrian' | 'car'>('pedestrian');
+  const [totalTime, setTotalTime] = useState<number>(0); // 초 단위
+  const [totalFare, setTotalFare] = useState<number>(0); // 택시 요금
+  const [segmentTimes, setSegmentTimes] = useState<number[]>([]); // 각 구간별 소요 시간
+  const [segmentInfos, setSegmentInfos] = useState<any[]>([]); // 구간별 상세 정보 (좌표 포함)
 
-  // 내비게이션 종료 (Cleanup)
-  const stopNavigation = () => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
+  // Auto-calculate route when spots are loaded (Course Mode)
+  useEffect(() => {
+    if (isMapReady && viewMode === 'course' && spots.length > 1 && totalTime === 0 && !isLoadingRoute) {
+        // Debounce slightly to ensure map is ready
+        const timer = setTimeout(() => {
+            fetchRoute(routeMode); // Use active routeMode
+        }, 1000);
+        return () => clearTimeout(timer);
     }
-    if (userMarkerRef.current) {
-      userMarkerRef.current.setMap(null);
-      userMarkerRef.current = null;
-    }
-    // 경로선 지우기
-    polylinesRef.current.forEach(p => p.setMap(null));
-    polylinesRef.current = [];
+  }, [isMapReady, viewMode, spots, routeMode, totalTime]);
 
-    setIsNavigationActive(false);
-    setTotalTime(0);
-    console.log("🛑 Navigation Stopped");
-  };
-
-  // 내비게이션 시작
-  const startNavigation = async () => {
+  // Render Time Badges on Map
+  useEffect(() => {
     if (!mapInstance.current || !(window as any).Tmapv3) return;
     const Tmapv3 = (window as any).Tmapv3;
 
-    // 이미 켜져 있다면 끄기
-    if (isNavigationActive) {
-      stopNavigation();
-      return;
-    }
+    // Clear existing time markers
+    timeMarkersRef.current.forEach(m => m.setMap(null));
+    timeMarkersRef.current = [];
 
-    // 1. 현재 위치 가져오기
-    if (!navigator.geolocation) {
-      alert("이 브라우저에서는 위치 정보를 사용할 수 없습니다.");
-      return;
-    }
+    if (viewMode === 'course' && segmentInfos.length > 0) {
+        const isCar = routeMode === 'car';
+        const bgColor = isCar ? '#1F2937' : '#FFFFFF';
+        const borderColor = isCar ? '#F59E0B' : '#0066FF'; // Amber for taxi, Blue for walk
+        const textColor = isCar ? '#FCD34D' : '#0066FF';
+        const iconSymbol = isCar ? '🚖' : '🚶';
+        const shadowRing = isCar ? 'rgba(245, 158, 11, 0.3)' : 'rgba(0,102,255,0.1)';
 
-    setIsLoadingRoute(true); // 로딩 표시
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log("📍 Current User Location:", latitude, longitude);
-
-        setUserLocation({ lat: latitude, lng: longitude });
-
-        // 2. 내 위치 마커 생성 (파란 점 + Pulse 효과)
-        if (!userMarkerRef.current) {
-          userMarkerRef.current = new Tmapv3.Marker({
-            position: new Tmapv3.LatLng(latitude, longitude),
-            map: mapInstance.current,
-            iconHTML: `
-              <div style="position:relative; width:24px; height:24px; display:flex; align-items:center; justify-content:center;">
-                <span style="position:absolute; width:100%; height:100%; border-radius:50%; background-color:#3B82F6; opacity:0.75; animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-                <div style="position:relative; width:16px; height:16px; background-color:#2563EB; border:2px solid white; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></div>
-              </div>
-              <style>
-                @keyframes ping {
-                  75%, 100% { transform: scale(2); opacity: 0; }
-                }
-              </style>
-            `
-          });
-        }
-
-        // 지도 중심 이동
-        mapInstance.current.setCenter(new Tmapv3.LatLng(latitude, longitude));
-        mapInstance.current.setZoom(17);
-
-        // 3. 목적지 설정 (현재 activeStep의 장소)
-        const targetSpot = spots[activeStep];
-        if (!targetSpot) {
-          setIsLoadingRoute(false);
-          return;
-        }
-
-        // 4. 경로 탐색 (Current -> Target)
-        try {
-          const APP_KEY = process.env.NEXT_PUBLIC_TMAP_APP_KEY || "";
-          const response = await fetch('https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json', {
-            method: 'POST',
-            headers: {
-              'appKey': APP_KEY,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              startX: String(longitude),
-              startY: String(latitude),
-              endX: String(targetSpot.lng),
-              endY: String(targetSpot.lat),
-              reqCoordType: "WGS84GEO",
-              resCoordType: "WGS84GEO",
-              startName: "내 위치",
-              endName: encodeURIComponent(targetSpot.name)
-            })
-          });
-
-          const data = await response.json();
-
-          // 기존 선 지우기
-          polylinesRef.current.forEach(p => p.setMap(null));
-          polylinesRef.current = [];
-
-          if (data.features) {
-            const linePath: any[] = [];
-            let totalSec = 0;
-
-            data.features.forEach((feature: any) => {
-              if (feature.properties?.totalTime) totalSec += feature.properties.totalTime;
-              if (feature.geometry.type === "LineString") {
-                feature.geometry.coordinates.forEach((coord: any) => {
-                  linePath.push(new Tmapv3.LatLng(coord[1], coord[0]));
-                });
-              }
+        segmentInfos.forEach(info => {
+            if (info.time <= 0) return;
+            const position = new Tmapv3.LatLng(info.lat, info.lng);
+            const timeStr = formatTime(info.time);
+            
+            const content = `
+                <div style="
+                    background: ${bgColor};
+                    padding: 6px 12px;
+                    border-radius: 24px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 0 2px ${shadowRing};
+                    border: 2px solid ${borderColor};
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    transform: translate(-50%, -50%);
+                    white-space: nowrap;
+                    pointer-events: none;
+                    z-index: 100;
+                ">
+                    <span style="font-size: 14px;">${iconSymbol}</span>
+                    <span style="font-size: 12px; font-weight: 900; color: ${textColor}; letter-spacing: -0.5px;">${timeStr}</span>
+                </div>
+            `;
+            
+            const marker = new Tmapv3.Marker({
+                position: position,
+                map: mapInstance.current,
+                iconHTML: content,
+                zIndex: 100
             });
+            timeMarkersRef.current.push(marker);
+        });
+    }
+  }, [segmentInfos, viewMode, isMapReady, routeMode]);
 
-            // 경로 그리기 (도보: 파란 실선)
-            const polyline = new Tmapv3.Polyline({
-              path: linePath,
-              strokeColor: "#0066FF",
-              strokeWeight: 6,
-              map: mapInstance.current,
-              style: "solid"
-            });
-            polylinesRef.current.push(polyline);
+  // Fetch and draw route based on mode
+  const fetchRoute = React.useCallback(async (mode: 'pedestrian' | 'car') => {
+    if (!isMapReady || spots.length < 2) return;
+    setIsLoadingRoute(true);
+    setRouteMode(mode);
 
-            setTotalTime(totalSec);
-            setIsNavigationActive(true);
+    const Tmapv3 = (window as any).Tmapv3;
+    const APP_KEY = process.env.NEXT_PUBLIC_TMAP_APP_KEY || "";
+
+    try {
+      // Clear existing routes
+      polylinesRef.current.forEach(p => p.setMap(null));
+      polylinesRef.current = [];
+
+      let accumulatedTime = 0;
+      let accumulatedFare = 0;
+      const collectedSegments: any[] = [];
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      const routeEndpoint = mode === 'pedestrian'
+        ? `${API_BASE_URL}/tmap/routes/pedestrian`
+        : `${API_BASE_URL}/tmap/routes`;
+
+      for (let i = 0; i < spots.length - 1; i++) {
+        const start = spots[i];
+        const end = spots[i + 1];
+
+        const response = await fetch(routeEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            startX: String(start.lng),
+            startY: String(start.lat),
+            endX: String(end.lng),
+            endY: String(end.lat),
+            reqCoordType: "WGS84GEO",
+            resCoordType: "WGS84GEO",
+            startName: encodeURIComponent(start.name),
+            endName: encodeURIComponent(end.name)
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.features) {
+          // Segment Time Logic
+          let segmentTime = 0;
+          
+          if (mode === 'car' && data.features.length > 0) {
+            const props = data.features[0].properties;
+            if (props && props.taxiFare) {
+              accumulatedFare += props.taxiFare;
+            }
           }
 
-        } catch (e) {
-          console.error("Navigation setup failed", e);
-          alert("경로를 탐색할 수 없습니다.");
-        } finally {
-          setIsLoadingRoute(false);
-        }
-
-        // 5. 실시간 위치 추적 시작 (Watch Position)
-        watchIdRef.current = navigator.geolocation.watchPosition(
-          (pos) => {
-            const { latitude: lat, longitude: lng } = pos.coords;
-            // 마커 이동
-            if (userMarkerRef.current && (window as any).Tmapv3) {
-              const Tmapv3 = (window as any).Tmapv3;
-              const newPos = new Tmapv3.LatLng(lat, lng);
-              userMarkerRef.current.setPosition(newPos);
-
-              // 내비게이션 활성화 중일 때는 내 위치가 보이도록
-              // mapInstance.current.panTo(newPos); // 너무 자주 움직이면 불편하므로 일단 주석 처리
+          const linePath: any[] = [];
+          data.features.forEach((feature: any) => {
+            if (feature.properties?.totalTime) {
+              accumulatedTime += feature.properties.totalTime;
+              segmentTime += feature.properties.totalTime;
             }
-          },
-          (err) => console.warn("Watch Position Error", err),
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-        );
+            if (feature.geometry.type === "LineString") {
+              feature.geometry.coordinates.forEach((coord: any) => {
+                linePath.push(new Tmapv3.LatLng(coord[1], coord[0]));
+              });
+            }
+          });
+          
+          // Collect Segment Info
+          collectedSegments.push({
+              lat: (parseFloat(start.lat) + parseFloat(end.lat)) / 2,
+              lng: (parseFloat(start.lng) + parseFloat(end.lng)) / 2,
+              time: segmentTime
+          });
 
-      },
-      (error) => {
-        console.error("Geolocation Error", error);
-        alert("위치 정보를 가져올 수 없습니다. GPS 권한을 확인해주세요.");
-        setIsLoadingRoute(false);
-      },
-      { enableHighAccuracy: true }
-    );
-  };
+          // 경로 색상: 도보=파랑, 차량=초록
+          const routeColor = mode === 'pedestrian' ? "#0066FF" : "#00C853";
+          const routePolyline = new Tmapv3.Polyline({
+            path: linePath,
+            strokeColor: routeColor,
+            strokeWeight: 6,
+            map: mapInstance.current
+          });
+          polylinesRef.current.push(routePolyline);
+        }
+      }
+
+      setSegmentInfos(collectedSegments);
+      setTotalTime(accumulatedTime);
+      console.log(`✅ ${mode} route loaded. Total time: ${Math.round(accumulatedTime / 60)} min`);
+
+    } catch (error) {
+      console.error("Route fetch failed", error);
+      alert("경로를 불러오는데 실패했습니다.");
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  }, [isMapReady, spots]);
+
+  // Auto-update route when spots or mode change
+  useEffect(() => {
+    if (viewMode === 'course' && spots.length >= 2) {
+      const timer = setTimeout(() => {
+        fetchRoute(routeMode);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [spots, routeMode, viewMode, fetchRoute]);
 
   // Helper: format seconds to "X분"
   const formatTime = (seconds: number) => {
@@ -966,6 +981,13 @@ export const MapView = () => {
       // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
       setIsEditMode(false); // 코스 변경 시 편집 모드 해제
+      
+      // Reset Route Data to trigger auto-recalculation
+      setTotalTime(0);
+      setTotalFare(0);
+      setSegmentTimes([]);
+      setSegmentInfos([]);
+
       console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
     }
   };
@@ -1027,7 +1049,7 @@ export const MapView = () => {
   // 순서 변경 핸들러 (Reorder)
   const handleReorder = (newSpots: any[]) => {
     setSpots(newSpots);
-
+    
     // 로컬 스토리지 업데이트
     const updatedAllCourses = [...allCourses];
     if (updatedAllCourses[selectedCourseIndex]) {
@@ -1083,50 +1105,51 @@ export const MapView = () => {
   const handleKeywordSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchKeyword.trim()) return;
-
+    
     setIsSearching(true);
     setViewMode('places'); // 결과 확인을 위해 장소 모드로 전환
-
+    
     // 키보드 내리기 (모바일 고려)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
-      if (!response.ok) throw new Error('Search failed');
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+        const response = await fetch(`${API_URL}/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        
+        if (data.searchPoiInfo?.pois?.poi) {
+             const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
+                name: p.name,
+                lat: p.noorLat,
+                lng: p.noorLon,
+                category: p.lowerAddrName || '장소',
+                address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
+              }));
+              
+              // 줌 제어 Ref 설정 (useEffect의 fitBounds 방지)
+              skipFitBoundsRef.current = true;
+              setAllPlaces(pois);
+              setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
 
-      const data = await response.json();
-
-      if (data.searchPoiInfo?.pois?.poi) {
-        const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
-          name: p.name,
-          lat: p.noorLat,
-          lng: p.noorLon,
-          category: p.lowerAddrName || '장소',
-          address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
-        }));
-
-        // 줌 제어 Ref 설정 (useEffect의 fitBounds 방지)
-        skipFitBoundsRef.current = true;
-        setAllPlaces(pois);
-        setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
-
-        // 첫 번째 결과로 지도 이동
-        if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
-          const Tmapv3 = (window as any).Tmapv3;
-          mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
-          mapInstance.current.setZoom(15);
+              // 첫 번째 결과로 지도 이동
+              if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
+                  const Tmapv3 = (window as any).Tmapv3;
+                  mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
+                  mapInstance.current.setZoom(15);
+              }
+        } else {
+            setAllPlaces([]);
+            setToastMessage("검색 결과가 없습니다.");
         }
-      } else {
-        setAllPlaces([]);
-        setToastMessage("검색 결과가 없습니다.");
-      }
     } catch (error) {
-      console.error("Search failed", error);
-      setToastMessage("검색 중 오류가 발생했습니다.");
+        console.error("Search failed", error);
+        setToastMessage("검색 중 오류가 발생했습니다.");
     } finally {
-      setIsSearching(false);
+        setIsSearching(false);
     }
   };
 
@@ -1224,7 +1247,7 @@ export const MapView = () => {
                 onClick={() => setSearchKeyword('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
               >
-                <X size={16} fill="currentColor" className="opacity-50" />
+                <X size={16} fill="currentColor" className="opacity-50"/>
               </button>
             )}
           </form>
@@ -1310,7 +1333,7 @@ export const MapView = () => {
         </button>
       </div>
 
-      <motion.div
+      <MotionDiv
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.1}
@@ -1474,8 +1497,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                             (e.target as HTMLImageElement).style.display = 'none';
+                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (
@@ -1500,18 +1523,32 @@ export const MapView = () => {
 
                   <div className="flex gap-3 mt-2 shrink-0">
                     <button
-                      onClick={startNavigation}
-                      disabled={isLoadingRoute}
-                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${isNavigationActive
-                        ? 'bg-[#0066FF] text-white border-[#0066FF] animate-pulse-slow'
+                      onClick={() => fetchRoute('pedestrian')}
+                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'pedestrian'
+                        ? 'bg-[#0066FF] text-white border-[#0066FF]'
                         : 'bg-white text-gray-700 border-gray-200'
                         }`}
                     >
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-lg">{isNavigationActive ? '🛑' : '🚶'}</span>
-                        {isNavigationActive ? '안내 종료' : '도보 안내'}
-                      </span>
-                      {totalTime > 0 && isNavigationActive && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)} (남음)</span>}
+                      <span className="flex items-center gap-1.5"><span className="text-lg">🚶</span> 도보 안내</span>
+                      {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
+                    </button>
+
+                    <button
+                      onClick={() => fetchRoute('car')}
+                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'car'
+                        ? 'bg-[#00C853] text-white border-[#00C853]'
+                        : 'bg-white text-gray-700 border-gray-200'
+                        }`}
+                    >
+                      <span className="flex items-center gap-1.5"><span className="text-lg">🚗</span> 차량 안내</span>
+                      {totalTime > 0 && routeMode === 'car' && (
+                        <span className="text-[10px] opacity-90 font-bold flex flex-col items-center leading-tight">
+                          <span>{formatTime(totalTime)}</span>
+                          {totalFare > 0 && <span>{totalFare.toLocaleString()}원</span>}
+                        </span>
+                      )}
                     </button>
 
                     <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 px-2 py-2 flex flex-row items-center justify-center gap-3">
@@ -1563,7 +1600,7 @@ export const MapView = () => {
                     >
                       <Heart size={20} />
                     </button>
-
+                    
                     <button
                       onClick={() => setIsEditMode(!isEditMode)}
                       className={`h-10 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all shadow-sm border font-bold text-xs ${isEditMode ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}
@@ -1587,8 +1624,10 @@ export const MapView = () => {
                         <h2 className="text-lg font-bold text-gray-900 truncate">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
                       </div>
                     </div>
-
-                    <p className="text-sm text-gray-500 font-medium line-clamp-1">동구 동명동 · 34,900원 · 4시간 50분</p>
+                    
+                    <p className="text-sm text-gray-500 font-medium line-clamp-1">
+                      동구 동명동 · {totalFare > 0 ? `${totalFare.toLocaleString()}원` : '비용 산출 중'} · {totalTime > 0 ? formatTime(totalTime) : '소요시간 계산 중'}
+                    </p>
                     <div className="flex gap-2 mt-3 flex-wrap">
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">연인과</span>
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
@@ -1599,9 +1638,9 @@ export const MapView = () => {
                   {isEditMode ? (
                     /* Edit Mode - Vertical Sortable List */
                     <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 -mx-6 px-6">
-                      <Reorder.Group axis="y" values={spots} onReorder={handleReorder} className="space-y-2">
+                      <ReorderGroup axis="y" values={spots} onReorder={handleReorder} className="space-y-2">
                         {spots.map((spot, index) => (
-                          <Reorder.Item
+                          <ReorderItem
                             key={spot.id}
                             value={spot}
                             className="relative select-none"
@@ -1633,9 +1672,9 @@ export const MapView = () => {
                                 <Trash2 size={16} />
                               </button>
                             </div>
-                          </Reorder.Item>
+                          </ReorderItem>
                         ))}
-                      </Reorder.Group>
+                      </ReorderGroup>
                       <div className="text-center text-xs text-gray-400 mt-4 font-medium animate-pulse">
                         💡 순서를 드래그하여 변경하거나 장소를 삭제하세요.
                       </div>
@@ -1754,7 +1793,7 @@ export const MapView = () => {
             )}
           </div>
         )}
-      </motion.div>
+      </MotionDiv>
 
       <div className="fixed bottom-0 left-0 right-0 h-24 bg-white z-[150]" />
       <LoginInducementModal

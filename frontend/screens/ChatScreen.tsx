@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Bot, Mic, ArrowLeft } from 'lucide-react';
+import { Bot, Mic, ArrowLeft, Send } from 'lucide-react';
 import { GeminiService } from '../services/geminiService';
 import { Message } from '../types';
 import { getCourseImage } from '../utils/courseImages';
@@ -27,7 +27,7 @@ const ChatContent = () => {
           id: '1',
           role: 'assistant',
           text: '가고 싶은 장소가 있나요?',
-          suggestions: ['네, 계속 채팅하기', '아니요, 바로 코스 생성하기']
+          suggestions: ['바로 코스 생성하기'] // '계속 채팅하기' 제거됨
         }
       ]);
     } else {
@@ -199,24 +199,39 @@ const ChatContent = () => {
               </div>
             )}
 
-            {/* Suggestions Chips */}
+            {/* Suggestions Chips & Inputs */}
             {m.suggestions && (
-              <div className="mt-4 flex flex-wrap gap-2 animate-fade-in">
-                {m.suggestions.map((suggestion, idx) => (
+              <div className="mt-4 flex flex-col gap-3 w-full animate-fade-in">
+                {m.suggestions.map((suggestion, idx) => {
+                  if (suggestion === '바로 코스 생성하기') {
+                    return (
+                      <div key={idx} className="w-full flex flex-col gap-3">
+                        {/* Primary Action Button */}
+                        <button
+                          onClick={() => {
+                             // 1. 사용자 메시지 추가 (UI 피드백)
+                             const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
+                             setMessages(prev => [...prev, userMsg]);
+ 
+                             // 2. 즉시 페이지 이동 (PRD v2.1) + 추가 요청사항 전달
+                             // Use 'input' state from the bottom bar
+                             const userId = localStorage.getItem('temp_user_id');
+                             const extraQuery = input.trim() ? `&extraRequest=${encodeURIComponent(input)}` : '';
+                             router.push(`/map?auto_generate=true&userId=${userId}${extraQuery}`);
+                          }}
+                          className="w-full py-4 bg-[#0066FF] text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                          <span className="text-lg">✨</span> {suggestion}
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
                   <button
                     key={idx}
                     onClick={() => {
-                      // [Branching Logic] "가고 싶은 장소가 있나요?" 에 대한 처리
-                      if (suggestion === '아니요, 바로 코스 생성하기') {
-                        // 1. 사용자 메시지 추가 (UI 피드백)
-                        const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
-                        setMessages(prev => [...prev, userMsg]);
-
-                        // 2. 즉시 페이지 이동 (PRD v2.1)
-                        const userId = localStorage.getItem('temp_user_id');
-                        router.push(`/map?auto_generate=true&userId=${userId}`);
-                        return;
-                      }
+                      // [Branching Logic] "가고 싶은 장소가 있나요?" 에 대한 처리 (Legacy check removed)
 
                       // 칩 클릭 시 바로 전송 처리
                       const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
@@ -259,7 +274,8 @@ const ChatContent = () => {
                   >
                     {suggestion}
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -288,14 +304,18 @@ const ChatContent = () => {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && handleSend()}
-            placeholder="프롬프트를 입력하세요..."
+            placeholder={
+              messages.length > 0 && messages[messages.length - 1].suggestions?.includes('바로 코스 생성하기')
+                ? "추가로 원하시는 요청사항이 있다면 입력해주세요. (예: 조용한 분위기, 주차 편한 곳)"
+                : "프롬프트를 입력하세요..."
+            }
             className="flex-1 bg-transparent outline-none font-bold text-gray-700 placeholder:text-gray-300 text-base"
           />
           <button
             onClick={handleSend}
             className="w-12 h-12 bg-[#0066FF] rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition-all shrink-0 ml-2"
           >
-            <Mic size={24} />
+            <Send size={20} className="ml-0.5" />
           </button>
         </div>
       </div>

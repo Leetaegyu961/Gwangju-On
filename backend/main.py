@@ -44,6 +44,8 @@ app = FastAPI(title="Gwangju-On Backend", lifespan=lifespan)
 origins = [
     "http://localhost:5000", # Frontend dev server
     "http://localhost:3000", # Default Next.js port (fail-safe)
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
@@ -56,7 +58,8 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api")
-from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note
+from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps
+app.include_router(maps.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
 app.include_router(place_info.router, prefix="/api")  # Mini Agent API

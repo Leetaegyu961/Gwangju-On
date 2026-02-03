@@ -130,3 +130,51 @@ body {
 .animate-float {
     animation: float 3s ease-in-out infinite;
 }
+
+/* --- Walking Navigation UI Enhancements --- */
+
+/* 1. Marker Pulse Effect (Active Target) */
+@keyframes pulse-ring {
+    0% { transform: scale(0.33); opacity: 0; }
+    80%, 100% { opacity: 0; }
+}
+@keyframes pulse-dot {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1); }
+    100% { transform: scale(0.8); }
+}
+.marker-pulse-ring {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    background-color: rgba(0, 102, 255, 0.4);
+    animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+/* 2. Marker Bounce (Selection) */
+@keyframes marker-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+.marker-bounce {
+    animation: marker-bounce 1s infinite ease-in-out;
+}
+
+/* 3. Gradient Gradients for Markers */
+.bg-gradient-marker-food { background: linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%); }
+.bg-gradient-marker-cafe { background: linear-gradient(135deg, #FFB142 0%, #FF9F1A 100%); }
+.bg-gradient-marker-spot { background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%); }
+.bg-gradient-marker-course { background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%); }
+
+/* 4. 3D Pin Shape */
+.pin-3d {
+    width: 100%; height: 100%;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: -2px 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 5. Course Step Card Active Glow */
+.step-card-active {
+    box-shadow: 0 0 0 2px #0066FF, 0 8px 16px rgba(0,102,255,0.2);
+}

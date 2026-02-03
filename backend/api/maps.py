@@ -10,14 +10,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 router = APIRouter()
+print("🗺️ [Maps API] maps.py module loaded!")
 
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+# Refactored: Use GOOGLE_CLOUD_API_KEY as per existing project convention
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
 
 # [Debug] API Key Check
 if not GOOGLE_MAPS_API_KEY:
-    print("❌ [Maps API] GOOGLE_MAPS_API_KEY is missing in .env")
+    print("❌ [Maps API] GOOGLE_CLOUD_API_KEY is missing in .env")
 else:
-    print(f"✅ [Maps API] GOOGLE_MAPS_API_KEY loaded (len: {len(GOOGLE_MAPS_API_KEY)})")
+    print(f"✅ [Maps API] GOOGLE_CLOUD_API_KEY loaded (len: {len(GOOGLE_MAPS_API_KEY)})")
+
+# Test endpoint to verify router registration
+@router.get("/maps/test")
+async def test_maps_api():
+    return {"status": "ok", "message": "Maps API is working!"}
 
 class Marker(BaseModel):
     lat: float

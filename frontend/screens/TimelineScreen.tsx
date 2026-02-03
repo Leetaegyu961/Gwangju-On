@@ -73,8 +73,6 @@ export default function TimelineScreen() {
             setMapImageUrl(null); // Reset
 
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
                 // Construct payload
                 const markers = currentCourse.map((s: any) => ({
                     lat: parseFloat(s.lat),
@@ -85,7 +83,10 @@ export default function TimelineScreen() {
                     lng: parseFloat(s.lng)
                 }));
 
-                const res = await fetch(`${API_URL}/api/maps/static`, {
+                // Use absolute path to ensure request hits Backend (port 8000) not Frontend (port 5000)
+                const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+                const baseUrl = rawApiUrl.replace(/\/api\/?$/, '');
+                const res = await fetch(`${baseUrl}/api/maps/static`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
