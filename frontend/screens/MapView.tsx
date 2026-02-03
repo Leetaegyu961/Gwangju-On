@@ -11,6 +11,11 @@ import InvitationModal from '../components/invitation/InvitationModal';
 
 const aiService = new GeminiService();
 
+// Fix for React 19 / Framer Motion type mismatch
+const MotionDiv = motion.div as any;
+const ReorderGroup = Reorder.Group as any;
+const ReorderItem = Reorder.Item as any;
+
 export const MapView = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,6 +31,7 @@ export const MapView = () => {
   // 마커 및 경로 객체 관리 (지도에서 제거/추가를 위해 저장)
   const markersRef = useRef<any[]>([]);       // 현재 표시된 마커들
   const polylinesRef = useRef<any[]>([]);     // 경로(선) 객체들
+  const timeMarkersRef = useRef<any[]>([]);   // 시간 표시 마커 관리 (Time Badges)
 
   // 상세정보 검색 취소용 컨트롤러 (중복 요청 방지 및 취소 처리)
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -130,7 +136,7 @@ export const MapView = () => {
 
     const Tmapv3 = (window as any).Tmapv3;
     const center = mapInstance.current.getCenter();
-    const API_BASE_URL = "http://localhost:8000";
+    const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api").replace(/\/api\/?$/, "");
 
     // 현재 요청하는 카테고리 캡처
     const targetCategory = activeCategoryRef.current;
@@ -242,8 +248,9 @@ export const MapView = () => {
     }); // 내용 초기화 및 기본 정보 설정
 
     try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
       // MiniAgent를 사용하는 /api/place-info 엔드포인트 호출
-      const response = await fetch('http://localhost:8000/api/place-info', {
+      const response = await fetch(`${API_URL}/place-info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -723,9 +730,76 @@ export const MapView = () => {
   // Route mode state: 'pedestrian' or 'car'
   const [routeMode, setRouteMode] = useState<'pedestrian' | 'car'>('pedestrian');
   const [totalTime, setTotalTime] = useState<number>(0); // 초 단위
+  const [totalFare, setTotalFare] = useState<number>(0); // 택시 요금
+  const [segmentTimes, setSegmentTimes] = useState<number[]>([]); // 각 구간별 소요 시간
+  const [segmentInfos, setSegmentInfos] = useState<any[]>([]); // 구간별 상세 정보 (좌표 포함)
+
+  // Auto-calculate route when spots are loaded (Course Mode)
+  useEffect(() => {
+    if (isMapReady && viewMode === 'course' && spots.length > 1 && totalTime === 0 && !isLoadingRoute) {
+        // Debounce slightly to ensure map is ready
+        const timer = setTimeout(() => {
+            fetchRoute(routeMode); // Use active routeMode
+        }, 1000);
+        return () => clearTimeout(timer);
+    }
+  }, [isMapReady, viewMode, spots, routeMode, totalTime]);
+
+  // Render Time Badges on Map
+  useEffect(() => {
+    if (!mapInstance.current || !(window as any).Tmapv3) return;
+    const Tmapv3 = (window as any).Tmapv3;
+
+    // Clear existing time markers
+    timeMarkersRef.current.forEach(m => m.setMap(null));
+    timeMarkersRef.current = [];
+
+    if (viewMode === 'course' && segmentInfos.length > 0) {
+        const isCar = routeMode === 'car';
+        const bgColor = isCar ? '#1F2937' : '#FFFFFF';
+        const borderColor = isCar ? '#F59E0B' : '#0066FF'; // Amber for taxi, Blue for walk
+        const textColor = isCar ? '#FCD34D' : '#0066FF';
+        const iconSymbol = isCar ? '🚖' : '🚶';
+        const shadowRing = isCar ? 'rgba(245, 158, 11, 0.3)' : 'rgba(0,102,255,0.1)';
+
+        segmentInfos.forEach(info => {
+            if (info.time <= 0) return;
+            const position = new Tmapv3.LatLng(info.lat, info.lng);
+            const timeStr = formatTime(info.time);
+            
+            const content = `
+                <div style="
+                    background: ${bgColor};
+                    padding: 6px 12px;
+                    border-radius: 24px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3), 0 0 0 2px ${shadowRing};
+                    border: 2px solid ${borderColor};
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    transform: translate(-50%, -50%);
+                    white-space: nowrap;
+                    pointer-events: none;
+                    z-index: 100;
+                ">
+                    <span style="font-size: 14px;">${iconSymbol}</span>
+                    <span style="font-size: 12px; font-weight: 900; color: ${textColor}; letter-spacing: -0.5px;">${timeStr}</span>
+                </div>
+            `;
+            
+            const marker = new Tmapv3.Marker({
+                position: position,
+                map: mapInstance.current,
+                iconHTML: content,
+                zIndex: 100
+            });
+            timeMarkersRef.current.push(marker);
+        });
+    }
+  }, [segmentInfos, viewMode, isMapReady, routeMode]);
 
   // Fetch and draw route based on mode
-  const fetchRoute = async (mode: 'pedestrian' | 'car') => {
+  const fetchRoute = React.useCallback(async (mode: 'pedestrian' | 'car') => {
     if (!isMapReady || spots.length < 2) return;
     setIsLoadingRoute(true);
     setRouteMode(mode);
@@ -739,9 +813,12 @@ export const MapView = () => {
       polylinesRef.current = [];
 
       let accumulatedTime = 0;
+      let accumulatedFare = 0;
+      const collectedSegments: any[] = [];
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
       const routeEndpoint = mode === 'pedestrian'
-        ? 'https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json'
-        : 'https://apis.openapi.sk.com/tmap/routes?version=1&format=json';
+        ? `${API_BASE_URL}/tmap/routes/pedestrian`
+        : `${API_BASE_URL}/tmap/routes`;
 
       for (let i = 0; i < spots.length - 1; i++) {
         const start = spots[i];
@@ -750,7 +827,6 @@ export const MapView = () => {
         const response = await fetch(routeEndpoint, {
           method: 'POST',
           headers: {
-            'appKey': APP_KEY,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -768,17 +844,34 @@ export const MapView = () => {
         const data = await response.json();
 
         if (data.features) {
+          // Segment Time Logic
+          let segmentTime = 0;
+          
+          if (mode === 'car' && data.features.length > 0) {
+            const props = data.features[0].properties;
+            if (props && props.taxiFare) {
+              accumulatedFare += props.taxiFare;
+            }
+          }
+
           const linePath: any[] = [];
           data.features.forEach((feature: any) => {
-            // 시간 정보 추출
             if (feature.properties?.totalTime) {
               accumulatedTime += feature.properties.totalTime;
+              segmentTime += feature.properties.totalTime;
             }
             if (feature.geometry.type === "LineString") {
               feature.geometry.coordinates.forEach((coord: any) => {
                 linePath.push(new Tmapv3.LatLng(coord[1], coord[0]));
               });
             }
+          });
+          
+          // Collect Segment Info
+          collectedSegments.push({
+              lat: (parseFloat(start.lat) + parseFloat(end.lat)) / 2,
+              lng: (parseFloat(start.lng) + parseFloat(end.lng)) / 2,
+              time: segmentTime
           });
 
           // 경로 색상: 도보=파랑, 차량=초록
@@ -793,6 +886,7 @@ export const MapView = () => {
         }
       }
 
+      setSegmentInfos(collectedSegments);
       setTotalTime(accumulatedTime);
       console.log(`✅ ${mode} route loaded. Total time: ${Math.round(accumulatedTime / 60)} min`);
 
@@ -802,7 +896,17 @@ export const MapView = () => {
     } finally {
       setIsLoadingRoute(false);
     }
-  };
+  }, [isMapReady, spots]);
+
+  // Auto-update route when spots or mode change
+  useEffect(() => {
+    if (viewMode === 'course' && spots.length >= 2) {
+      const timer = setTimeout(() => {
+        fetchRoute(routeMode);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [spots, routeMode, viewMode, fetchRoute]);
 
   // Helper: format seconds to "X분"
   const formatTime = (seconds: number) => {
@@ -877,6 +981,13 @@ export const MapView = () => {
       // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
       setIsEditMode(false); // 코스 변경 시 편집 모드 해제
+      
+      // Reset Route Data to trigger auto-recalculation
+      setTotalTime(0);
+      setTotalFare(0);
+      setSegmentTimes([]);
+      setSegmentInfos([]);
+
       console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
     }
   };
@@ -1004,7 +1115,8 @@ export const MapView = () => {
     }
 
     try {
-        const response = await fetch(`http://localhost:8000/api/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+        const response = await fetch(`${API_URL}/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
         if (!response.ok) throw new Error('Search failed');
         
         const data = await response.json();
@@ -1221,7 +1333,7 @@ export const MapView = () => {
         </button>
       </div>
 
-      <motion.div
+      <MotionDiv
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.1}
@@ -1422,6 +1534,23 @@ export const MapView = () => {
                       {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
                     </button>
 
+                    <button
+                      onClick={() => fetchRoute('car')}
+                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'car'
+                        ? 'bg-[#00C853] text-white border-[#00C853]'
+                        : 'bg-white text-gray-700 border-gray-200'
+                        }`}
+                    >
+                      <span className="flex items-center gap-1.5"><span className="text-lg">🚗</span> 차량 안내</span>
+                      {totalTime > 0 && routeMode === 'car' && (
+                        <span className="text-[10px] opacity-90 font-bold flex flex-col items-center leading-tight">
+                          <span>{formatTime(totalTime)}</span>
+                          {totalFare > 0 && <span>{totalFare.toLocaleString()}원</span>}
+                        </span>
+                      )}
+                    </button>
+
                     <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 px-2 py-2 flex flex-row items-center justify-center gap-3">
                       <span className="text-xs font-black text-gray-800 flex items-center gap-1 shrink-0">길찾기</span>
                       <div className="flex gap-2">
@@ -1496,7 +1625,9 @@ export const MapView = () => {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-500 font-medium line-clamp-1">동구 동명동 · 34,900원 · 4시간 50분</p>
+                    <p className="text-sm text-gray-500 font-medium line-clamp-1">
+                      동구 동명동 · {totalFare > 0 ? `${totalFare.toLocaleString()}원` : '비용 산출 중'} · {totalTime > 0 ? formatTime(totalTime) : '소요시간 계산 중'}
+                    </p>
                     <div className="flex gap-2 mt-3 flex-wrap">
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">연인과</span>
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
@@ -1507,9 +1638,9 @@ export const MapView = () => {
                   {isEditMode ? (
                     /* Edit Mode - Vertical Sortable List */
                     <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 -mx-6 px-6">
-                      <Reorder.Group axis="y" values={spots} onReorder={handleReorder} className="space-y-2">
+                      <ReorderGroup axis="y" values={spots} onReorder={handleReorder} className="space-y-2">
                         {spots.map((spot, index) => (
-                          <Reorder.Item
+                          <ReorderItem
                             key={spot.id}
                             value={spot}
                             className="relative select-none"
@@ -1541,9 +1672,9 @@ export const MapView = () => {
                                 <Trash2 size={16} />
                               </button>
                             </div>
-                          </Reorder.Item>
+                          </ReorderItem>
                         ))}
-                      </Reorder.Group>
+                      </ReorderGroup>
                       <div className="text-center text-xs text-gray-400 mt-4 font-medium animate-pulse">
                         💡 순서를 드래그하여 변경하거나 장소를 삭제하세요.
                       </div>
@@ -1662,7 +1793,7 @@ export const MapView = () => {
             )}
           </div>
         )}
-      </motion.div>
+      </MotionDiv>
 
       <div className="fixed bottom-0 left-0 right-0 h-24 bg-white z-[150]" />
       <LoginInducementModal

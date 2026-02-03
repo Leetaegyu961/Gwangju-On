@@ -10,6 +10,10 @@ import uuid
 
 router = APIRouter()
 
+@router.get("/invitation/ping")
+async def ping_invitation():
+    return {"message": "Invitation router is working"}
+
 class InvitationResponse(BaseModel):
     has_seen: bool
 

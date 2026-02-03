@@ -37,7 +37,7 @@ export const SurveyScreen = () => {
 
   const themes = ['데이트', '힐링', '액티비티', '맛집탐방'];
   const companions = ['혼자', '친구', '연인', '가족'];
-  const regions = ['수완지구', '충장로', '첨단지구', '상무지구', '내 중심', '기타'];
+  const regions = ['동명동', '양림동', '충장로/ACC', '상무지구', '수완지구', '첨단지구', '내 중심', '기타'];
 
   const categories = [
     { type: '식당', icon: Utensils },
