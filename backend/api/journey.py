@@ -155,3 +155,29 @@ async def log_silent_action(request: LogActionRequest):
     )
     
     return {"status": "success", "message": f"{request.actionType} logged to user_activity_logs"}
+
+@router.get("/journey/history/{userId}")
+async def get_journey_history(userId: str):
+    db = await get_database()
+    # status가 COMPLETED인 모든 세션 조회 (최신순 정렬)
+    cursor = db["user_trip_sessions"].find(
+        {"userId": userId, "status": "COMPLETED"}
+    ).sort("completed_at", -1)
+    
+    history = []
+    async for doc in cursor:
+        # _id 등 직렬화 불가능한 필드 처리
+        doc["_id"] = str(doc["_id"])
+        history.append(doc)
+        
+    return history
+
+@router.delete("/journey/{sessionId}")
+async def delete_journey(sessionId: str):
+    db = await get_database()
+    result = await db["user_trip_sessions"].delete_one({"sessionId": sessionId})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Journey not found")
+        
+    return {"status": "success", "message": "Journey deleted"}

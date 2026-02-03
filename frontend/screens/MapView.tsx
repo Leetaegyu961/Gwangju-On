@@ -583,11 +583,11 @@ export const MapView = () => {
 
       // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
       console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
-      
+
       // 선택된 장소가 있다면 해제
       setSelectedPlace(null);
       setIsDetailLoading(false);
-      
+
       // 코스 모드일 때 시트 닫기
       if (viewModeRef.current === 'course' && sheetOpenRef.current) {
         setSheetOpen(false);
@@ -712,7 +712,7 @@ export const MapView = () => {
             // 하단 바텀 시트가 지도를 가리는 것을 고려하여 Padding(Margin) 적용
             // viewMode가 'course'일 때는 시트가 높게 올라오므로 하단 여백을 크게 설정
             const bottomPadding = viewMode === 'course' ? 320 : 150;
-            
+
             // Tmapv3 fitBounds(bounds, margin) 사용
             // margin: { top, right, bottom, left }
             mapInstance.current.fitBounds(bounds, {
@@ -737,11 +737,11 @@ export const MapView = () => {
   // Auto-calculate route when spots are loaded (Course Mode)
   useEffect(() => {
     if (isMapReady && viewMode === 'course' && spots.length > 1 && totalTime === 0 && !isLoadingRoute) {
-        // Debounce slightly to ensure map is ready
-        const timer = setTimeout(() => {
-            fetchRoute(routeMode); // Use active routeMode
-        }, 1000);
-        return () => clearTimeout(timer);
+      // Debounce slightly to ensure map is ready
+      const timer = setTimeout(() => {
+        fetchRoute(routeMode); // Use active routeMode
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [isMapReady, viewMode, spots, routeMode, totalTime]);
 
@@ -755,19 +755,19 @@ export const MapView = () => {
     timeMarkersRef.current = [];
 
     if (viewMode === 'course' && segmentInfos.length > 0) {
-        const isCar = routeMode === 'car';
-        const bgColor = isCar ? '#1F2937' : '#FFFFFF';
-        const borderColor = isCar ? '#F59E0B' : '#0066FF'; // Amber for taxi, Blue for walk
-        const textColor = isCar ? '#FCD34D' : '#0066FF';
-        const iconSymbol = isCar ? '🚖' : '🚶';
-        const shadowRing = isCar ? 'rgba(245, 158, 11, 0.3)' : 'rgba(0,102,255,0.1)';
+      const isCar = routeMode === 'car';
+      const bgColor = isCar ? '#1F2937' : '#FFFFFF';
+      const borderColor = isCar ? '#F59E0B' : '#0066FF'; // Amber for taxi, Blue for walk
+      const textColor = isCar ? '#FCD34D' : '#0066FF';
+      const iconSymbol = isCar ? '🚖' : '🚶';
+      const shadowRing = isCar ? 'rgba(245, 158, 11, 0.3)' : 'rgba(0,102,255,0.1)';
 
-        segmentInfos.forEach(info => {
-            if (info.time <= 0) return;
-            const position = new Tmapv3.LatLng(info.lat, info.lng);
-            const timeStr = formatTime(info.time);
-            
-            const content = `
+      segmentInfos.forEach(info => {
+        if (info.time <= 0) return;
+        const position = new Tmapv3.LatLng(info.lat, info.lng);
+        const timeStr = formatTime(info.time);
+
+        const content = `
                 <div style="
                     background: ${bgColor};
                     padding: 6px 12px;
@@ -786,15 +786,15 @@ export const MapView = () => {
                     <span style="font-size: 12px; font-weight: 900; color: ${textColor}; letter-spacing: -0.5px;">${timeStr}</span>
                 </div>
             `;
-            
-            const marker = new Tmapv3.Marker({
-                position: position,
-                map: mapInstance.current,
-                iconHTML: content,
-                zIndex: 100
-            });
-            timeMarkersRef.current.push(marker);
+
+        const marker = new Tmapv3.Marker({
+          position: position,
+          map: mapInstance.current,
+          iconHTML: content,
+          zIndex: 100
         });
+        timeMarkersRef.current.push(marker);
+      });
     }
   }, [segmentInfos, viewMode, isMapReady, routeMode]);
 
@@ -846,7 +846,7 @@ export const MapView = () => {
         if (data.features) {
           // Segment Time Logic
           let segmentTime = 0;
-          
+
           if (mode === 'car' && data.features.length > 0) {
             const props = data.features[0].properties;
             if (props && props.taxiFare) {
@@ -866,12 +866,12 @@ export const MapView = () => {
               });
             }
           });
-          
+
           // Collect Segment Info
           collectedSegments.push({
-              lat: (parseFloat(start.lat) + parseFloat(end.lat)) / 2,
-              lng: (parseFloat(start.lng) + parseFloat(end.lng)) / 2,
-              time: segmentTime
+            lat: (parseFloat(start.lat) + parseFloat(end.lat)) / 2,
+            lng: (parseFloat(start.lng) + parseFloat(end.lng)) / 2,
+            time: segmentTime
           });
 
           // 경로 색상: 도보=파랑, 차량=초록
@@ -981,7 +981,7 @@ export const MapView = () => {
       // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
       setIsEditMode(false); // 코스 변경 시 편집 모드 해제
-      
+
       // Reset Route Data to trigger auto-recalculation
       setTotalTime(0);
       setTotalFare(0);
@@ -1016,7 +1016,7 @@ export const MapView = () => {
   };
 
   // 코스 확정 및 타임라인 생성 핸들러
-  const handleConfirmCourse = () => {
+  const handleConfirmCourse = async () => {
     // [Guest Check]
     if (checkIsGuest()) {
       setModalFeature("코스 확정 및 저장");
@@ -1024,32 +1024,61 @@ export const MapView = () => {
       return;
     }
 
+    let finalSpots = [];
+
     // 1. 유효성 검사: 담은 장소가 없으면 경고
     if (pickedSpots.length === 0) {
       if (confirm("담은 장소가 없습니다. 현재 코스의 모든 장소로 타임라인을 만들까요?")) {
         // 사용자가 '확인' 누르면 전체 코스 저장
+        finalSpots = spots;
         localStorage.setItem('current_course', JSON.stringify(spots));
       } else {
         return; // 취소하면 아무것도 안 함
       }
     } else {
       // 담은 장소가 있으면 그것만 저장
+      finalSpots = pickedSpots;
       localStorage.setItem('current_course', JSON.stringify(pickedSpots));
     }
 
     // 2. 선택된 코스의 메타 데이터도 저장 (제목 등)
-    if (allCourses[selectedCourseIndex]) {
-      localStorage.setItem('current_course_meta', JSON.stringify(allCourses[selectedCourseIndex]));
+    const selectedMeta = allCourses[selectedCourseIndex] || {};
+    localStorage.setItem('current_course_meta', JSON.stringify(selectedMeta));
+
+    // 3. [NEW] Backend DB 저장 (영구 저장)
+    try {
+      const userId = localStorage.getItem('temp_user_id');
+      if (userId) {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+        // AI Summary가 없으면 코스 이름을 대신 사용
+        const summary = selectedMeta.ai_summary || selectedMeta.course_name || "나만의 광주 여행";
+
+        await fetch(`${API_URL}/api/journey/save-final`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            pickedPlaces: finalSpots,
+            aiSummary: summary
+          })
+        });
+        console.log("✅ Course saved to DB successfully");
+      }
+    } catch (error) {
+      console.error("❌ Failed to save course to DB:", error);
+      // DB 저장 실패해도 로컬 동작은 유지
     }
 
-    // 3. 완료 메시지
-    alert(`총 ${pickedSpots.length > 0 ? pickedSpots.length : spots.length}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴에서 확인해보세요.`);
+    // 4. 완료 메시지
+    alert(`총 ${finalSpots.length}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴로 이동합니다.`);
+    router.push('/timeline');
   };
 
   // 순서 변경 핸들러 (Reorder)
   const handleReorder = (newSpots: any[]) => {
     setSpots(newSpots);
-    
+
     // 로컬 스토리지 업데이트
     const updatedAllCourses = [...allCourses];
     if (updatedAllCourses[selectedCourseIndex]) {
@@ -1105,51 +1134,51 @@ export const MapView = () => {
   const handleKeywordSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!searchKeyword.trim()) return;
-    
+
     setIsSearching(true);
     setViewMode('places'); // 결과 확인을 위해 장소 모드로 전환
-    
+
     // 키보드 내리기 (모바일 고려)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
     try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-        const response = await fetch(`${API_URL}/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
-        if (!response.ok) throw new Error('Search failed');
-        
-        const data = await response.json();
-        
-        if (data.searchPoiInfo?.pois?.poi) {
-             const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
-                name: p.name,
-                lat: p.noorLat,
-                lng: p.noorLon,
-                category: p.lowerAddrName || '장소',
-                address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
-              }));
-              
-              // 줌 제어 Ref 설정 (useEffect의 fitBounds 방지)
-              skipFitBoundsRef.current = true;
-              setAllPlaces(pois);
-              setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      const response = await fetch(`${API_URL}/tmap/poi/search?keyword=${encodeURIComponent(searchKeyword)}`);
+      if (!response.ok) throw new Error('Search failed');
 
-              // 첫 번째 결과로 지도 이동
-              if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
-                  const Tmapv3 = (window as any).Tmapv3;
-                  mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
-                  mapInstance.current.setZoom(15);
-              }
-        } else {
-            setAllPlaces([]);
-            setToastMessage("검색 결과가 없습니다.");
+      const data = await response.json();
+
+      if (data.searchPoiInfo?.pois?.poi) {
+        const pois = data.searchPoiInfo.pois.poi.map((p: any) => ({
+          name: p.name,
+          lat: p.noorLat,
+          lng: p.noorLon,
+          category: p.lowerAddrName || '장소',
+          address: (p.upperAddrName + " " + p.middleAddrName + " " + p.lowerAddrName).trim()
+        }));
+
+        // 줌 제어 Ref 설정 (useEffect의 fitBounds 방지)
+        skipFitBoundsRef.current = true;
+        setAllPlaces(pois);
+        setToastMessage(`'${searchKeyword}' 검색 완료: ${pois.length}개 발견`);
+
+        // 첫 번째 결과로 지도 이동
+        if (pois.length > 0 && mapInstance.current && (window as any).Tmapv3) {
+          const Tmapv3 = (window as any).Tmapv3;
+          mapInstance.current.setCenter(new Tmapv3.LatLng(pois[0].lat, pois[0].lng));
+          mapInstance.current.setZoom(15);
         }
+      } else {
+        setAllPlaces([]);
+        setToastMessage("검색 결과가 없습니다.");
+      }
     } catch (error) {
-        console.error("Search failed", error);
-        setToastMessage("검색 중 오류가 발생했습니다.");
+      console.error("Search failed", error);
+      setToastMessage("검색 중 오류가 발생했습니다.");
     } finally {
-        setIsSearching(false);
+      setIsSearching(false);
     }
   };
 
@@ -1247,7 +1276,7 @@ export const MapView = () => {
                 onClick={() => setSearchKeyword('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-gray-500"
               >
-                <X size={16} fill="currentColor" className="opacity-50"/>
+                <X size={16} fill="currentColor" className="opacity-50" />
               </button>
             )}
           </form>
@@ -1497,8 +1526,8 @@ export const MapView = () => {
                           alt="place"
                           loading="lazy"
                           onError={(e) => {
-                             (e.target as HTMLImageElement).style.display = 'none';
-                             (e.target as HTMLImageElement).parentElement!.innerText = '📍';
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).parentElement!.innerText = '📍';
                           }}
                         />
                       ) : (
@@ -1600,7 +1629,7 @@ export const MapView = () => {
                     >
                       <Heart size={20} />
                     </button>
-                    
+
                     <button
                       onClick={() => setIsEditMode(!isEditMode)}
                       className={`h-10 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all shadow-sm border font-bold text-xs ${isEditMode ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}
@@ -1624,7 +1653,7 @@ export const MapView = () => {
                         <h2 className="text-lg font-bold text-gray-900 truncate">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-gray-500 font-medium line-clamp-1">
                       동구 동명동 · {totalFare > 0 ? `${totalFare.toLocaleString()}원` : '비용 산출 중'} · {totalTime > 0 ? formatTime(totalTime) : '소요시간 계산 중'}
                     </p>

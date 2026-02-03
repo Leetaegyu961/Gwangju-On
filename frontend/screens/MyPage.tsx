@@ -114,6 +114,20 @@ export const MyPage = () => {
 
             <div className="text-center mb-8">
                <h2 className="text-2xl font-black text-gray-800 mb-2">{userName}</h2>
+
+               {/* User Profile Badges (Age/Gender) */}
+               <div className="flex gap-2 justify-center mb-3">
+                  {profile?.age && (
+                     <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100 shadow-sm">
+                        {profile.age}
+                     </span>
+                  )}
+                  {profile?.gender && (
+                     <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-500 text-[10px] font-bold rounded-full border border-indigo-100 shadow-sm">
+                        {profile.gender}
+                     </span>
+                  )}
+               </div>
                <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-blue-100 shadow-sm">
                   <TrendingUp size={14} className="text-[#3B82F6]" />
                   <p className="text-xs font-bold text-gray-500">나의 여행 횟수: <span className="text-[#3B82F6]">{tripCount}회</span></p>

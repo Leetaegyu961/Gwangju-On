@@ -1,132 +1,189 @@
-# 🛠️ Gwangju-On 프로젝트 상세 수정 로그 (2026-02-03)
+# 🛠️ Journey Timeline Update Log (2026-02-03)
 
-## 📂 파일 변경 요약 (File Change Summary)
-
-### ✨ 신규 생성 (Created)
-- **`backend/api/maps.py`**: Google Static Maps API와 통신하기 위한 백엔드 프록시 로직 구현 파일.
-
-### 📝 수정됨 (Modified)
-- **`frontend/screens/TimelineScreen.tsx`**: 
-  - 지도 렌더링 방식 전면 교체 (Tmap SDK → Static Map Image).
-  - 공유하기 기능(Web Share/Clipboard) 추가.
-  - 엔딩 슬라이드 및 앨범 리스트 UI 디자인 개선.
-- **`frontend/screens/MapView.tsx`**: 
-  - 정적 경로 보기 기능을 **실시간 도보 내비게이션(내 위치 추적)**으로 기능 업그레이드.
-- **`frontend/screens/MyPage.tsx`**: 
-  - 전체 테마 컬러 변경 (오렌지 → **블루**).
-  - 마스코트 이미지 배경 장식 추가 및 프로필 UI 수정.
-- **`frontend/screens/LoginScreen.tsx`**: 
-  - 전체 테마 컬러 변경 (오렌지 → **블루**) 및 배경 장식 톤 조정.
-- **`main.py`**: 
-  - 신규 생성된 `maps` 라우터를 FastAPI 앱에 등록.
+이 문서는 2026년 2월 3일 오후에 진행된 **타임라인 영구 저장(DB 연동) 및 삭제 기능** 구현에 대한 상세 수정 로그입니다.
 
 ---
 
-## 1. 🗺️ 타임라인 지도 캡처 시스템 전면 개편 (Timeline Map Upgrade)
+## 1. 🔙 Backend: `backend/api/journey.py`
+기존의 단일 세션 업데이트 로직을 확장하여, 사용자의 **지난 여행 기록(History)을 조회**하고 **삭제**할 수 있는 API 엔드포인트를 추가했습니다.
 
-### 🚨 문제 발생 (Problem)
-- **증상**: `TimelineScreen`에서 생성된 카드 이미지를 `html2canvas`로 캡처할 때, 지도 영역이 빈 화면(흰색/투명)으로 저장되는 현상 발생.
-- **원인 분석**:
-  - 기존에는 Tmap Javascript V2 SDK를 사용하여 클라이언트 사이드(브라우저 Canvas/WebGL)에서 지도를 렌더링했습니다.
-  - `html2canvas` 라이브러리는 외부 도메인(Tmap 서버)에서 로드된 이미지나 WebGL 컨텍스트(Tained Canvas)에 대해 보안 정책(CORS)상 접근을 차단하거나 렌더링을 건너뛰는 한계가 있습니다.
+### ✨ 주요 변경 사항 (Core Changes)
 
-### 💡 해결 솔루션 (Solution): Google Static Maps 도입
-브라우저 렌더링을 포기하고, **백엔드에서 이미 생성된 지도 이미지 파일(PNG)을 받아와서 표시**하는 방식으로 아키텍처를 변경했습니다.
+#### A. 여행 히스토리 조회 API (`GET /journey/history/{userId}`)
+사용자의 완료된(`COMPLETED`) 여행 기록을 최신순으로 반환합니다.
+```python
+@router.get("/journey/history/{userId}")
+async def get_journey_history(userId: str):
+    db = await get_database()
+    # 1. userId가 일치하고, status가 'COMPLETED'인 세션만 필터링
+    # 2. completed_at 기준 내림차순 정렬 (최신순)
+    cursor = db["user_trip_sessions"].find(
+        {"userId": userId, "status": "COMPLETED"}
+    ).sort("completed_at", -1)
+    
+    history = []
+    async for doc in cursor:
+        doc["_id"] = str(doc["_id"]) # ObjectId 직렬화 처리
+        history.append(doc)
+        
+    return history
+```
 
-### 💻 상세 수정 내역 (Code Changes)
-
-#### A. Backend: `backend/api/maps.py` (New File)
-- **Static Map Proxy 구현**:
-  - `POST /api/maps/static` 엔드포인트를 신설했습니다.
-  - 프론트엔드로부터 `center`({lat, lng}), `zoom`, `markers`(Array), `path`(Array) 데이터를 수신합니다.
-  - Google Static Maps API URL을 생성하고, 서버 측에서 `requests`를 통해 이미지를 받아옵니다.
-  - 받아온 이미지를 그대로 `Response(content=..., media_type="image/png")`로 반환하여, 프론트엔드가 바이너리 데이터를 직접 쓸 수 있게 했습니다.
-
-#### B. Frontend: `frontend/screens/TimelineScreen.tsx` (Major Update)
-- **Tmap 제거 및 이미지 대체**: 
-  - `initTmap` 등 클라이언트 SDK 로직을 제거하고, `useEffect`에서 `/api/maps/static`을 호출하여 지도 이미지를 Blob으로 받아옵니다.
-  - `<div id="map">` 대신 `<img src={mapImageUrl} />` 태그를 사용하여 캡처 호환성을 완벽하게 확보했습니다.
-
-#### ⚠️ 중요: API 활성화 필요 (Required Setup)
-- Google Cloud Console의 [APIs & Services] > [Library] 메뉴에서 **"Maps Static API"**를 검색하여 반드시 **사용 설정(Enable)** 해야 합니다.
-- 단순히 API Key만 있다고 작동하지 않으며, 해당 프로젝트에 이 특정 API 서비스가 켜져 있어야 이미지가 정상적으로 로드됩니다.
-
----
-
-## 2. 📤 공유하기 기능 추가 (Share Functionality)
-
-### 구현 목적
-사용자가 생성된 여행 코스 카드를 다운로드만 하는 것이 아니라, 모바일 메신저(카카오톡 등)나 SNS로 즉시 공유할 수 있도록 기능을 확장했습니다.
-
-### 💻 상세 수정 내역 (`TimelineScreen.tsx`)
-
-#### A. `handleShare` 함수 구현
-- **이미지 캡처**: 다운로드와 동일하게 `html2canvas`로 해당 DOM(`cardRef`)을 고해상도(`scale: 2`) 이미지 blob으로 변환합니다.
-- **Platform-Specific Logic**:
-  1.  **모바일 (Navigator.share)**: `navigator.canShare` 지원 시, 네이티브 공유 시트를 호출하여 카카오톡, 메시지 등으로 파일을 바로 전송합니다.
-  2.  **PC (Clipboard API)**: `navigator.clipboard.write`를 사용하여 이미지를 클립보드에 복사합니다. (채팅방 붙여넣기 가능)
-
-#### B. UI 추가
-- 다운로드 버튼 좌측에 **Share2 아이콘 버튼**을 추가하여 접근성을 높였습니다.
+#### B. 여행 기록 삭제 API (`DELETE /journey/{sessionId}`)
+특정 여행 기록을 영구 삭제합니다.
+```python
+@router.delete("/journey/{sessionId}")
+async def delete_journey(sessionId: str):
+    db = await get_database()
+    # sessionId를 기준으로 문서 삭제
+    result = await db["user_trip_sessions"].delete_one({"sessionId": sessionId})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Journey not found")
+        
+    return {"status": "success", "message": "Journey deleted"}
+```
 
 ---
 
-## 3. 🚶‍♂️ 실시간 도보 내비게이션 (Real-time Navigation) - MapView Update
+## 2. 🖥️ Frontend: `frontend/screens/TimelineScreen.tsx`
+브라우저 로컬 스토리지(휘발성)에 의존하던 로직을 **서버 DB 우선 조회** 로직으로 변경하고, 앨범 삭제 UI를 추가했습니다.
 
-### 개요
-기존 `MapView.tsx`의 단순 경로 보기 기능을 **"내 위치 기반 실시간 길안내"** 기능으로 업그레이드했습니다. 이제 사용자는 본인의 현재 위치에서 다음 목적지까지의 경로를 실시간으로 확인하며 이동할 수 있습니다.
+### ✨ 주요 변경 사항 (Core Changes)
 
-### 💻 상세 수정 내역 (`frontend/screens/MapView.tsx`)
+#### A. DB 조회 로직 구현 (`fetchHistory`)
+- 기존: `localStorage.getItem('current_course')`만 확인.
+- 변경: `/api/journey/history/{userId}` API를 먼저 호출하여 DB 데이터를 `albums` 상태에 매핑.
+- **Fallback**: DB에 데이터가 없거나 서버 오류 시 로컬 스토리지를 확인하도록 안전장치 마련.
 
-#### A. 내비게이션 로직 (`startNavigation`, `stopNavigation`)
-- **Geolocation API 활용**: `navigator.geolocation.getCurrentPosition`으로 초기 위치를 잡고, `watchPosition`으로 실시간 이동 경로를 추적합니다.
-- **Tmap API 연동**:
-  - EndPoint: `https://apis.openapi.sk.com/tmap/routes/pedestrian` (보행자 경로)
-  - Start: 내 실시간 위치 (User Location)
-  - End: 현재 선택된 목적지 (Target Spot)
-  - 매번 경로를 다시 계산하지 않고 코스 이동 시 최적 경로를 보여줍니다.
+```typescript
+// [Updated] Fetch Journey History from DB
+const fetchHistory = async () => {
+    const userId = localStorage.getItem('temp_user_id');
+    // ... API 호출 ...
+    const res = await fetch(`${API_URL}/api/journey/history/${userId}`);
+    if (res.ok) {
+        const data = await res.json();
+        // Server Data -> UI Album Model Mapping
+        const mappedAlbums = data.map((session: any) => ({
+            id: session.sessionId,
+            title: session.ai_summary || "나만의 감성 광주 여행",
+            spots: session.album_data || [], // 저장된 장소 리스트
+            isNew: false // DB에서 불러온 데이터는 New 배지 제거
+            // ... 기타 필드 매핑 ...
+        }));
+        setAlbums(mappedAlbums);
+    }
+    // ... Fallback Logic ...
+};
+```
 
-#### B. UI 및 시각화 (Visuals)
-- **내 위치 마커 (Pulse Effect)**:
-  - 파란색 점과 퍼져나가는(Ping) 애니메이션 효과(`<span class="animate-ping">`)를 CSS로 구현하여 현재 위치를 직관적으로 표시했습니다.
-- **버튼 액션**:
-  - 버튼 클릭 시 "도보 안내" ↔ "안내 종료"로 상태가 토글됩니다.
-  - 내비게이션 중에는 남은 예상 소요 시간이 실시간으로 표시됩니다.
+#### B. 앨범 삭제 기능 (`handleDeleteAlbum`)
+- **UI**: 앨범 카드 우상단에 `Trash2`(쓰레기통) 아이콘 버튼 추가.
+- **Logic**: 삭제 확인(`confirm`) 후 API 호출 (`DELETE /api/journey/{id}`).
+- **UX**: 삭제 성공 시 화면에서 즉시 카드를 제거(Filter)하여 반응성 향상.
 
----
-
-## 4. 🎨 UI/UX 디테일 개선 (Timeline Improvements)
-
-### A. 엔딩 슬라이드 (Ending Slide)
-- **Wide Grid**: 사진 배열을 가로로 긴 2분할(`aspect-[2.5/1]`)로 변경하여 지도 영역을 넓게 확보했습니다.
-- **디자인 폴리싱**: 사진 오버레이 그라데이션을 부드럽게(`from-black/70`) 조정하고, 텍스트 정렬을 최적화했습니다.
-
-### B. 앨범 리스트 (Dynamic Covers)
-- 코스 장소 개수(1, 2, 3+)에 따라 앨범 표지 디자인이 폴라로이드(1장), 겹친 사진(2장), 콜라주(3장)로 동적으로 변하도록 개선했습니다.
-
----
-
-## 5. 🔵 디자인 테마 변경: Blue Theme (MyPage & Login)
-
-### 개요
-프로젝트의 메인 컬러 톤을 **오렌지(#FF6B00)**에서 신뢰감과 시원함을 주는 **파란색(#3B82F6, Tailwind Blue-500)** 계열로 전면 교체했습니다.
-
-### 💻 상세 수정 내역
-
-#### A. `frontend/screens/MyPage.tsx`
-- **테마 변경**: 배경색(`bg-[#F5F8FF]`) 및 모든 포인트 컬러를 블루 톤으로 수정.
-- **마스코트 통합**: 기존의 단순 아이콘 대신 `mascot_full.png`를 배경 장식으로 활용하여 브랜드 아이덴티티를 강화했습니다.
-
-#### B. `frontend/screens/LoginScreen.tsx`
-- **테마 변경**: 로그인 화면의 그라데이션, 그림자, 텍스트 색상을 모두 파란색 계열로 통일했습니다.
-- **애니메이션**: 마스코트 비디오 주변의 Glow 효과를 블루/인디고 컬러로 매칭했습니다.
+```typescript
+<button 
+    onClick={(e) => handleDeleteAlbum(e, album.id)}
+    className="absolute top-2 right-2 z-50 p-2 text-gray-300 hover:text-red-500 ..."
+    title="앨범 삭제"
+>
+    <Trash2 size={16} />
+</button>
+```
 
 ---
 
-## 6. 🧹 코드 관리 및 리팩토링
-- **Dependencies**: React 19와 `framer-motion` 호환 이슈 해결을 위해 `MotionDiv` 래퍼 도입.
-- **Cleanup**: Tmap V2 관련 Legacy 코드(Script 로딩 등) 및 미사용 상태 변수 정리.
+## 3. 👤 마이페이지 UI 개선 (`frontend/screens/MyPage.tsx`)
+사용자의 현재 프로필 정보(나이, 성별)를 **시각적으로 확인**할 수 있도록 UI를 개선했습니다.
+
+### ✨ 주요 변경 사항 (Core Changes)
+- **프로필 배지(Badge) 추가**: 사용자 이름 하단에 `[20대]` `[여성]`과 같은 형태의 태그를 추가하여, 현재 설정된 Demographics 정보를 직관적으로 보여줍니다.
+- **실시간 반영**: 설정 팝업에서 정보를 수정하고 저장하면, DB 업데이트와 동시에 배지 내용도 즉시 변경됩니다.
+
+```typescript
+{/* User Profile Badges (Age/Gender) */}
+<div className="flex gap-2 justify-center mb-3">
+    {profile?.age && (
+        <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100 shadow-sm">
+            {profile.age}
+        </span>
+    )}
+    {profile?.gender && (
+        <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-500 text-[10px] font-bold rounded-full border border-indigo-100 shadow-sm">
+            {profile.gender}
+        </span>
+    )}
+</div>
+```
 
 ---
-*Last Updated: 2026-02-03 11:47*
-*Modified by: AI Assistant (Antigravity)*
+
+---
+
+## 4. 🎨 Timeline UI 전면 리뉴얼 & 기능 고도화
+**(2026-02-03 17:30 Update)**
+
+앱의 전반적인 디자인 통일성을 위해 `TimelineScreen`의 UI를 **Blue Theme & Mascot Identity**로 전면 개편하고, 사용자 참여형 기능을 추가했습니다.
+
+### ✨ 주요 변경 사항 (Core Changes)
+
+#### A. 디자인 테마 통일 (`Blue & Mascot Style`)
+- **Background**: 기존 베이지색 배경을 **밝은 블루톤(#F5F8FF)**으로 변경하고, **마스코트 캐릭터 애니메이션**을 추가하여 화사한 분위기 연출.
+- **Header**: `MyPage`와 동일한 스타일(`Travel Log` 태그, 타이포그래피) 적용.
+- **Album Card**: 카드 그림자 및 테두리를 블루 계열(`border-blue-50`, `shadow-blue-100`)로 변경하여 일관성 유지.
+- **Grid Layout**: 사진이 2장일 때 `aspect-square`로 가로 배치되도록 개선, 4장일 때 비율 최적화.
+
+#### B. 사용자 코멘트 기록 기능 (`User Editable Description`)
+상세 타임라인에서 AI가 작성한 기본 장소 설명을 **사용자가 직접 편집**할 수 있는 기능을 추가했습니다.
+- **Textarea 도입**: 설명 텍스트를 클릭하면 수정 모드로 전환.
+- **Fallback Logic**: 사용자가 내용을 입력하지 않으면 **기존 AI 요약 설명**이 기본값으로 표시됨.
+- **State Persistence**: 수정된 내용은 세션 내에서 유지됨.
+
+#### C. Backend Interaction (`MapView.tsx` -> `DB`)
+코스 확정(`handleConfirmCourse`) 시, 기존 로컬 스토리지 저장 방식에서 **DB 영구 저장 API 호출**로 로직을 강화했습니다.
+```typescript
+// MapView.tsx
+await fetch(`${API_URL}/api/journey/save-final`, {
+    method: 'POST',
+    body: JSON.stringify({ userId, pickedPlaces: finalSpots, aiSummary })
+});
+```
+
+#### D. Bug Fixes
+- `onClose` Prop 미전달로 인한 **닫기 버튼 오작동 수정** (`router.back()` 연결).
+- 리스트/디테일 뷰 전환 시 불필요한 레이아웃 꼬임 해결.
+
+---
+
+## 5. 🛠️ Bug Fixes & UX Performance Tuning
+**(2026-02-04 Update)**
+
+사용자 피드백을 반영하여 **타임라인 UI의 사용성**을 대폭 개선하고, **API 호출 최적화** 및 **버그 수정**을 완료했습니다.
+
+### ✨ 주요 변경 사항 (Core Changes)
+
+#### A. 장소 설명 편집 위치 변경 (`TimelineScreen.tsx`)
+- **변경 전**: 앨범 상세 보기(Modal) 슬라이드 내에서 설명을 수정.
+- **변경 후**: **리스트 뷰(List View)**의 사진 업로드 영역 상단으로 설명 입력창(`textarea`)을 이동.
+- **이유**: 사진을 올리면서 바로 설명을 적는 것이 자연스러운 동작(UX)이므로 위치를 재배치.
+- **Modal View**: 앨범 카드는 **읽기 전용(Read-Only)** 뷰로 변경하여, 최종 결과물을 감상하는 용도로 명확히 구분.
+
+#### B. 앨범 카드 텍스트 렌더링 수정 (`TimelineScreen.tsx`)
+- **Issue**: 앨범 카드 모달에서 텍스트 영역의 높이가 0으로 잡혀 글자가 보이지 않는 현상.
+- **Fix**: 
+    - 레이아웃을 `Relative` + `Flex` 구조에서 **`Absolute Positioning`** 구조로 변경하여 텍스트 박스를 강제로 확장.
+    - 데이터가 비어있을 경우(빈 문자열 등), 공백 대신 **기본 문구**나 **기존 장소 설명(`spot.desc`)**이 우선적으로 표시되도록 Fallback 로직 강화.
+    - **디자인 강화**: 글자색을 진하게(`text-gray-900`) 하고 가시성을 높임.
+
+#### C. 지도 API 호출 최적화 (`TimelineScreen.tsx`)
+- **Issue**: 댓글 입력, 사진 업로드 등으로 상태가 변할 때마다 `/api/maps/static` API가 불필요하게 반복 호출되어 서버 로그가 폭주하는 문제.
+- **Fix**: **좌표(`lat`, `lng`)가 실제로 변경된 경우에만** API를 호출하도록 비교 로직(Memoization)을 추가하여 서버 부하 감소.
+
+#### D. 코스 확정 UX 개선 (`MapView.tsx`)
+- **Issue**: "이 코스로 결정하기" 버튼 클릭 후, 화면 이동이 없어 사용자가 완료 여부를 모른 채 오류로 오인하거나 불안해함.
+- **Fix**: `save-final` 완료 후 **즉시 타임라인 화면으로 이동(`router.push('/timeline')`)**하도록 로직 추가하여 UX 흐름을 명확히 함.
+
+---
+*Last Updated: 2026-02-04 17:35*
