@@ -1070,9 +1070,12 @@ export const MapView = () => {
       // DB 저장 실패해도 로컬 동작은 유지
     }
 
-    // 4. 완료 메시지
-    alert(`총 ${finalSpots.length}개의 장소로 코스가 확정되었습니다!\n타임라인 메뉴로 이동합니다.`);
-    router.push('/timeline');
+    // 4. 완료 메시지 및 이동 확인
+    if (confirm(`총 ${finalSpots.length}개의 장소로 코스가 확정되었습니다!\n타임라인으로 바로 이동하시겠습니까?`)) {
+      router.push('/timeline');
+    } else {
+      setToastMessage("코스가 저장되었습니다. 언제든 타임라인 메뉴로 이동할 수 있습니다.");
+    }
   };
 
   // 순서 변경 핸들러 (Reorder)

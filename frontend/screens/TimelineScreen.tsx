@@ -236,10 +236,14 @@ export default function TimelineScreen() {
         });
     };
 
-    // Share Current Slide Logic
-    const handleShare = async () => {
+    // [New] Share Selection Modal State
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+    // 1. Share Current Slide (Single Image)
+    const shareCurrentSlide = async () => {
         if (!cardRef.current || isGenerating) return;
         setIsGenerating(true);
+        setIsShareModalOpen(false); // Close Modal
 
         try {
             await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
@@ -257,7 +261,6 @@ export default function TimelineScreen() {
                 }
                 const file = new File([blob], "gwangju-trip.png", { type: "image/png" });
 
-                // 1. 네이티브 공유 시도 (모바일 등)
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
@@ -266,22 +269,22 @@ export default function TimelineScreen() {
                             text: '나만의 광주 여행 코스를 확인해보세요!'
                         });
                     } catch (shareError) {
-                        // 사용자가 취소한 경우 등
-                        console.log("Share cancelled or failed", shareError);
+                        console.log("Share cancelled", shareError);
                     }
-                }
-                // 2. 클립보드 복사 시도 (PC 등)
-                else {
+                } else {
                     try {
                         await navigator.clipboard.write([
                             new ClipboardItem({
                                 [blob.type]: blob
                             })
                         ]);
-                        alert("이미지가 클립보드에 복사되었습니다.\n채팅방에 붙여넣기(Ctrl+V) 하세요!");
-                    } catch (clipError) {
-                        console.error("Clipboard failed", clipError);
-                        alert("이 브라우저에서는 공유 기능을 지원하지 않습니다.\n'저장' 기능을 이용해주세요.");
+                        alert("이미지가 클립보드에 복사되었습니다.\n(공유 기능을 완전하게 지원하지 않는 환경입니다)");
+                    } catch (e) {
+                        // Fallback Download
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "gwangju-trip.png";
+                        link.click();
                     }
                 }
                 setIsGenerating(false);
@@ -292,6 +295,87 @@ export default function TimelineScreen() {
             setIsGenerating(false);
             alert("공유하기 실패");
         }
+    };
+
+    // 2. Share ALL Slides (Multiple Images)
+    const shareAllSlidesAsFiles = async () => {
+        if (!cardRef.current || isGenerating) return;
+        setIsGenerating(true);
+        setIsShareModalOpen(false); // Close Modal
+        const originalSlide = currentSlide;
+
+        try {
+            const slideCount = course.length + 2;
+            const files: File[] = [];
+
+            // Capture Loop
+            for (let i = 0; i < slideCount; i++) {
+                setCurrentSlide(i);
+                await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
+
+                if (cardRef.current) {
+                    const canvas = await html2canvas(cardRef.current, {
+                        scale: 2,
+                        backgroundColor: '#FDFBF7',
+                        useCORS: true,
+                        logging: false,
+                    });
+
+                    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+                    if (blob) {
+                        const fileName = i === 0 ? '00_Cover.png' : i === slideCount - 1 ? '99_Ending.png' : `0${i}_Spot.png`;
+                        const file = new File([blob], fileName, { type: "image/png" });
+                        files.push(file);
+                    }
+                }
+            }
+
+            // Share Files or Fallback Download
+            const performDownload = () => {
+                files.forEach((file) => {
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(file);
+                    link.download = file.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            };
+
+            if (files.length > 0) {
+                if (navigator.canShare && navigator.canShare({ files })) {
+                    try {
+                        await navigator.share({
+                            files: files,
+                            title: '광주 여행 앨범',
+                            text: '나만의 여행 코스 전체 앨범입니다.'
+                        });
+                    } catch (shareError: any) {
+                        console.log("Multi-share cancelled or failed", shareError);
+                        // 보안 정책(User Gesture) 등으로 실패 시 다운로드로 대체
+                        if (shareError.name === 'NotAllowedError' || shareError.message.includes('user gesture')) {
+                            alert("브라우저 보안 정책으로 자동 공유가 차단되었습니다.\n대신 이미지를 다운로드합니다. 💾");
+                            performDownload();
+                        }
+                    }
+                } else {
+                    alert("이 기기에서는 여러 장의 이미지 동시 공유를 지원하지 않습니다.\n대신 이미지들이 순차적으로 저장됩니다.");
+                    performDownload();
+                }
+            }
+
+        } catch (e) {
+            console.error("Multi-share failed", e);
+            alert("전체 공유 중 오류가 발생했습니다.");
+        } finally {
+            setCurrentSlide(originalSlide);
+            setIsGenerating(false);
+        }
+    };
+
+    // Open Share Modal
+    const handleShareClick = () => {
+        setIsShareModalOpen(true);
     };
 
     // Save Current Slide Logic
@@ -1029,7 +1113,7 @@ export default function TimelineScreen() {
                                 {/* Download & Share Buttons */}
                                 <div className="flex gap-3 animate-fade-in-up mt-2">
                                     <button
-                                        onClick={handleShare}
+                                        onClick={handleShareClick}
                                         disabled={isGenerating}
                                         className="w-12 h-12 bg-white text-gray-900 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-gray-50 border border-gray-100"
                                         title="공유하기"
@@ -1068,6 +1152,56 @@ export default function TimelineScreen() {
                                 </div>
                             </MotionDiv>
                         </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+
+            {/* Share Option Modal */}
+            <AnimatePresence>
+                {isShareModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)}>
+                        <MotionDiv
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            onClick={(e: any) => e.stopPropagation()}
+                            className="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-sm"
+                        >
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">공유 방식 선택</h3>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={shareCurrentSlide}
+                                    className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors border border-gray-100"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
+                                        <Images size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="block font-bold text-sm">현재 페이지만 (이미지 1장)</span>
+                                        <span className="block text-xs text-gray-400">지금 보고 있는 이 장면만 공유합니다.</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={shareAllSlidesAsFiles}
+                                    className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition-colors border border-gray-100"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-orange-500">
+                                        <FolderArchive size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="block font-bold text-sm">전체 앨범 (여러 장)</span>
+                                        <span className="block text-xs text-gray-400">모든 페이지를 한 번에 공유합니다.</span>
+                                    </div>
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setIsShareModalOpen(false)}
+                                className="mt-4 w-full py-3 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                취소
+                            </button>
+                        </MotionDiv>
                     </div>
                 )}
             </AnimatePresence>
