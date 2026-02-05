@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..config import config
 from ..state import AgentState
+from ..tools.vector_db import vector_db
 
 load_dotenv()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_CLOUD_API_KEY")
@@ -269,6 +270,70 @@ async def google_place_search_node(state: AgentState) -> dict[str, Any]:
     result_count = min(query_plan.get("result_count", 10), 20)
 
     print(f"[Search] Google Place 검색 쿼리 목록: {queries} (쿼리당 최대 {result_count}개)")
+
+    # 1. Local Vector Search (Priority)
+    local_place_data = []
+    try:
+        print(f"[Search] Local Vector DB 검색 시도...")
+        for q in queries:
+            # Search local DB
+            results = await vector_db.search(q, k=5)
+            for res in results:
+                # Similarity Score Threshold (FAISS L2 distance: lower is better, range depends on normalization)
+                # If using Inner Product or Cosine, higher is better.
+                # Assuming standard FAISS L2 for now. But embeddings are usually normalized?
+                # Let's trust top K for now.
+                
+                name = res['place_name']
+                data = res['data']
+                keywords = data.get('keywords', {})
+                
+                # Extract address
+                address = "광주광역시 동구" # Default
+                if keywords.get('location'):
+                    address = keywords['location'][0]
+                elif keywords.get('address'):
+                    address = keywords['address'][0]
+
+                # Map to place_data structure
+                place_entry = {
+                    "id": f"local_{name}",
+                    "name": name,
+                    "displayName": {"text": name}, # For compatibility
+                    "original_name": name,
+                    "address": address,
+                    "formattedAddress": address,
+                    "lat": 0.0, # Missing in local data
+                    "lng": 0.0, # Missing in local data
+                    "rating": 0.0,
+                    "total_reviews": 0,
+                    "photo_name": None,
+                    "price_level": "",
+                    "reviews": [
+                        {
+                            "rating": 0,
+                            "text": r.get('snippet', '') or "",
+                            "time": ""
+                        }
+                        for r in data.get('reviews', [])
+                    ],
+                    "source": "local_vector_db",
+                    "local_keywords": keywords
+                }
+                
+                # Check duplication
+                if not any(p['name'] == name for p in local_place_data):
+                    local_place_data.append(place_entry)
+                    
+    except Exception as e:
+        print(f"[Error] Local Vector Search Failed: {e}")
+
+    if local_place_data:
+        print(f"[OK] Local Vector DB에서 {len(local_place_data)}개 장소 발견! (Google Search Skip)")
+        return {"place_data": local_place_data[:result_count]}
+
+    # 2. Google Search Fallback
+    print("[Info] Local DB 결과 없음 -> Google API 검색 시작")
 
     try:
         place_data_list = await _run_google_search_logic(queries, result_count)

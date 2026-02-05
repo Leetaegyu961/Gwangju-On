@@ -4,6 +4,7 @@ from datetime import datetime
 import time
 import uuid
 from backend.db import get_database
+import os
 
 router = APIRouter()
 
@@ -114,7 +115,8 @@ async def chat(request: ChatRequest):
                     photo_name = place_photo_map.get(norm_name)
                     
                     # 2. Proxy URL 사용
-                    img_url = f"http://localhost:8000/api/photo?name={photo_name}" if photo_name else None
+                    api_url = os.getenv("API_URL", "http://localhost:8000")
+                    img_url = f"{api_url}/api/photo?name={photo_name}" if photo_name else None
                     
                     course_cards.append(EvidenceCard(
                         placeId=place.get("id") or f"p{idx}",

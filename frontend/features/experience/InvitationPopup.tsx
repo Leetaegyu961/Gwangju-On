@@ -56,7 +56,8 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
         // 사일런트 데이터 로깅 (반려 이력 기록)
         try {
             const userId = localStorage.getItem('access_token') || localStorage.getItem('temp_user_id') || 'guest';
-            await fetch('http://localhost:8000/api/journey/log-action', {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            await fetch(`${API_URL}/journey/log-action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

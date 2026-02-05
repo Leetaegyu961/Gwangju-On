@@ -58,7 +58,8 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api")
-from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps
+from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps, search
+app.include_router(search.router, prefix="/api") # Vertex Search
 app.include_router(maps.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
 app.include_router(photo.router, prefix="/api")
@@ -67,6 +68,8 @@ app.include_router(tmap.router, prefix="/api")  # Tmap POI Search
 app.include_router(auth.router, prefix="/api")
 app.include_router(journey.router, prefix="/api")
 app.include_router(tasting_note.router, prefix="/api")
+from backend.api import search
+app.include_router(search.router, prefix="/api")
 
 # Invitation System
 from backend.api import invitation

@@ -1,113 +1,125 @@
 import json
+import glob
 import os
+import time
+from typing import List
+from vertexai.language_models import TextEmbeddingModel
 
-def load_data(filepath):
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
-        return None
-    with open(filepath, 'r', encoding='utf-8') as f:
-        return json.load(f)
+# Configuration
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "jnu-rise-edu-134") # Replace with your project ID
+LOCATION = "us-central1" # TextEmbeddingModel is available here
+MODEL_NAME = "text-multilingual-embedding-002"
 
-def merge_keywords_from_posts(posts):
-    """필터링된 포스트들로부터 키워드 다시 집계"""
-    merged = {
-        "facilities": set(),
-        "location": set(),
-        "hours": set(),
-        "menu_type": set(),
-        "signature_menu": set(),
-        "ambiance": set(),
-        "policy": set(),
-    }
+def get_embeddings(texts: List[str]) -> List[List[float]]:
+    """Generates embeddings for a list of texts."""
+    model = TextEmbeddingModel.from_pretrained(MODEL_NAME)
+    embeddings = []
     
-    for post in posts:
-        keywords = post.get("keywords", {})
-        for category in merged.keys():
-            items = keywords.get(category, [])
-            if isinstance(items, list):
-                merged[category].update(items)
-                
-    return {k: sorted(list(v)) for k, v in merged.items()}
-
-def create_vertex_corpus(data):
-    """
-    Vertex AI용 코퍼스 데이터 생성
-    1. 2025년 이후 포스트 필터링
-    2. 메타데이터 간소화 (title, link)
-    3. 상세 키워드 제거
-    """
-    raw_posts = data.get('posts', [])
-    filtered_posts = []
-    
-    print(f"Total posts before filter: {len(raw_posts)}")
-    
-    # 1. 2025년 이후 데이터 필터링
-    for post in raw_posts:
-        meta = post.get('metadata', {})
-        postdate = meta.get('postdate', '')
-        
-        # 날짜가 있고 20250101 이상인 경우만 포함
-        if postdate and postdate >= '20250101':
-            filtered_posts.append(post)
+    # Vertex AI has a quota (e.g. 1500 requests/min). Batching helps.
+    batch_size = 5
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i : i + batch_size]
+        try:
+            vectors = model.get_embeddings(batch)
+            embeddings.extend([v.values for v in vectors])
+            # Rate limiting
+            time.sleep(0.5) 
+        except Exception as e:
+            print(f"Error embedding batch {i}: {e}")
+            # Fill with zeros or handle error
+            embeddings.extend([[0.0]*768] * len(batch))
             
-    print(f"Total posts after filter (>= 2025): {len(filtered_posts)}")
+    return embeddings
+
+def process_files(input_files: List[str], output_file: str):
+    all_records = []
     
-    # 2. 필터링된 포스트 기반으로 Summary 재계산
-    # (기존 summary는 전체 데이터 기준일 수 있으므로 다시 계산하는 것이 정확함)
-    merged_summary = merge_keywords_from_posts(filtered_posts)
-    
-    # 3. 메타데이터 간소화
-    simplified_metadata = []
-    for post in filtered_posts:
-        meta = post.get('metadata', {})
-        simplified_metadata.append({
-            "title": meta.get('title', ''),
-            "link": meta.get('link', '')
-        })
+    # 1. Collect all texts
+    for filepath in input_files:
+        if not os.path.exists(filepath):
+            print(f"Skipping {filepath} (not found)")
+            continue
+            
+        print(f"Reading {filepath}...")
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        places = data.get('places', []) if isinstance(data, dict) else data
         
-    # 4. 최종 구조 생성
-    result = {
-        "merged_keywords_summary": merged_summary,
-        "metadata": simplified_metadata,
-        "source_info": {
-            "original_count": len(raw_posts),
-            "filtered_count": len(filtered_posts),
-            "filter_criteria": "postdate >= 20250101"
-        }
-    }
+        for idx, place in enumerate(places):
+            place_name = place.get('place_name', 'Unknown')
+            keywords = place.get('keywords', {})
+            
+            # Construct rich text for embedding
+            text_parts = [f"장소명: {place_name}"]
+            
+            if keywords.get('menu_type'):
+                text_parts.append(f"메뉴: {', '.join(keywords['menu_type'])}")
+            if keywords.get('signature_menu'):
+                text_parts.append(f"대표메뉴: {', '.join(keywords['signature_menu'])}")
+            if keywords.get('ambiance'):
+                text_parts.append(f"분위기: {', '.join(keywords['ambiance'])}")
+            if keywords.get('special_features'):
+                text_parts.append(f"특징: {', '.join(keywords['special_features'])}")
+                
+            text_content = " ".join(text_parts)
+            
+            # Safe ID (ASCII only)
+            import hashlib
+            file_key = os.path.basename(filepath).split('.')[0]
+            safe_id = hashlib.md5(f"{file_key}_{idx}".encode('utf-8')).hexdigest()
+            
+            all_records.append({
+                "id": safe_id,
+                "text": text_content,
+                "metadata": {
+                    "place_name": place_name,
+                    "region": data.get('region', 'Unknown'),
+                    # Store original keywords for display
+                    "keywords": json.dumps(keywords, ensure_ascii=False)
+                }
+            })
     
-    return result
+    print(f"Total records to embed: {len(all_records)}")
+    
+    # 2. Generate Embeddings
+    texts = [r['text'] for r in all_records]
+    # Note: This requires Vertex AI API enabled and credentials set
+    print("Generating embeddings (this may take a while)...")
+    try:
+        embeddings = get_embeddings(texts)
+    except Exception as e:
+        print(f"Failed to generate embeddings: {e}")
+        print("Please ensure 'gcloud auth application-default login' is run and API is enabled.")
+        return
 
-def load_source_query(filepath):
-    """원본 검색어(장소명) 로드"""
-    if not os.path.exists(filepath):
-        return None
-    with open(filepath, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        return data.get("query")
-
-def save_json(data, modify_filepath):
-    with open(modify_filepath, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"Saved to {modify_filepath}")
+    # 3. Write to JSONL
+    print(f"Writing to {output_file}...")
+    with open(output_file, 'w', encoding='utf-8') as out_f:
+        for record, vector in zip(all_records, embeddings):
+            # Vertex AI Vector Search format
+            vector_record = {
+                "id": record['id'],
+                "embedding": vector,
+                # Optional: restricts for filtering
+                "restricts": [
+                    {"namespace": "region", "allow": [record['metadata']['region']]}
+                ]
+            }
+            out_f.write(json.dumps(vector_record) + '\n')
+            
+    # Also save metadata mapping for backend retrieval
+    meta_file = output_file.replace('.jsonl', '_metadata.json')
+    with open(meta_file, 'w', encoding='utf-8') as meta_f:
+        meta_map = {r['id']: r['metadata'] for r in all_records}
+        json.dump(meta_map, meta_f, ensure_ascii=False, indent=2)
+        
+    print(f"Done! Vectors saved to {output_file}, Metadata to {meta_file}")
 
 if __name__ == "__main__":
-    input_file = 'extracted_keywords.json'
-    source_file = 'rss_yield_test.json'  # 쿼리(장소명) 정보가 있는 원본 파일
-    output_file = 'vertex_corpus.json'
-    
-    data = load_data(input_file)
-    place_name = load_source_query(source_file)
-    
-    if data:
-        vertex_data = create_vertex_corpus(data)
-        
-        # 장소명 추가
-        if place_name:
-            vertex_data["place_name"] = place_name
-            print(f"Added place name: {place_name}")
-        else:
-            vertex_data["place_name"] = "Unknown Place"
-            print("Warning: Could not find place name from source file.")
-            
-        save_json(vertex_data, output_file)
+    files = [
+        'extracted_keywords_cleaned_동명동.json',
+        'extracted_keywords_시내권.json',
+        'extracted_keywords_조대권.json'
+    ]
+    process_files(files, 'vertex_vectors.jsonl')

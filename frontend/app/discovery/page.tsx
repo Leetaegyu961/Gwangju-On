@@ -41,7 +41,8 @@ export default function DiscoveryPage() {
             const sharedUserId = searchParams.get('shared');
             if (sharedUserId) {
                 try {
-                    const res = await fetch(`http://localhost:8000/api/journey/session/${sharedUserId}`);
+                    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+                    const res = await fetch(`${API_URL}/journey/session/${sharedUserId}`);
                     if (res.ok) {
                         const data = await res.json();
                         if (data.album_data) {
@@ -68,7 +69,8 @@ export default function DiscoveryPage() {
         // 사일런트 데이터 로깅 (담기 이력 기록)
         try {
             const userId = localStorage.getItem('access_token') || localStorage.getItem('temp_user_id') || 'guest';
-            await fetch('http://localhost:8000/api/journey/log-action', {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            await fetch(`${API_URL}/journey/log-action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -91,7 +93,8 @@ export default function DiscoveryPage() {
         // 사일런트 데이터 로깅 (물색 이력 기록)
         try {
             const userId = localStorage.getItem('access_token') || localStorage.getItem('temp_user_id') || 'guest';
-            await fetch('http://localhost:8000/api/journey/log-action', {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            await fetch(`${API_URL}/journey/log-action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -113,7 +116,8 @@ export default function DiscoveryPage() {
         setMode('summary');
 
         const userId = localStorage.getItem('user_id') || localStorage.getItem('temp_user_id');
-        await fetch(`http://localhost:8000/api/journey/status?user_id=${userId}&status=COMPLETED`, { method: 'POST' });
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        await fetch(`${API_URL}/journey/status?user_id=${userId}&status=COMPLETED`, { method: 'POST' });
     };
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><p className="font-bold text-gray-400 text-sm">로드 중...</p></div>;

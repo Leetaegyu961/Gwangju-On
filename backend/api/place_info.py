@@ -65,7 +65,9 @@ async def get_place_info(request: PlaceInfoRequest):
         if places:
             first_place = places[0]
             if first_place.get("photo_name"):
-                img_url = f"http://localhost:8000/api/photo?name={first_place['photo_name']}"
+                import os
+                api_url = os.getenv("API_URL", "http://localhost:8000")
+                img_url = f"{api_url}/api/photo?name={first_place['photo_name']}"
             rating = first_place.get("rating")
             reviews_count = first_place.get("total_reviews")
         

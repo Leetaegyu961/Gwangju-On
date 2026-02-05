@@ -12,7 +12,8 @@ export const SummarySequence = ({ pickedPlaces, aiSummary }: { pickedPlaces: any
         if (isWishlisted) return;
         try {
             const userId = localStorage.getItem('access_token') || localStorage.getItem('temp_user_id');
-            await fetch('http://localhost:8000/api/journey/save-wishlist', {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            await fetch(`${API_URL}/journey/save-wishlist`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

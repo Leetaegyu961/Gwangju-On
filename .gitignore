@@ -43,3 +43,26 @@ visualize_graph.py
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Hackathon Data Files
+extracted_keywords_*.json
+rss_collected*.jsonl
+vectors.json*
+*.jsonl
+Dong_gu_rest.json
+DongMyungDong_eat.json
+
+# Generated Vector Stores
+faiss_index/
+
+# Temporary Utility Scripts
+test_*.py
+check_*.py
+ingest_*.py
+generate_*.py
+collect_*.py
+extract_*.py
+debug_*.py
+clean_*.py
+prepare_*.py
+convert_*.py

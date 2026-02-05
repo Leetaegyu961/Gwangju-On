@@ -36,7 +36,8 @@ export const TastingNoteScreen = () => {
     const handleFinish = async () => {
         const userId = localStorage.getItem('temp_user_id');
         try {
-            await fetch(`http://localhost:8000/api/user/session/tasting-notes?user_id=${userId}`, {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+            await fetch(`${API_URL}/user/session/tasting-notes?user_id=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
