@@ -14,7 +14,7 @@ class EvidenceCard(BaseModel):
     img: Optional[str] = None
 
 class CourseInfo(BaseModel):
-    course_id: int
+    course_id: Optional[str] = None
     course_name: str
     course_description: Optional[str] = ""
     cards: List[EvidenceCard]

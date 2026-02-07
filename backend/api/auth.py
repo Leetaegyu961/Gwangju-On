@@ -153,3 +153,33 @@ async def google_login(request: GoogleLoginRequest, response: Response):
         raise HTTPException(status_code=400, detail="Invalid Google token")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- [New] Token Verification & /auth/me ---
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    
+    db = await get_database()
+    user = await db["users"].find_one({"id": user_id})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if "_id" in user: user.pop("_id")
+    return user
+
+@router.get("/auth/me")
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    """
+    현재 로그인된 사용자 정보 반환 (ID 대신 토큰 사용)
+    """
+    print(f"🕵️ [Auth] /auth/me called for user: {current_user.get('name')}")
+    return current_user

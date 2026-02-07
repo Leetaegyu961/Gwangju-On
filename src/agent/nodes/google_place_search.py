@@ -166,7 +166,21 @@ async def _normalize_names_to_korean_async(place_data_list: list[dict]) -> list[
 
     try:
         response = await llm.ainvoke(prompt)
-        match = re.search(r'\[.*\]', response.content, re.DOTALL)
+        raw_content = response.content
+        if isinstance(raw_content, list):
+             parts = []
+             for item in raw_content:
+                 if isinstance(item, str):
+                     parts.append(item)
+                 elif hasattr(item, 'text') and item.text:
+                     parts.append(item.text)
+                 else:
+                     parts.append(str(item))
+             content = "".join(parts)
+        else:
+             content = str(raw_content)
+
+        match = re.search(r'\[.*\]', content, re.DOTALL)
         if match:
             korean_names = json.loads(match.group(0))  # ✅ eval -> json.loads
             k_idx = 0

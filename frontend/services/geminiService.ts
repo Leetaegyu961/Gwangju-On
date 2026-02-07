@@ -1,5 +1,4 @@
 
-
 import { CoursePoint, SavedCourse, Message, EvidenceCard, CourseInfo } from "../types";
 
 export class GeminiService {
@@ -10,12 +9,13 @@ export class GeminiService {
   }
 
   async processRequest(input: string, onStatusChange?: (status: Message['status']) => void): Promise<Message> {
+    if (onStatusChange) onStatusChange('analyzing');
+
+    // userId 가져오기
+    const userId = localStorage.getItem('temp_user_id') || undefined;
+
     try {
-      if (onStatusChange) onStatusChange('analyzing');
-
-      // userId 가져오기
-      const userId = localStorage.getItem('temp_user_id') || undefined;
-
+      console.log(`[GeminiService] Requesting to: ${this.apiUrl}/chat`);
       const response = await fetch(`${this.apiUrl}/chat`, {
         method: 'POST',
         headers: {
@@ -53,6 +53,29 @@ export class GeminiService {
 
   async getUserProfile(): Promise<any> {
     const userId = localStorage.getItem('temp_user_id');
+    const token = localStorage.getItem('access_token');
+
+    // [New] 1. Try fetching with Token (/auth/me) - MOST RELIABLE for logged-in users
+    if (token) {
+      try {
+        const res = await fetch(`${this.apiUrl}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // If successful, update local storage to sync
+          if (data.id) localStorage.setItem('temp_user_id', data.id);
+          return data;
+        }
+        console.warn("⚠️ [GeminiService] /auth/me failed, falling back to ID check.");
+      } catch (e) {
+        console.error("Failed to fetch /auth/me", e);
+      }
+    }
+
+    // 2. Fallback to ID-based fetch (Guest or if token fails)
     if (!userId) return null;
     try {
       const res = await fetch(`${this.apiUrl}/user/${userId}`);
@@ -96,10 +119,15 @@ export class GeminiService {
 
   async getCourses(): Promise<SavedCourse[]> {
     const userId = localStorage.getItem('temp_user_id');
-    if (!userId) return JSON.parse(localStorage.getItem('courses') || '[]');
+    const hasAccessToken = !!localStorage.getItem('access_token');
+
+    // 게스트는 백엔드에서 가져오지 않음
+    if (!userId || !hasAccessToken) {
+      return [];
+    }
 
     try {
-      const res = await fetch(`${this.apiUrl}/user/${userId}/courses`);
+      const res = await fetch(`${this.apiUrl}/journey/history/${userId}`);
       if (res.ok) {
         const serverCourses = await res.json();
         // Merge with local if needed, or just return server
@@ -143,5 +171,10 @@ export class GeminiService {
       console.error("Failed to fetch agent context", e);
     }
     return null;
+  }
+
+  // [New] Ensure User Sync across screens
+  async syncUser(): Promise<void> {
+    await this.getUserProfile();
   }
 }

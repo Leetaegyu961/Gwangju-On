@@ -135,8 +135,27 @@ async def analyze_sentiment_batch(llm: ChatGoogleGenerativeAI, batch_items: List
     
     try:
         response = await llm.ainvoke(prompt)
-        content = response.content.strip()
+        raw_content = response.content
+        if isinstance(raw_content, list):
+            parts = []
+            for item in raw_content:
+                if isinstance(item, str):
+                    parts.append(item)
+                elif hasattr(item, 'text') and item.text:
+                    parts.append(item.text)
+                elif isinstance(item, dict) and 'text' in item:
+                    parts.append(item['text'])
+                else:
+                    parts.append(str(item))
+            content = "".join(parts)
+        else:
+            content = str(raw_content)
+            
+        content = content.strip()
         
+        # [Debug Log] LLM 응답 확인용
+        print(f"🐛 [Scoring Debug] Content Preview: {content[:200]}")
+
         if content.startswith("```"):
             content = content.split("```")[1]
             if content.strip().startswith("json"):

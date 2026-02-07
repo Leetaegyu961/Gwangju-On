@@ -6,6 +6,7 @@ import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, 
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import Script from 'next/script';
+import { GeminiService } from '../services/geminiService';
 
 
 // Fix for Framer Motion + React 19 type mismatch
@@ -46,9 +47,14 @@ export default function TimelineScreen() {
 
     // [Updated] Fetch Journey History from DB
     const fetchHistory = async () => {
-        // 우선 localStorage의 userId 사용 (없으면 비회원이거나 로그인 전)
         const userId = typeof window !== 'undefined' ? localStorage.getItem('temp_user_id') : null;
-        if (!userId) return;
+        const hasAccessToken = typeof window !== 'undefined' ? !!localStorage.getItem('access_token') : false;
+
+        // 게스트는 타임라인을 표시하지 않음
+        if (!userId || !hasAccessToken) {
+            setAlbums([]);
+            return;
+        }
 
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -58,57 +64,74 @@ export default function TimelineScreen() {
                 const data = await res.json();
 
                 if (data && data.length > 0) {
-                    const mappedAlbums = data.map((session: any) => ({
+                    // [Filter] 타임라인에는 오직 'timeline_generated=true'인 항목만 표시 (여행 완료 후 생성된 앨범)
+                    const confirmedData = data.filter((s: any) => s.timeline_generated === true);
+
+                    const dbAlbums = confirmedData.map((session: any) => ({
                         id: session.sessionId,
-                        title: session.ai_summary || "나만의 감성 광주 여행",
-                        date: new Date(session.completed_at || session.created_at).toLocaleDateString(),
+                        title: session.title || session.ai_summary || "나만의 감성 광주 여행",
+                        date: new Date(session.completed_at || session.created_at || session.timeline_created_at).toLocaleDateString(),
                         location: session.intent_context?.survey_data?.region || "광주",
-                        description: `#${session.album_data?.length || 0}코스 #추억`,
-                        spots: session.album_data || [],
-                        isNew: false // DB에서 불러온 건 New 배지 제거
+                        description: `#${session.memory_spots?.length || session.album_data?.length || session.total_courses || 0}코스 #추억`,
+                        spots: session.memory_spots || session.album_data || session.points || [],
+                        isNew: false
                     }));
-                    setAlbums(mappedAlbums);
-                } else {
-                    // DB 데이터가 없으면 로컬 스토리지 확인 (Fallback)
-                    loadFromLocalStorage();
+
+                    // DB 데이터 로드 성공 시 업데이트
+                    setAlbums(dbAlbums);
                 }
-            } else {
-                loadFromLocalStorage();
             }
         } catch (e) {
             console.error("Failed to fetch history", e);
-            loadFromLocalStorage();
         }
     };
 
-    const loadFromLocalStorage = () => {
-        const stored = localStorage.getItem('current_course');
-        const currentCourseSpots = stored ? JSON.parse(stored) : [];
-        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
-
-        if (currentCourseSpots.length > 0) {
-            const currentAlbum: Album = {
-                id: 'current_local',
-                title: '광주에서 보낸 오후 (임시)',
-                date: today,
-                location: '광주 동구',
-                description: '#혼행 #힐링',
-                spots: currentCourseSpots,
-                isNew: true
-            };
-            setAlbums([currentAlbum]);
-        }
-    };
-
+    // Initial Load (Local + DB)
     useEffect(() => {
-        fetchHistory();
+        const initSteps = async () => {
+            // [Sync] Ensure User ID is accurate 
+            await new GeminiService().syncUser();
+
+            // 1. Load Local Storage explicitly first (for immediate feedback)
+            const loadLocal = () => {
+                const localCourseStr = localStorage.getItem('current_course');
+                const localMetaStr = localStorage.getItem('current_course_meta');
+
+                if (localCourseStr) {
+                    try {
+                        const spots = JSON.parse(localCourseStr);
+                        const meta = localMetaStr ? JSON.parse(localMetaStr) : {};
+
+                        if (Array.isArray(spots) && spots.length > 0) {
+                            const localAlbum: Album = {
+                                id: 'current_local',
+                                title: meta.course_name || "나만의 코스 (방금 생성)",
+                                date: new Date().toLocaleDateString(),
+                                location: "광주",
+                                description: "#여행준비 #New",
+                                spots: spots,
+                                isNew: true
+                            };
+                            setAlbums([localAlbum]);
+                        }
+                    } catch (e) {
+                        console.error("Local parse error", e);
+                    }
+                }
+            };
+
+            loadLocal();
+            fetchHistory(); // Then fetch DB
+        };
+
+        initSteps();
     }, []);
 
     // 앨범 삭제 핸들러
     const handleDeleteAlbum = async (e: React.MouseEvent, albumId: string) => {
         e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
 
-        if (!confirm("정말 이 앨범을 삭제하시겠습니까? (삭제 후 복구 불가)")) return;
+        if (!confirm("이 앨범을 타임라인에서 제거하시겠습니까?\n(확정한 코스 목록에는 유지됩니다)")) return;
 
         // Optimistic UI Update
         setAlbums(prev => prev.filter(a => a.id !== albumId));
@@ -121,13 +144,23 @@ export default function TimelineScreen() {
 
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-            await fetch(`${API_URL.replace(/\/api\/?$/, '')}/api/journey/${albumId}`, {
-                method: 'DELETE'
+            // timeline_generated를 false로 변경 (완전 삭제 X)
+            const res = await fetch(`${API_URL.replace(/\/api\/?$/, '')}/api/journey/${albumId}/remove-timeline`, {
+                method: 'PATCH'
             });
+
+            if (res.ok) {
+                alert('타임라인에서 제거되었습니다.');
+            } else {
+                alert('삭제 실패');
+                // 실패 시 원복
+                fetchHistory();
+            }
         } catch (error) {
             console.error("Delete failed", error);
             alert("서버 오류로 삭제에 실패했습니다.");
-            // 실패 시 원복 로직은 생략 (보통 새로고침하면 됨)
+            // 실패 시 원복
+            fetchHistory();
         }
     };
 
@@ -646,7 +679,7 @@ export default function TimelineScreen() {
                                     )}
 
                                     {/* Main Card */}
-                                    <div className="relative z-20 bg-white p-6 shadow-xl shadow-blue-100/50 transition-all duration-500 max-w-[340px] w-full aspect-[3/4.5] flex flex-col items-center overflow-hidden border border-blue-50 transform group-hover:-translate-y-1"
+                                    <div className="relative z-20 bg-white p-6 shadow-xl shadow-blue-100/50 transition-all duration-500 w-[320px] h-[480px] flex flex-col items-center overflow-hidden border border-blue-50 transform group-hover:-translate-y-1"
                                         style={{ borderRadius: '2px' }}
                                     >
                                         <div className="absolute inset-0 opacity-40 pointer-events-none z-0 mix-blend-multiply"
@@ -881,8 +914,8 @@ export default function TimelineScreen() {
                 </div>
             </section>
 
-            {/* Floating Action Button */}
-            <div className="fixed bottom-24 right-6 z-40">
+            {/* Floating Action Button Group */}
+            <div className="fixed bottom-24 right-6 z-40 flex flex-col items-end gap-3">
                 <button
                     onClick={() => setIsCardModalOpen(true)}
                     className="bg-[#FF6B00] text-white p-4 rounded-full shadow-xl shadow-orange-300/50 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 font-bold"

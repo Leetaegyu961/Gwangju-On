@@ -176,6 +176,58 @@ async def chat(request: ChatRequest):
         }
     )
 
+    # [AUTO SAVE] 추천 코스 즉시 저장 (사용자 요청: 생성되면 바로 히스토리 저장)
+    if is_plan_request and all_courses:
+        try:
+            group_id = str(uuid.uuid4())
+            ts = datetime.now().isoformat()
+            
+            for course in all_courses:
+                 # Cards -> Points 변환
+                 points = []
+                 cards_list = course.get("cards", [])
+                 for card in cards_list:
+                      # EvidenceCard 객체에서 속성 추출
+                      points.append({
+                          "id": str(card.placeId),
+                          "name": card.name,
+                          "lat": card.lat or 0.0,
+                          "lng": card.lng or 0.0,
+                          "desc": card.reason,
+                          "img": card.img,
+                          "tags": card.keywords,
+                          "transport": "이동" 
+                      })
+                 
+                 # DB Insert
+                 new_session_id = str(uuid.uuid4())
+                 new_session = {
+                     "sessionId": new_session_id,
+                     "group_id": group_id,
+                     "userId": user_id,
+                     "status": "COMPLETED_CANDIDATE", # 자동 저장됨
+                     "is_selected": False,
+                     "title": course.get("course_name", "추천 코스"),
+                     "course_description": course.get("course_description", "AI가 제안한 여행 코스입니다."),
+                     "album_data": points,
+                     "total_courses": len(points),
+                     "ai_summary": response_text[:100] + "..." if response_text else "AI 추천",
+                     "created_at": ts,
+                     "completed_at": ts,
+                     "last_activity_at": ts,
+                     "intent_context": {"auto_saved": True}
+                 }
+                 await db["user_trip_sessions"].insert_one(new_session)
+                 
+                 # [Vital] 클라이언트가 이 ID를 알 수 있도록 course 객체 업데이트
+                 course["course_id"] = new_session_id
+                 course["group_id"] = group_id # 프론트엔드가 이를 저장해두면 좋음
+                 
+            print(f"✅ Auto-saved {len(all_courses)} courses for user {user_id}")
+            
+        except Exception as e:
+            print(f"⚠️ Auto-save failed: {e}")
+
     # all_courses를 CourseInfo 모델로 변환
     from backend.models.chat import CourseInfo
     all_courses_models = [CourseInfo(**c) for c in all_courses] if all_courses else None

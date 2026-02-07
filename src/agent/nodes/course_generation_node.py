@@ -157,7 +157,21 @@ async def _generate_single_course(state: AgentState, theme_idx: int) -> dict[str
 
     try:
         response = await llm.ainvoke(prompt)
-        content = response.content.strip()
+        raw_content = response.content
+        if isinstance(raw_content, list):
+             parts = []
+             for item in raw_content:
+                 if isinstance(item, str):
+                     parts.append(item)
+                 elif hasattr(item, 'text') and item.text:
+                     parts.append(item.text)
+                 else:
+                     parts.append(str(item))
+             content = "".join(parts)
+        else:
+             content = str(raw_content)
+             
+        content = content.strip()
         
         # JSON 파싱
         if content.startswith("```"):
@@ -165,10 +179,49 @@ async def _generate_single_course(state: AgentState, theme_idx: int) -> dict[str
             if content.startswith("json"):
                 content = content[4:].strip()
         
-        course_data = json.loads(content)
+        try:
+            course_data = json.loads(content)
+        except json.JSONDecodeError:
+            print(f"[Warn] [Course Gen {theme_idx+1}] JSON 파싱 실패, ast.literal_eval 시도")
+            import ast
+            try:
+                course_data = ast.literal_eval(content)
+            except Exception as e:
+                print(f"[Error] [Course Gen {theme_idx+1}] ast 파싱 실패: {e}")
+                # 최후의 수단: 단순히 에러 던지기 전에 내용을 한번 출력
+                print(f"Content content: {content}")
+                raise e
+        
+        # [Fix] 중첩된 JSON 구조 처리 (Recursive Parsing)
+        # 예: {'type': 'text', 'text': '{...}'} 형태로 오는 경우
+        if isinstance(course_data, dict) and "places" not in course_data and "text" in course_data:
+            print(f"[Info] [Course Gen {theme_idx+1}] 중첩된 JSON 구조 감지, 재파싱 시도...")
+            inner_text = course_data["text"]
+            if isinstance(inner_text, str):
+                inner_text = inner_text.strip()
+                if inner_text.startswith("```"):
+                    inner_text = inner_text.split("```")[1]
+                    if inner_text.startswith("json"):
+                        inner_text = inner_text[4:].strip()
+                try:
+                    course_data = json.loads(inner_text)
+                    print(f"[Info] [Course Gen {theme_idx+1}] 재파싱 성공!")
+                except json.JSONDecodeError:
+                     import ast
+                     try:
+                        course_data = ast.literal_eval(inner_text)
+                        print(f"[Info] [Course Gen {theme_idx+1}] 재파싱(ast) 성공!")
+                     except:
+                        pass # 재파싱 실패 시 원래 데이터 사용
+
         
         # ID 강제 주입 (병합 시 식별용)
         course_data["course_id"] = theme_idx + 1
+        
+        # 데이터 무결성 검사
+        places_found = course_data.get("places", [])
+        if not places_found:
+            print(f"[Warn] [Course Gen {theme_idx+1}] 'places' 목록이 비어있습니다. (AI Output: {str(course_data)[:50]}...)")
         
         return {"generated_courses": [course_data]}
         

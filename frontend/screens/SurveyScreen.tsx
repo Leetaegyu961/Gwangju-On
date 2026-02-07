@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, Plus, X, ChevronDown, Mic, Utensils, Coffee, Music, MapPin, Bed } from 'lucide-react';
+import { Plus, X, ChevronDown, Mic, Utensils, Coffee, Music, MapPin, Bed } from 'lucide-react';
 import { CoursePoint } from '../types';
-import { DiscoverySideModal } from '../components/DiscoverySideModal';
 import { InvitationPopup } from '../features/experience/InvitationPopup';
 
 export const SurveyScreen = () => {
@@ -27,7 +26,6 @@ export const SurveyScreen = () => {
   ]);
   const [activeSelect, setActiveSelect] = useState<string | null>(null);
   const [budget, setBudget] = useState([10, 30]); // 5 ~ 50 range
-  const [isSideOpen, setIsSideOpen] = useState(false);
   const [selectedThemes, setSelectedThemes] = useState(['데이트', '맛집탐방']);
   const [selectedCompanions, setSelectedCompanions] = useState(['연인']);
   const [selectedRegion, setSelectedRegion] = useState<string>('수완지구');
@@ -87,14 +85,9 @@ export const SurveyScreen = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF7] pb-44 overflow-y-auto font-['Inter'] hide-scrollbar relative">
       <InvitationPopup isOpen={showInvitation} onClose={() => setShowInvitation(false)} />
-      <DiscoverySideModal isOpen={isSideOpen} onClose={() => setIsSideOpen(false)} />
-
       {/* Header */}
-      <header className="px-6 py-5 flex items-center sticky top-0 z-[100] bg-[#FDFBF7]/80 backdrop-blur-md">
-        <button onClick={() => setIsSideOpen(true)} className="p-1 -ml-1 text-gray-800">
-          <Menu size={28} />
-        </button>
-        <h1 className="flex-1 text-center text-xl font-black tracking-tight text-gray-800 pr-8">여행 취향 분석</h1>
+      <header className="px-6 py-5 flex items-center justify-center sticky top-0 z-[100] bg-[#FDFBF7]/80 backdrop-blur-md">
+        <h1 className="text-center text-xl font-black tracking-tight text-gray-800">여행 취향 분석</h1>
       </header>
 
       <div className="p-6 space-y-8 animate-fade-in transition-all pt-0">
