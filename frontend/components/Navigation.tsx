@@ -8,8 +8,14 @@ export const Navigation = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  // 온보딩이나 로그인 단계에서는 숨김
-  if (pathname === '/' || pathname === '/login' || pathname === '/onboarding') return null;
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 온보딩이나 로그인 단계에서는 숨김 (클라이언트 마운트 전에는 렌더링 안 함)
+  if (!isMounted || pathname === '/' || pathname === '/login' || pathname === '/onboarding') return null;
 
   const tabs = [
     { id: 'guide', label: 'AI 가이드', path: '/survey', icon: MessageSquare, isAI: true, activePaths: ['/survey', '/chat'] },

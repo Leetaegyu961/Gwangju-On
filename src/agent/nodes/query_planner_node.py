@@ -18,7 +18,7 @@ class QueryPlan(BaseModel):
     )
     place_queries: list[str] = Field(
         default=[],
-        description="Google Places API에 사용할 검색 쿼리 리스트. 3가지 테마를 모두 커버할 수 있도록 다양하게 생성하세요."
+        description="Google Places API에 사용할 검색 쿼리 리스트. 3가지 테마를 모두 커버할 수 있도록 생성하되, 반드시 최대 3개로 제한하세요."
     )
     result_count: int = Field(
         default=20,

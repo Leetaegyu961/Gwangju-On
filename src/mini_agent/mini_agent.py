@@ -47,7 +47,7 @@ class MiniAgent:
     async def run_async(
         self, 
         query: str, 
-        max_places: int = 10
+        max_places: int = 5
     ) -> Dict[str, Any]:
         """
         비동기로 장소 검색 및 LLM 응답 생성
@@ -109,7 +109,7 @@ class MiniAgent:
         print(f"\n🧠 Step 2: LLM 응답 생성")
         return await self.llm_node.generate_summary(query, places)
     
-    def run(self, query: str, max_places: int = 10) -> Dict[str, Any]:
+    def run(self, query: str, max_places: int = 5) -> Dict[str, Any]:
         """
         동기 버전의 실행 메서드
         
@@ -124,7 +124,9 @@ class MiniAgent:
 
 
 # 간편 사용을 위한 함수
-async def run_mini_agent(query: str, max_places: int = 10) -> Dict[str, Any]:
+async def run_mini_agent(query: str, max_places: int = 5) -> Dict[str, Any]:
     """MiniAgent를 간편하게 실행하는 함수"""
     agent = MiniAgent()
     return await agent.run_async(query, max_places)
+
+

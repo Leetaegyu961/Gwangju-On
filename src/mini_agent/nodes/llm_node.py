@@ -68,13 +68,29 @@ class LLMNode:
 - 평점: ⭐{place.get('rating', 0)} ({place.get('total_reviews', 0)}개 리뷰)
 """
             
-            # 리뷰 추가 (최대 2개)
-            reviews = place.get("reviews", [])
-            if reviews:
-                place_info += "### 리뷰 요약:\n"
-                for r in reviews[:2]:
-                    text = r.get('text', '')[:80]
-                    place_info += f"- \"{text}...\"\n"
+            # RAG 키워드 정보 추가 (VectorDB에서 가져온 경우)
+            keywords = place.get("keywords", {})
+            if keywords:
+                if keywords.get("menu_type"):
+                    place_info += f"- 종류: {keywords['menu_type']}\n"
+                if keywords.get("signature_menu"):
+                    menus = keywords['signature_menu']
+                    if isinstance(menus, list):
+                        menus = ", ".join(menus[:3])
+                    place_info += f"- 대표메뉴: {menus}\n"
+                if keywords.get("ambiance"):
+                    ambiance = keywords['ambiance']
+                    if isinstance(ambiance, list):
+                        ambiance = ", ".join(ambiance[:3])
+                    place_info += f"- 분위기: {ambiance}\n"
+            else:
+                # 기존 방식 (Google Places API에서 가져온 경우)
+                reviews = place.get("reviews", [])
+                if reviews:
+                    place_info += "### 리뷰 요약:\n"
+                    for r in reviews[:2]:
+                        text = r.get('text', '')[:80]
+                        place_info += f"- \"{text}...\"\n"
             
             context_parts.append(place_info)
         

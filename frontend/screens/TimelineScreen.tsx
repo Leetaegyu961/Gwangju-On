@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Plus, FolderArchive, Images, Share2 } from 'lucide-react';
+import { Camera, Calendar, MapPin, CheckCircle2, X, Download, Wand2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Plus, FolderArchive, Images, Share2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import Script from 'next/script';
+import { GeminiService } from '../services/geminiService';
 
 
 // Fix for Framer Motion + React 19 type mismatch
@@ -44,40 +45,173 @@ export default function TimelineScreen() {
     // [New] Static Map Image State
     const [mapImageUrl, setMapImageUrl] = useState<string | null>(null);
 
-    // [Restored] Load Course Data from LocalStorage
-    useEffect(() => {
-        const stored = localStorage.getItem('current_course');
-        const currentCourseSpots = stored ? JSON.parse(stored) : [];
-        const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\./g, '.');
+    // [Updated] Fetch Journey History from DB
+    const fetchHistory = async () => {
+        const userId = typeof window !== 'undefined' ? localStorage.getItem('temp_user_id') : null;
+        const hasAccessToken = typeof window !== 'undefined' ? !!localStorage.getItem('access_token') : false;
 
-        if (currentCourseSpots.length > 0) {
-            const currentAlbum: Album = {
-                id: 'current',
-                title: '광주에서 보낸 오후',
-                date: today,
-                location: '광주 동구',
-                description: '#혼행 #힐링',
-                spots: currentCourseSpots,
-                isNew: true
-            };
-            setAlbums([currentAlbum]);
+        // 게스트는 타임라인을 표시하지 않음
+        if (!userId || !hasAccessToken) {
+            setAlbums([]);
+            return;
         }
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await fetch(`${API_URL.replace(/\/api\/?$/, '')}/api/journey/history/${userId}`);
+
+            if (res.ok) {
+                const data = await res.json();
+
+                if (data && data.length > 0) {
+                    // [Filter] 타임라인에는 오직 'timeline_generated=true'인 항목만 표시 (여행 완료 후 생성된 앨범)
+                    const confirmedData = data.filter((s: any) => s.timeline_generated === true);
+
+                    const dbAlbums = confirmedData.map((session: any) => ({
+                        id: session.sessionId,
+                        title: session.title || session.ai_summary || "나만의 감성 광주 여행",
+                        date: new Date(session.completed_at || session.created_at || session.timeline_created_at).toLocaleDateString(),
+                        location: session.intent_context?.survey_data?.region || "광주",
+                        description: `#${session.memory_spots?.length || session.album_data?.length || session.total_courses || 0}코스 #추억`,
+                        spots: session.memory_spots || session.album_data || session.points || [],
+                        isNew: false
+                    }));
+
+                    // DB 데이터 로드 성공 시 업데이트
+                    setAlbums(dbAlbums);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to fetch history", e);
+        }
+    };
+
+    // Initial Load (Local + DB)
+    useEffect(() => {
+        const initSteps = async () => {
+            // [Sync] Ensure User ID is accurate 
+            await new GeminiService().syncUser();
+
+            // 1. Load Local Storage explicitly first (for immediate feedback)
+            const loadLocal = () => {
+                const localCourseStr = localStorage.getItem('current_course');
+                const localMetaStr = localStorage.getItem('current_course_meta');
+
+                if (localCourseStr) {
+                    try {
+                        const spots = JSON.parse(localCourseStr);
+                        const meta = localMetaStr ? JSON.parse(localMetaStr) : {};
+
+                        if (Array.isArray(spots) && spots.length > 0) {
+                            const localAlbum: Album = {
+                                id: 'current_local',
+                                title: meta.course_name || "나만의 코스 (방금 생성)",
+                                date: new Date().toLocaleDateString(),
+                                location: "광주",
+                                description: "#여행준비 #New",
+                                spots: spots,
+                                isNew: true
+                            };
+                            setAlbums([localAlbum]);
+                        }
+                    } catch (e) {
+                        console.error("Local parse error", e);
+                    }
+                }
+            };
+
+            loadLocal();
+            fetchHistory(); // Then fetch DB
+        };
+
+        initSteps();
     }, []);
 
+    // 앨범 삭제 핸들러
+    const handleDeleteAlbum = async (e: React.MouseEvent, albumId: string) => {
+        e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+
+        if (!confirm("이 앨범을 타임라인에서 제거하시겠습니까?\n(확정한 코스 목록에는 유지됩니다)")) return;
+
+        // Optimistic UI Update
+        setAlbums(prev => prev.filter(a => a.id !== albumId));
+
+        // 로컬 데이터면 여기서 끝
+        if (albumId === 'current_local') {
+            localStorage.removeItem('current_course');
+            return;
+        }
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            // timeline_generated를 false로 변경 (완전 삭제 X)
+            const res = await fetch(`${API_URL.replace(/\/api\/?$/, '')}/api/journey/${albumId}/remove-timeline`, {
+                method: 'PATCH'
+            });
+
+            if (res.ok) {
+                alert('타임라인에서 제거되었습니다.');
+            } else {
+                alert('삭제 실패');
+                // 실패 시 원복
+                fetchHistory();
+            }
+        } catch (error) {
+            console.error("Delete failed", error);
+            alert("서버 오류로 삭제에 실패했습니다.");
+            // 실패 시 원복
+            fetchHistory();
+        }
+    };
+
+    // [New] Handle User Comment Update for a spot
+    const handleCommentUpdate = (index: number, text: string) => {
+        // 1. Update current course view
+        const updatedCourse = [...course];
+        if (updatedCourse[index]) {
+            updatedCourse[index].userComment = text;
+            setCourse(updatedCourse);
+        }
+
+        // 2. Update albums list to persist changes within session
+        if (selectedAlbum) {
+            setAlbums((prevAlbums) =>
+                prevAlbums.map((album) =>
+                    album.id === selectedAlbum.id
+                        ? {
+                            ...album,
+                            spots: album.spots.map((spot: any, i: number) =>
+                                i === index ? { ...spot, userComment: text } : spot
+                            )
+                        }
+                        : album
+                )
+            );
+        }
+    };
+
     // Fetch Static Map from Backend
+    // State to store previous markers string to avoid refetching
+    const [prevMarkersStr, setPrevMarkersStr] = useState("");
+
     useEffect(() => {
         const fetchStaticMap = async () => {
             const currentCourse = selectedAlbum ? selectedAlbum.spots : (albums.length > 0 ? albums[0].spots : []);
             if (!currentCourse || currentCourse.length === 0) return;
 
+            // Construct payload data for comparison
+            const markers = currentCourse.map((s: any) => ({
+                lat: parseFloat(s.lat),
+                lng: parseFloat(s.lng)
+            }));
+
+            const currentMarkersStr = JSON.stringify(markers);
+            if (currentMarkersStr === prevMarkersStr) return; // Skip if coordinates haven't changed
+
+            setPrevMarkersStr(currentMarkersStr);
             setMapImageUrl(null); // Reset
 
             try {
-                // Construct payload
-                const markers = currentCourse.map((s: any) => ({
-                    lat: parseFloat(s.lat),
-                    lng: parseFloat(s.lng)
-                }));
                 const path = currentCourse.map((s: any) => ({
                     lat: parseFloat(s.lat),
                     lng: parseFloat(s.lng)
@@ -108,7 +242,7 @@ export default function TimelineScreen() {
         };
 
         fetchStaticMap();
-    }, [selectedAlbum, albums]);
+    }, [selectedAlbum, albums, prevMarkersStr]);
 
     const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -135,10 +269,14 @@ export default function TimelineScreen() {
         });
     };
 
-    // Share Current Slide Logic
-    const handleShare = async () => {
+    // [New] Share Selection Modal State
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+    // 1. Share Current Slide (Single Image)
+    const shareCurrentSlide = async () => {
         if (!cardRef.current || isGenerating) return;
         setIsGenerating(true);
+        setIsShareModalOpen(false); // Close Modal
 
         try {
             await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
@@ -156,7 +294,6 @@ export default function TimelineScreen() {
                 }
                 const file = new File([blob], "gwangju-trip.png", { type: "image/png" });
 
-                // 1. 네이티브 공유 시도 (모바일 등)
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     try {
                         await navigator.share({
@@ -165,22 +302,22 @@ export default function TimelineScreen() {
                             text: '나만의 광주 여행 코스를 확인해보세요!'
                         });
                     } catch (shareError) {
-                        // 사용자가 취소한 경우 등
-                        console.log("Share cancelled or failed", shareError);
+                        console.log("Share cancelled", shareError);
                     }
-                }
-                // 2. 클립보드 복사 시도 (PC 등)
-                else {
+                } else {
                     try {
                         await navigator.clipboard.write([
                             new ClipboardItem({
                                 [blob.type]: blob
                             })
                         ]);
-                        alert("이미지가 클립보드에 복사되었습니다.\n채팅방에 붙여넣기(Ctrl+V) 하세요!");
-                    } catch (clipError) {
-                        console.error("Clipboard failed", clipError);
-                        alert("이 브라우저에서는 공유 기능을 지원하지 않습니다.\n'저장' 기능을 이용해주세요.");
+                        alert("이미지가 클립보드에 복사되었습니다.\n(공유 기능을 완전하게 지원하지 않는 환경입니다)");
+                    } catch (e) {
+                        // Fallback Download
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "gwangju-trip.png";
+                        link.click();
                     }
                 }
                 setIsGenerating(false);
@@ -191,6 +328,87 @@ export default function TimelineScreen() {
             setIsGenerating(false);
             alert("공유하기 실패");
         }
+    };
+
+    // 2. Share ALL Slides (Multiple Images)
+    const shareAllSlidesAsFiles = async () => {
+        if (!cardRef.current || isGenerating) return;
+        setIsGenerating(true);
+        setIsShareModalOpen(false); // Close Modal
+        const originalSlide = currentSlide;
+
+        try {
+            const slideCount = course.length + 2;
+            const files: File[] = [];
+
+            // Capture Loop
+            for (let i = 0; i < slideCount; i++) {
+                setCurrentSlide(i);
+                await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
+
+                if (cardRef.current) {
+                    const canvas = await html2canvas(cardRef.current, {
+                        scale: 2,
+                        backgroundColor: '#FDFBF7',
+                        useCORS: true,
+                        logging: false,
+                    });
+
+                    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+                    if (blob) {
+                        const fileName = i === 0 ? '00_Cover.png' : i === slideCount - 1 ? '99_Ending.png' : `0${i}_Spot.png`;
+                        const file = new File([blob], fileName, { type: "image/png" });
+                        files.push(file);
+                    }
+                }
+            }
+
+            // Share Files or Fallback Download
+            const performDownload = () => {
+                files.forEach((file) => {
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(file);
+                    link.download = file.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            };
+
+            if (files.length > 0) {
+                if (navigator.canShare && navigator.canShare({ files })) {
+                    try {
+                        await navigator.share({
+                            files: files,
+                            title: '광주 여행 앨범',
+                            text: '나만의 여행 코스 전체 앨범입니다.'
+                        });
+                    } catch (shareError: any) {
+                        console.log("Multi-share cancelled or failed", shareError);
+                        // 보안 정책(User Gesture) 등으로 실패 시 다운로드로 대체
+                        if (shareError.name === 'NotAllowedError' || shareError.message.includes('user gesture')) {
+                            alert("브라우저 보안 정책으로 자동 공유가 차단되었습니다.\n대신 이미지를 다운로드합니다. 💾");
+                            performDownload();
+                        }
+                    }
+                } else {
+                    alert("이 기기에서는 여러 장의 이미지 동시 공유를 지원하지 않습니다.\n대신 이미지들이 순차적으로 저장됩니다.");
+                    performDownload();
+                }
+            }
+
+        } catch (e) {
+            console.error("Multi-share failed", e);
+            alert("전체 공유 중 오류가 발생했습니다.");
+        } finally {
+            setCurrentSlide(originalSlide);
+            setIsGenerating(false);
+        }
+    };
+
+    // Open Share Modal
+    const handleShareClick = () => {
+        setIsShareModalOpen(true);
     };
 
     // Save Current Slide Logic
@@ -318,22 +536,33 @@ export default function TimelineScreen() {
 
                 {/* Photo Grid (Adaptive: up to 4) */}
                 {/* Photo Grid (2x2 wide) */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                {/* Photo Grid (Adaptive Layout) */}
+                <div className={`grid gap-2 mb-4 transition-all ${(course.length === 3) ? 'grid-cols-3' : 'grid-cols-2'
+                    }`}>
                     {course.slice(0, 4).map((spot, i) => {
                         const img = photos[i] || spot.img || placeholders[i % 3];
-                        // 3개일 때 마지막 사진을 가로로 길게 (옵션)
-                        const isLastAndOdd = course.length === 3 && i === 2;
+
+                        // Set aspect ratio based on total count
+                        let aspectClass = "aspect-[2/1]"; // Default for 4 items (Minimal height)
+                        if (course.length === 1) aspectClass = "aspect-video"; // 1 item: Wide
+                        if (course.length === 2) aspectClass = "aspect-square"; // 2 items: Square Side-by-Side
+                        if (course.length === 3) aspectClass = "aspect-[3/5]"; // 3 items: Horizontal 3-Col (Tall Portrait)
 
                         return (
-                            <div key={i} className={`flex flex-col gap-2 ${isLastAndOdd ? 'col-span-2' : ''}`}>
-                                <div className="w-full aspect-[2.5/1] rounded-lg overflow-hidden shadow-sm relative">
-                                    <img src={img} className="w-full h-full object-cover" crossOrigin="anonymous" alt={`spot-${i}`} />
-                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-8">
-                                        <div className="flex items-center gap-2">
+                            <div key={i} className="flex flex-col gap-2">
+                                <div className={`w-full ${aspectClass} rounded-lg overflow-hidden shadow-sm relative group`}>
+                                    <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" crossOrigin="anonymous" alt={`spot-${i}`} />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-8">
+                                        <div className="flex flex-col items-start gap-1">
                                             <div className="w-5 h-5 rounded-full bg-white text-black flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0 leading-none pb-[1px]">
                                                 {i + 1}
                                             </div>
-                                            <span className="text-white text-[11px] font-bold truncate drop-shadow-md">{spot.place_name}</span>
+                                            {/* 3개일 때는 텍스트가 작아야 잘림 방지 */}
+                                            {course.length === 3 ? (
+                                                <span className="text-white text-[10px] font-bold leading-tight line-clamp-2 drop-shadow-md">{spot.place_name}</span>
+                                            ) : (
+                                                <span className="text-white text-[12px] font-bold truncate drop-shadow-md">{spot.place_name}</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -380,158 +609,152 @@ export default function TimelineScreen() {
     // --- 1. 앨범 목록 화면 (List View) ---
     if (viewMode === 'list') {
         return (
-            <div className="min-h-screen bg-[#FDFBF7] font-['Inter'] px-6 pt-12 pb-32">
-                <header className="mb-12 animate-fade-in-up">
-                    <h1 className="text-3xl font-black text-gray-900 mb-2">나의 여행 기록</h1>
-                    <p className="text-sm text-gray-500">차곡차곡 쌓인 추억들을 꺼내보세요.</p>
-                </header>
-
-                <div className="flex flex-col gap-12 items-center">
-                    {/* 새 앨범 만들기 버튼 */}
-                    <button
-                        onClick={() => router.push('/chat')}
-                        className="w-full py-6 rounded-3xl border-2 border-dashed border-gray-300 flex items-center justify-center gap-3 text-gray-400 hover:border-[#FF6B00] hover:text-[#FF6B00] hover:bg-orange-50 transition-all group active:scale-95"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                            <Plus size={20} />
-                        </div>
-                        <span className="font-bold text-sm">새로운 여행 시작하기</span>
-                    </button>
-
-                    {albums.map((album, index) => {
-                        const spots = album.spots || [];
-                        const count = spots.length;
-
-                        // 앨범 표지용 이미지 소스 결정
-                        const mainImg = spots.length > 0 && spots[0].img ? spots[0].img : album.coverImg || placeholders[0];
-                        const subImg1 = spots.length > 1 && spots[1].img ? spots[1].img : placeholders[1];
-                        const subImg2 = spots.length > 2 && spots[2].img ? spots[2].img : placeholders[2];
-
-                        return (
-                            <MotionDiv
-                                key={album.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.15 }}
-                                onClick={() => handleAlbumClick(album)}
-                                className="group cursor-pointer relative pb-4 pr-4"
-                            >
-                                {/* --- Behind Stacked Photos --- */}
-
-                                {/* Photo 3 (Back-most) - 3개 이상일 때만 */}
-                                {count > 2 && (
-                                    <div className="absolute top-4 left-6 w-[90%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[6deg] z-0 transition-transform duration-500 group-hover:rotate-[12deg] group-hover:translate-x-8 group-hover:translate-y-2 border border-gray-200">
-                                        <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.2]">
-                                            <img src={subImg2} className="w-full h-full object-cover opacity-80" alt="back" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Photo 2 (Middle) - 2개 이상일 때만 */}
-                                {count > 1 && (
-                                    <div className="absolute top-2 left-3 w-[95%] aspect-[3/4.5] bg-white p-2 shadow-md rounded-[2px] transform rotate-[3deg] z-10 transition-transform duration-500 group-hover:rotate-[6deg] group-hover:translate-x-4 group-hover:translate-y-1 border border-gray-200">
-                                        <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1]">
-                                            <img src={subImg1} className="w-full h-full object-cover opacity-90" alt="middle" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* --- Main Cover Card (Front) --- */}
-                                <div className="relative z-20 bg-white p-6 shadow-xl shadow-gray-200/50 transition-all duration-500 max-w-[340px] w-full aspect-[3/4.5] flex flex-col items-center overflow-hidden border border-gray-50 transform group-hover:-translate-y-1"
-                                    style={{ borderRadius: '2px' }}
-                                >
-                                    {/* Texture */}
-                                    <div className="absolute inset-0 opacity-40 pointer-events-none z-0 mix-blend-multiply"
-                                        style={{ backgroundImage: 'radial-gradient(circle at 50% 10%, #fffbf0 0%, #fff 100%)', backgroundSize: 'cover' }}
-                                    />
-
-                                    {/* 1. Title Area */}
-                                    <div className="relative z-10 text-center mt-4 mb-6 w-full">
-                                        <h2 className="text-2xl font-black text-gray-800 mb-2 leading-tight break-keep" style={{ wordBreak: 'keep-all' }}>{album.title}</h2>
-                                        <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold text-gray-400">
-                                            {album.description.split(' ').map((tag, i) => <span key={i}>{tag}</span>)}
-                                            <span className="w-0.5 h-2 bg-gray-300 self-center mx-0.5"></span>
-                                            <span>{album.date}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* 2. Photo Layout (Collage) */}
-                                    <div className="relative w-full flex-1 mb-8 z-10">
-                                        {/* Case 1: 1 Photo */}
-                                        {count === 1 && (
-                                            <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
-                                                <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
-                                                    <img src={mainImg} className="w-full h-full object-cover" alt="main" />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Case 2: 2 Photos */}
-                                        {count === 2 && (
-                                            <>
-                                                <div className="absolute top-[10%] right-[5%] w-[60%] h-[70%] bg-white p-2 pb-6 shadow-md transform rotate-[5deg] z-10 border border-gray-100/50 rounded-[2px]">
-                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                        <img src={subImg1} className="w-full h-full object-cover" alt="sub" />
-                                                    </div>
-                                                </div>
-                                                <div className="absolute top-[5%] left-[5%] w-[65%] h-[80%] bg-white p-2 pb-6 shadow-xl transform rotate-[-3deg] z-20 border border-gray-100/50 rounded-[2px]">
-                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
-
-                                        {/* Case 3+: 3 Photos (Default) */}
-                                        {count >= 3 && (
-                                            <>
-                                                <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
-                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1] contrast-[1.05]">
-                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
-                                                    </div>
-                                                </div>
-                                                <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
-                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                        <img src={subImg1} className="w-full h-full object-cover" alt="sub1" />
-                                                    </div>
-                                                </div>
-                                                <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
-                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-                                                        <img src={subImg2} className="w-full h-full object-cover" alt="sub2" />
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )}
-                                        {/* (Fallback for 0 photos: same as Case 1 but with placeholder) */}
-                                        {count === 0 && (
-                                            <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
-                                                <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
-                                                    <img src={mainImg} className="w-full h-full object-cover" alt="main" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 3. Footer */}
-                                    <div className="relative z-10 w-[90%] bg-[#FDFBF7] py-2 px-4 shadow-sm transform rotate-[1deg] mb-2 border border-gray-100/50 flex items-center justify-center gap-2">
-                                        <div className="absolute inset-x-0 -top-[1px] h-[1px] border-t border-dashed border-gray-300"></div>
-                                        <div className="absolute inset-x-0 -bottom-[1px] h-[1px] border-b border-dashed border-gray-300"></div>
-                                        <MapPin size={12} className="text-[#FF6B00] shrink-0" />
-                                        <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">{album.date} • {album.location}</span>
-                                    </div>
-
-                                    {/* Overlay */}
-                                    <div className="absolute inset-0 bg-[#FF6B00] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
-                                    {album.isNew && <div className="absolute top-4 left-4 bg-[#FF6B00] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-50">NEW</div>}
-                                </div>
-                            </MotionDiv>
-                        );
-                    })}
+            <div className="min-h-screen bg-[#F5F8FF] font-['Inter'] relative overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute top-20 right-[-20px] w-32 opacity-20 pointer-events-none animate-float">
+                    <img src="/mascot_full.png" alt="Mascot" className="w-full" />
+                </div>
+                <div className="absolute bottom-40 left-[-30px] w-40 opacity-10 pointer-events-none rotate-12">
+                    <img src="/mascot_full.png" alt="Mascot" className="w-full grayscale" />
                 </div>
 
-                {/* 하단 여백 데코 */}
-                <div className="mt-20 text-center">
-                    <span className="text-gray-300 text-sm font-serif italic">Keep your memories forever</span>
+                <div className="px-6 pt-12 pb-32 relative z-10">
+                    <header className="mb-8 flex items-center justify-between animate-fade-in-up">
+                        <div>
+                            <span className="text-[#0066FF] font-black text-xs tracking-widest uppercase mb-1 block">Travel Log</span>
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                                나의 여행 기록 <span className="text-[#0066FF]">.</span>
+                            </h1>
+                        </div>
+                        <button
+                            onClick={() => router.back()}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-blue-50 text-gray-400 hover:text-[#0066FF] hover:border-blue-200 transition-all active:scale-95"
+                        >
+                            <X size={24} />
+                        </button>
+                    </header>
+
+                    <div className="flex flex-col gap-10 items-center">
+                        {/* 새 앨범 만들기 버튼 */}
+                        <button
+                            onClick={() => router.push('/chat')}
+                            className="w-full py-5 rounded-3xl bg-white border-2 border-dashed border-blue-200 flex items-center justify-center gap-3 text-blue-400 hover:border-[#0066FF] hover:text-[#0066FF] hover:bg-blue-50 transition-all group active:scale-95 shadow-sm"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-[#0066FF] group-hover:text-white transition-colors">
+                                <Plus size={16} />
+                            </div>
+                            <span className="font-bold text-sm">새로운 여행 시작하기</span>
+                        </button>
+
+                        {albums.map((album, index) => {
+                            const spots = album.spots || [];
+                            const count = spots.length;
+                            const mainImg = spots.length > 0 && spots[0].img ? spots[0].img : album.coverImg || placeholders[0];
+                            const subImg1 = spots.length > 1 && spots[1].img ? spots[1].img : placeholders[1];
+                            const subImg2 = spots.length > 2 && spots[2].img ? spots[2].img : placeholders[2];
+
+                            return (
+                                <MotionDiv
+                                    key={album.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.15 }}
+                                    onClick={() => handleAlbumClick(album)}
+                                    className="group cursor-pointer relative pb-4 pr-4"
+                                >
+                                    {/* Stacked Photos Logic (Blue Theme) */}
+                                    {count > 2 && (
+                                        <div className="absolute top-4 left-6 w-[90%] aspect-[3/4.5] bg-white p-2 shadow-sm shadow-blue-100 rounded-[2px] transform rotate-[6deg] z-0 transition-transform duration-500 group-hover:rotate-[12deg] group-hover:translate-x-8 group-hover:translate-y-2 border border-blue-50">
+                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.2]">
+                                                <img src={subImg2} className="w-full h-full object-cover opacity-80" alt="back" />
+                                            </div>
+                                        </div>
+                                    )}
+                                    {count > 1 && (
+                                        <div className="absolute top-2 left-3 w-[95%] aspect-[3/4.5] bg-white p-2 shadow-md shadow-blue-100/50 rounded-[2px] transform rotate-[3deg] z-10 transition-transform duration-500 group-hover:rotate-[6deg] group-hover:translate-x-4 group-hover:translate-y-1 border border-blue-50">
+                                            <div className="w-full h-full bg-gray-100 overflow-hidden relative grayscale-[0.1]">
+                                                <img src={subImg1} className="w-full h-full object-cover opacity-90" alt="middle" />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Main Card */}
+                                    <div className="relative z-20 bg-white p-6 shadow-xl shadow-blue-100/50 transition-all duration-500 w-[320px] h-[480px] flex flex-col items-center overflow-hidden border border-blue-50 transform group-hover:-translate-y-1"
+                                        style={{ borderRadius: '2px' }}
+                                    >
+                                        <div className="absolute inset-0 opacity-40 pointer-events-none z-0 mix-blend-multiply"
+                                            style={{ backgroundImage: 'radial-gradient(circle at 50% 10%, #fffbf0 0%, #fff 100%)', backgroundSize: 'cover' }}
+                                        />
+
+                                        <button
+                                            onClick={(e) => handleDeleteAlbum(e, album.id)}
+                                            className="absolute top-2 right-2 z-50 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                                            title="앨범 삭제"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+
+                                        {/* Title Area */}
+                                        <div className="relative z-10 text-center mt-4 mb-6 w-full">
+                                            <h2 className="text-2xl font-black text-gray-800 mb-2 leading-tight break-keep" style={{ wordBreak: 'keep-all' }}>{album.title}</h2>
+                                            <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold text-gray-400">
+                                                {album.description.split(' ').map((tag, i) => <span key={i}>{tag}</span>)}
+                                                <span className="w-0.5 h-2 bg-gray-300 self-center mx-0.5"></span>
+                                                <span>{album.date}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Photo Collage */}
+                                        <div className="relative w-full flex-1 mb-8 z-10">
+                                            {count === 1 && (
+                                                <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
+                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {count >= 2 && (
+                                                <div className="w-full h-full relative">
+                                                    <div className="absolute top-0 left-0 w-[65%] h-[85%] bg-white p-2 pb-6 shadow-md transform rotate-[-3deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                    </div>
+                                                    <div className="absolute top-4 right-0 w-[45%] h-[45%] bg-white p-1.5 pb-4 shadow-md transform rotate-[4deg] z-20 border border-gray-100/50 rounded-[2px]">
+                                                        <img src={subImg1} className="w-full h-full object-cover" alt="sub1" />
+                                                    </div>
+                                                    {count >= 3 && (
+                                                        <div className="absolute bottom-4 right-2 w-[42%] h-[42%] bg-white p-1.5 pb-4 shadow-md transform rotate-[6deg] z-30 border border-gray-100/50 rounded-[2px]">
+                                                            <img src={subImg2} className="w-full h-full object-cover" alt="sub2" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {count === 0 && ( /* Default placeholder */
+                                                <div className="absolute top-[5%] left-[10%] right-[10%] bottom-[5%] bg-white p-3 pb-8 shadow-md transform rotate-[-2deg] z-10 border border-gray-100/50 rounded-[2px]">
+                                                    <div className="w-full h-full bg-gray-100 overflow-hidden relative contrast-[1.05]">
+                                                        <img src={mainImg} className="w-full h-full object-cover" alt="main" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative z-10 w-[90%] bg-white py-2 px-4 shadow-sm transform rotate-[1deg] mb-2 border border-blue-50 flex items-center justify-center gap-2">
+                                            <div className="absolute inset-x-0 -top-[1px] h-[1px] border-t border-dashed border-gray-200"></div>
+                                            <div className="absolute inset-x-0 -bottom-[1px] h-[1px] border-b border-dashed border-gray-200"></div>
+                                            <MapPin size={12} className="text-[#0066FF] shrink-0" />
+                                            <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">{album.date} • {album.location}</span>
+                                        </div>
+
+                                        <div className="absolute inset-0 bg-[#0066FF] mix-blend-overlay opacity-[0.03] pointer-events-none z-40"></div>
+                                    </div>
+                                </MotionDiv>
+                            );
+                        })}
+                    </div>
+
+                    {/* 하단 여백 데코 */}
+                    <div className="mt-20 text-center">
+                        <span className="text-gray-300 text-sm font-serif italic">Keep your memories forever</span>
+                    </div>
                 </div>
             </div>
         );
@@ -556,11 +779,14 @@ export default function TimelineScreen() {
 
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] font-['Inter'] relative pb-32">
-            {/* 배경 텍스처 효과 */}
-            <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-0"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}
-            />
+        <div className="min-h-screen bg-[#F5F8FF] font-['Inter'] relative pb-32 overflow-hidden">
+            {/* Background Decoration (Fixed) */}
+            <div className="fixed top-10 right-[-50px] w-96 opacity-[0.05] pointer-events-none">
+                <img src="/mascot_full.png" alt="Mascot" className="w-full" />
+            </div>
+            <div className="fixed bottom-0 left-[-50px] w-80 opacity-[0.05] pointer-events-none rotate-12">
+                <img src="/mascot_full.png" alt="Mascot" className="w-full grayscale" />
+            </div>
 
             {/* Back Button */}
             <div className="fixed top-4 left-4 z-50">
@@ -649,7 +875,12 @@ export default function TimelineScreen() {
                             <div className="flex-1 bg-white p-5 rounded-2xl shadow-sm border border-gray-100/50">
                                 <div className="mb-4">
                                     <h3 className="text-lg font-black text-gray-800">{spot.name}</h3>
-                                    <p className="text-xs text-gray-400 mt-1">{spot.desc || "잠시 쉬기 좋은 공간"}</p>
+                                    <textarea
+                                        className="w-full bg-gray-50/50 p-3 rounded-xl resize-none outline-none text-sm text-gray-600 leading-relaxed font-medium placeholder:text-gray-300 min-h-[5em] mt-3 border border-gray-100 focus:border-blue-200 focus:bg-white focus:shadow-sm transition-all"
+                                        value={spot.userComment !== undefined ? spot.userComment : (spot.desc || "")}
+                                        onChange={(e) => handleCommentUpdate(index, e.target.value)}
+                                        placeholder="이 장소에서의 추억을 기록해보세요..."
+                                    />
                                 </div>
                                 <label className="block w-full aspect-[4/3] bg-gray-50 rounded-xl overflow-hidden relative cursor-pointer group transition-all hover:shadow-md border border-gray-100">
                                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(index, e)} />
@@ -683,8 +914,8 @@ export default function TimelineScreen() {
                 </div>
             </section>
 
-            {/* Floating Action Button */}
-            <div className="fixed bottom-24 right-6 z-40">
+            {/* Floating Action Button Group */}
+            <div className="fixed bottom-24 right-6 z-40 flex flex-col items-end gap-3">
                 <button
                     onClick={() => setIsCardModalOpen(true)}
                     className="bg-[#FF6B00] text-white p-4 rounded-full shadow-xl shadow-orange-300/50 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 font-bold"
@@ -863,11 +1094,16 @@ export default function TimelineScreen() {
                                                                 <img src={displayImg} className="w-full h-full object-cover" alt="spot" crossOrigin="anonymous" />
                                                             </div>
                                                         </div>
-                                                        <div className="flex-1 bg-white p-6 rounded-lg shadow-sm border border-orange-50 relative overflow-hidden">
-                                                            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF6B00]"></div>
-                                                            <p className="text-sm text-gray-600 leading-relaxed font-medium">
-                                                                {spot.description || "이곳에서의 특별한 순간을 기록했습니다. 광주의 아름다움을 느껴보세요."}
-                                                            </p>
+                                                        <div className="flex-1 bg-white rounded-lg shadow-sm border border-orange-50 relative overflow-hidden min-h-[100px]">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-[#FF6B00] z-20"></div>
+                                                            <div className="absolute inset-0 p-6 overflow-y-auto scrollbar-hide z-10">
+                                                                <p className="text-sm text-gray-900 leading-relaxed font-bold whitespace-pre-wrap">
+                                                                    {(() => {
+                                                                        const text = spot.userComment || spot.desc || spot.description;
+                                                                        return (text && text.trim().length > 0) ? text : "이곳에서의 특별한 순간을 기록했습니다. 광주의 아름다움을 느껴보세요.";
+                                                                    })()}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                         <div className="mt-6 text-center">
                                                             <span className="text-[10px] font-bold text-gray-300">- {currentSlide} / {course.length} -</span>
@@ -910,7 +1146,7 @@ export default function TimelineScreen() {
                                 {/* Download & Share Buttons */}
                                 <div className="flex gap-3 animate-fade-in-up mt-2">
                                     <button
-                                        onClick={handleShare}
+                                        onClick={handleShareClick}
                                         disabled={isGenerating}
                                         className="w-12 h-12 bg-white text-gray-900 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center hover:bg-gray-50 border border-gray-100"
                                         title="공유하기"
@@ -949,6 +1185,56 @@ export default function TimelineScreen() {
                                 </div>
                             </MotionDiv>
                         </div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+
+            {/* Share Option Modal */}
+            <AnimatePresence>
+                {isShareModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsShareModalOpen(false)}>
+                        <MotionDiv
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            onClick={(e: any) => e.stopPropagation()}
+                            className="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-sm"
+                        >
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">공유 방식 선택</h3>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={shareCurrentSlide}
+                                    className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors border border-gray-100"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-blue-500">
+                                        <Images size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="block font-bold text-sm">현재 페이지만 (이미지 1장)</span>
+                                        <span className="block text-xs text-gray-400">지금 보고 있는 이 장면만 공유합니다.</span>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={shareAllSlidesAsFiles}
+                                    className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 hover:bg-orange-50 text-gray-700 hover:text-orange-600 transition-colors border border-gray-100"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-orange-500">
+                                        <FolderArchive size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="block font-bold text-sm">전체 앨범 (여러 장)</span>
+                                        <span className="block text-xs text-gray-400">모든 페이지를 한 번에 공유합니다.</span>
+                                    </div>
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setIsShareModalOpen(false)}
+                                className="mt-4 w-full py-3 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                취소
+                            </button>
+                        </MotionDiv>
                     </div>
                 )}
             </AnimatePresence>

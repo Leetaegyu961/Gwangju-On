@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlaceInteractiveCard } from '../../features/experience/PlaceInteractiveCard';
 import { SummarySequence } from '../../features/experience/SummarySequence';
@@ -28,6 +28,14 @@ const allCourses = {
 };
 
 export default function DiscoveryPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><p className="font-bold text-gray-400 text-sm">로드 중...</p></div>}>
+            <DiscoveryContent />
+        </Suspense>
+    );
+}
+
+function DiscoveryContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [mode, setMode] = useState<'discovery' | 'summary'>('discovery');

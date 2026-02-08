@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(copy /Y \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\Gwangju-On\\\\frontend\\\\screens\\\\MapView.tsx\" \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\frontend\\\\screens\\\\MapView.tsx\")",
+      "Bash(copy /Y \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\Gwangju-On\\\\frontend\\\\screens\\\\MyPage.tsx\" \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\frontend\\\\screens\\\\MyPage.tsx\")",
+      "Bash(copy /Y \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\Gwangju-On\\\\frontend\\\\screens\\\\SurveyScreen.tsx\" \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\frontend\\\\screens\\\\SurveyScreen.tsx\")",
+      "Bash(copy /Y \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\Gwangju-On\\\\frontend\\\\screens\\\\TastingNoteScreen.tsx\" \"c:\\\\Users\\\\kimyj\\\\google_team_project_YoungJunKim\\\\frontend\\\\screens\\\\TastingNoteScreen.tsx\")",
+      "Bash(gcloud compute instances describe mongodb-server --zone=asia-northeast1-a --format=\"table\\(name,machineType.basename\\(\\),status,networkInterfaces[0].accessConfigs[0].natIP\\)\")",
+      "Bash(gcloud compute ssh mongodb-server --zone=asia-northeast3-a --command=\"sudo apt-get update -qq && sudo apt-get install -y -qq docker.io > /dev/null 2>&1 && sudo systemctl enable docker && sudo systemctl start docker && sudo docker run -d --name mongodb --restart always -p 27017:27017 -v /data/mongodb:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=gwangju2025! mongo:7 && echo ''MongoDB installed successfully''\")",
+      "Bash(gcloud run deploy gwangju-on-backend --source . --region asia-northeast3 --allow-unauthenticated --port 8080 --memory 2Gi --cpu 1 --min-instances 0 --max-instances 10 --set-env-vars \"GOOGLE_API_KEY=AIzaSyD0exz3_swTAVjyYXsK5EeVrE4oAUbMLLI,GOOGLE_CLOUD_API_KEY=AIzaSyAt1JoBcUXg_40xNJZww60Gpyr2fhbQiDk,NAVER_CLIENT_ID=bd3AoopoZ2RtHB0oTJko,NAVER_CLIENT_SECRET=meRRHhptpn,TMAP_APP_KEY=AW7iC1WmM8apRxGQG2fb860QprU7Adfq1sTxeYys,GOOGLE_CLIENT_ID=117313124086-6u6fgumsvas8v1jbc7ct2dm1rfpftl8q.apps.googleusercontent.com,MONGO_URI=mongodb://admin:gwangju2025!@34.22.74.157:27017/gwangju_on?authSource=admin\" --quiet)",
+      "Bash(gcloud builds list --region=asia-northeast3 --limit=1 --format=\"value\\(id\\)\")"
+    ]
+  }
+}

@@ -33,25 +33,47 @@ export const TastingNoteScreen = () => {
         if (step > 1) setStep(prev => prev - 1);
     };
 
+    // 각 단계별 완료 여부 확인
+    const isStepComplete = () => {
+        switch (step) {
+            case 1:
+                return answers.satisfaction > 0;
+            case 2:
+                return answers.atmosphere !== '';
+            case 3:
+                return answers.movement !== '';
+            case 4:
+                return answers.bestPlace !== '';
+            case 5:
+                return answers.cardChoice !== '';
+            default:
+                return false;
+        }
+    };
+
     const handleFinish = async () => {
         const userId = localStorage.getItem('temp_user_id');
+
         try {
-            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-            await fetch(`${API_URL}/user/session/tasting-notes?user_id=${userId}`, {
+            // 테이스팅 노트 저장
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/user/session/tasting-notes?user_id=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     satisfaction: answers.satisfaction,
-                    atmosphere: answers.atmosphere === 'good' ? 5 : 3, // Mapping string to int for simple demo
-                    movement: answers.movement === 'good' ? 5 : 3,
+                    atmosphere: answers.atmosphere,
+                    movement: answers.movement,
                     best_place: answers.bestPlace,
                     card_choice_style: answers.cardChoice
                 })
             });
+
         } catch (e) {
             console.error("Failed to save tasting notes", e);
         }
-        router.push('/home');
+
+        // 타임라인 화면으로 이동
+        router.push('/timeline');
     };
 
     const questions = [
@@ -63,10 +85,11 @@ export const TastingNoteScreen = () => {
             component: (
                 <div className="flex justify-center gap-3">
                     {[1, 2, 3, 4, 5].map(star => (
+                        // @ts-ignore
                         <motion.button
                             key={star}
                             whileTap={{ scale: 0.8 }}
-                            onClick={() => { setAnswers({ ...answers, satisfaction: star }); nextStep(); }}
+                            onClick={() => setAnswers({ ...answers, satisfaction: star })}
                             className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${answers.satisfaction >= star ? 'bg-[#0066FF] text-white shadow-lg' : 'bg-gray-100 text-gray-300'}`}
                         >
                             <Star size={28} fill={answers.satisfaction >= star ? "currentColor" : "none"} />
@@ -107,13 +130,11 @@ export const TastingNoteScreen = () => {
             component: (
                 <div className="grid grid-cols-2 gap-4">
                     {tripPlaces.map((place) => (
+                        // @ts-ignore
                         <motion.button
                             key={place.id}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                                setAnswers({ ...answers, bestPlace: place.name });
-                                nextStep();
-                            }}
+                            onClick={() => setAnswers({ ...answers, bestPlace: place.name })}
                             className={`relative aspect-[4/5] rounded-3xl overflow-hidden border-4 transition-all ${answers.bestPlace === place.name ? 'border-[#0066FF] shadow-lg' : 'border-transparent'
                                 }`}
                         >
@@ -144,27 +165,36 @@ export const TastingNoteScreen = () => {
     const currentQ = questions[step - 1];
 
     return (
-        <div className="min-h-screen bg-white flex flex-col font-['Inter']">
+        <div className="h-screen bg-white flex flex-col font-['Inter']">
             {/* Progress Bar */}
             <div className="fixed top-0 left-0 right-0 h-1.5 bg-gray-50 z-50">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(step / 5) * 100}%` }}
+                    // @ts-ignore
                     className="h-full bg-[#0066FF]"
                 />
             </div>
 
             {/* Header */}
-            <header className="p-6 flex items-center justify-between">
+            <header className="p-6 flex items-center justify-between shrink-0">
                 <button onClick={prevStep} className={`p-1 text-gray-300 ${step === 1 ? 'opacity-0' : ''}`}>
                     <ArrowLeft size={24} />
                 </button>
                 <span className="text-xs font-black text-blue-400 tracking-tighter uppercase">Travel Tasting Note</span>
-                <div className="w-8" />
+                <button
+                    onClick={() => router.push('/timeline')}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </header>
 
-            {/* Question Content */}
-            <main className="flex-1 px-8 pt-12 pb-20 flex flex-col">
+            {/* Question Content - Scrollable */}
+            <main className="flex-1 px-8 pt-12 pb-32 overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -193,7 +223,6 @@ export const TastingNoteScreen = () => {
                                         onClick={() => {
                                             //@ts-ignore
                                             setAnswers({ ...answers, [currentQ.field]: opt.value });
-                                            nextStep();
                                         }}
                                         className={`w-full p-5 text-left rounded-3xl font-bold border-2 transition-all active:scale-[0.98] ${
                                             //@ts-ignore
@@ -213,12 +242,12 @@ export const TastingNoteScreen = () => {
                 </AnimatePresence>
             </main>
 
-            {/* Footer Navigation */}
-            <div className="p-8">
+            {/* Footer Navigation - Fixed at bottom */}
+            <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-100 p-6 pb-8 z-50 shadow-2xl">
                 <button
                     onClick={nextStep}
-                    disabled={step === 1 && answers.satisfaction === 0}
-                    className="w-full py-6 bg-gray-900 text-white rounded-3xl font-black text-xl shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-30 transition-all"
+                    disabled={!isStepComplete()}
+                    className="w-full py-5 bg-gray-900 text-white rounded-3xl font-black text-lg shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-30 transition-all"
                 >
                     {step === 5 ? '테이스팅 노트 완성하기' : '다음 단계로'}
                     <ArrowRight size={22} />

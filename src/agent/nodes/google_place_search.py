@@ -271,72 +271,56 @@ async def google_place_search_node(state: AgentState) -> dict[str, Any]:
 
     print(f"[Search] Google Place 검색 쿼리 목록: {queries} (쿼리당 최대 {result_count}개)")
 
-    # 1. Local Vector Search (Priority)
-    local_place_data = []
+    # 1. Hybrid Search Preparation (Vector DB + Text Queries)
+    vector_results = state.get("vector_search_results", [])
+    
+    # Vector DB에서 찾은 장소 이름들을 검색 쿼리에 추가
+    # (Vector DB ID가 Place Name이라고 가정 - test_cloud_search.py line 75 참고)
+    vector_queries = []
+    if vector_results:
+        print(f"[Search] Vector DB 결과 {len(vector_results)}개를 검색 후보에 포함합니다.")
+        for item in vector_results:
+            # item.get('id')가 장소 이름
+            place_name = item.get('id') or item.get('place_name')
+            if place_name:
+                # 지역명과 함께 검색하여 정확도 높임 (예: "동명동 {이름}")
+                # 하지만 이미 지역 필터가 적용된 결과일 수 있으므로 이름만 검색하거나
+                # survey_data의 지역을 붙여서 검색
+                region = state.get("survey_data", {}).get("region", "광주")
+                vector_queries.append(f"{region} {place_name}")
+    
+    # 중복 제거 및 상위 5개만 추가 (API 비용 관리)
+    vector_queries = list(set(vector_queries))[:5]
+    
+    # 원본 쿼리와 합치기 (Vector 결과가 있으면 원본 쿼리는 조금만 수행하거나 병행)
+    final_queries = queries + vector_queries
+    
+    # 중복 제거
+    final_queries = list(set(final_queries))
+    
+    print(f"[Search] 최종 검색 쿼리 목록 ({len(final_queries)}개): {final_queries}")
+
+    # 2. Google Search Execution
     try:
-        print(f"[Search] Local Vector DB 검색 시도...")
-        for q in queries:
-            # Search local DB
-            results = await vector_db.search(q, k=5)
-            for res in results:
-                # Similarity Score Threshold (FAISS L2 distance: lower is better, range depends on normalization)
-                # If using Inner Product or Cosine, higher is better.
-                # Assuming standard FAISS L2 for now. But embeddings are usually normalized?
-                # Let's trust top K for now.
-                
-                name = res['place_name']
-                data = res['data']
-                keywords = data.get('keywords', {})
-                
-                # Extract address
-                address = "광주광역시 동구" # Default
-                if keywords.get('location'):
-                    address = keywords['location'][0]
-                elif keywords.get('address'):
-                    address = keywords['address'][0]
+        # Vector 결과가 많으면 result_count를 나눠서 검색할 수도 있지만,
+        # 여기서는 각 쿼리당 result_count만큼 검색하되 전체에서 자르는 방식 유지
+        # 단, Vector Query는 구체적인 이름이므로 1개만 나와도 충분함.
+        # _search_places_async는 max_results만큼 가져옴.
+        
+        place_data_list = await _run_google_search_logic(final_queries, result_count)
+        
+        # Vector DB에서 가져온 메타데이터(유사도 등)를 place_data에 주입할 수 있음
+        # (선택 사항: Scoring에 활용 가능)
+        if vector_results and place_data_list:
+            for place in place_data_list:
+                # 매칭되는 Vector 결과 찾기 (이름 기반)
+                for v_item in vector_results:
+                    v_name = v_item.get('id')
+                    if v_name and v_name in place['name']: # place['name'] is display name
+                         place['vector_similarity'] = v_item.get('similarity_score')
+                         place['source'] = 'hybrid'
+                         break
 
-                # Map to place_data structure
-                place_entry = {
-                    "id": f"local_{name}",
-                    "name": name,
-                    "displayName": {"text": name}, # For compatibility
-                    "original_name": name,
-                    "address": address,
-                    "formattedAddress": address,
-                    "lat": 0.0, # Missing in local data
-                    "lng": 0.0, # Missing in local data
-                    "rating": 0.0,
-                    "total_reviews": 0,
-                    "photo_name": None,
-                    "price_level": "",
-                    "reviews": [
-                        {
-                            "rating": 0,
-                            "text": r.get('snippet', '') or "",
-                            "time": ""
-                        }
-                        for r in data.get('reviews', [])
-                    ],
-                    "source": "local_vector_db",
-                    "local_keywords": keywords
-                }
-                
-                # Check duplication
-                if not any(p['name'] == name for p in local_place_data):
-                    local_place_data.append(place_entry)
-                    
-    except Exception as e:
-        print(f"[Error] Local Vector Search Failed: {e}")
-
-    if local_place_data:
-        print(f"[OK] Local Vector DB에서 {len(local_place_data)}개 장소 발견! (Google Search Skip)")
-        return {"place_data": local_place_data[:result_count]}
-
-    # 2. Google Search Fallback
-    print("[Info] Local DB 결과 없음 -> Google API 검색 시작")
-
-    try:
-        place_data_list = await _run_google_search_logic(queries, result_count)
     except Exception as e:
         print(f"[Error] 검색 프로세스 오류: {e}")
         return {"place_data": None}

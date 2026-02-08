@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'gwangju-on-frontend'
+      - '--source=frontend'
+      - '--region=asia-northeast3'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--memory=1Gi'
+timeout: '1200s'

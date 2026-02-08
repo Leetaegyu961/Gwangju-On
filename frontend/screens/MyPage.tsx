@@ -25,9 +25,15 @@ export const MyPage = () => {
    const [isDashboardOpen, setIsDashboardOpen] = useState(false);
    const [showGuestModal, setShowGuestModal] = useState(false);
    const [showUserModal, setShowUserModal] = useState(false);
+   const [userWishlist, setUserWishlist] = useState<any[]>([]);
+   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
    useEffect(() => {
+      let hasToken = false;
       if (typeof window !== 'undefined') {
+         hasToken = !!localStorage.getItem('access_token');
+         setIsLoggedIn(hasToken);
+
          const saved = localStorage.getItem('user_profile');
          if (saved) {
             setProfile(JSON.parse(saved));
@@ -38,6 +44,19 @@ export const MyPage = () => {
          if (p) {
             setProfile(p);
             localStorage.setItem('user_profile', JSON.stringify(p));
+
+            // Fetch Wishlist from DB
+            const userId = p.id || localStorage.getItem('temp_user_id');
+            if (userId) {
+               fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/journey/wishlist/${userId}`)
+                  .then(res => res.json())
+                  .then(data => {
+                     if (data.wishlist) setUserWishlist(data.wishlist);
+                  });
+            }
+         } else if (hasToken) {
+            // [Fix] 토큰은 있는데 프로필 로드 실패 시, 로컬 정보라도 유지하거나 기본형태 표시
+            console.warn("User profile load failed but token exists.");
          }
       });
       aiService.getCourses().then(setSavedCourses);
@@ -55,7 +74,7 @@ export const MyPage = () => {
       }
    };
 
-   const userName = profile?.name || 'GUEST';
+   const userName = profile?.name || (isLoggedIn ? (profile?.email?.split('@')[0] || 'Traveler') : 'GUEST');
    const userImage = (profile && profile.picture && profile.picture !== "")
       ? profile.picture
       : "https://ui-avatars.com/api/?name=Guest&background=EFF6FF&color=3B82F6&bold=true&length=1"; // Blue theme avatar
@@ -83,7 +102,7 @@ export const MyPage = () => {
             </button>
             <button
                onClick={() => {
-                  if (!profile || !profile.name) {
+                  if (!isLoggedIn) {
                      setShowGuestModal(true);
                   } else {
                      setShowUserModal(true);
@@ -114,6 +133,20 @@ export const MyPage = () => {
 
             <div className="text-center mb-8">
                <h2 className="text-2xl font-black text-gray-800 mb-2">{userName}</h2>
+
+               {/* User Profile Badges (Age/Gender) */}
+               <div className="flex gap-2 justify-center mb-3">
+                  {profile?.age && (
+                     <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100 shadow-sm">
+                        {profile.age}
+                     </span>
+                  )}
+                  {profile?.gender && (
+                     <span className="px-2.5 py-0.5 bg-indigo-50 text-indigo-500 text-[10px] font-bold rounded-full border border-indigo-100 shadow-sm">
+                        {profile.gender}
+                     </span>
+                  )}
+               </div>
                <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-blue-100 shadow-sm">
                   <TrendingUp size={14} className="text-[#3B82F6]" />
                   <p className="text-xs font-bold text-gray-500">나의 여행 횟수: <span className="text-[#3B82F6]">{tripCount}회</span></p>
@@ -173,19 +206,21 @@ export const MyPage = () => {
                      <div className="p-3 bg-gray-50 rounded-2xl text-gray-600 group-hover:bg-[#3B82F6] group-hover:text-white transition-all">
                         <History size={20} />
                      </div>
-                     이전 여행 기록
+                     추천 코스 히스토리
                   </div>
                   <ChevronRight size={18} className="text-gray-300 group-hover:text-[#3B82F6] group-hover:translate-x-1 transition-transform" />
                </button>
             </MotionDiv>
 
             <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
-               <button className="w-full flex items-center justify-between p-5 bg-white hover:bg-blue-50/50 border border-transparent hover:border-blue-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md">
+               <button
+                  onClick={() => router.push('/history?mode=confirmed')}
+                  className="w-full flex items-center justify-between p-5 bg-white hover:bg-blue-50/50 border border-transparent hover:border-blue-100 text-gray-800 rounded-3xl transition-all group shadow-sm hover:shadow-md">
                   <div className="flex items-center gap-4 font-bold text-sm">
                      <div className="p-3 bg-gray-50 rounded-2xl text-gray-600 group-hover:bg-[#3B82F6] group-hover:text-white transition-all">
                         <Bookmark size={20} />
                      </div>
-                     찜한 코스
+                     확정한 코스 {savedCourses.filter(c => c.is_selected).length > 0 && <span className="text-[#3B82F6] ml-1">({savedCourses.filter(c => c.is_selected).length})</span>}
                   </div>
                   <ChevronRight size={18} className="text-gray-300 group-hover:text-[#3B82F6] group-hover:translate-x-1 transition-transform" />
                </button>

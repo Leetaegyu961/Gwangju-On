@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv/
+env/
+
+# Node
+node_modules
+.next
+out
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+.env.*
+
+# Exclude
+Gwangju-On/
+.claude/
+
+# vectors.json은 포함해야 함 (여기에 적지 않음)

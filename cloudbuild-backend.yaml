@@ -1,0 +1,15 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'gwangju-on-backend'
+      - '--source=.'
+      - '--dockerfile=Dockerfile.backend'
+      - '--region=asia-northeast3'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--memory=2Gi'
+      - '--cpu=1'
+timeout: '1200s'

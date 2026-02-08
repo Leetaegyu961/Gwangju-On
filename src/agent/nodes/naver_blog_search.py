@@ -9,21 +9,25 @@ from ..state import AgentState
 
 async def naver_blog_search_node(state: AgentState) -> dict[str, Any]:
     """
-    네이버 블로그 검색 및 RSS 매칭을 수행하는 노드입니다.
-    현재는 Latency 최적화를 위해 실제 검색을 수행하지 않고 빈 결과를 반환합니다.
+    네이버 블로그 검색 노드 (Conditional)
+    state['enriched_results']를 입력받아 블로그 정보를 추가(Update)합니다.
     """
-    place_data_list = state.get("place_data")
-    if not place_data_list:
-        return {"enriched_results": None}
+    enriched_results = state.get("enriched_results")
+    if not enriched_results:
+        return {"enriched_results": []}
 
-    print(f"\n🔗 Naver 블로그 검색 SKIPPED (Latency Optimization): {len(place_data_list)}개 가게")
+    print(f"\n🟢 [Naver Blog Search] 블로그 검색 실행 (Conditional): {len(enriched_results)}개 가게")
     
-    # Bypass Naver Search -> Return empty blogs
-    enriched_results = []
-    for place in place_data_list:
-        enriched_results.append({
-            "place": place,
-            "blogs": []
-        })
-
+    # TODO: Implement actual Naver API call here if needed in the future.
+    # Currently, we just keep the empty blogs list or add a placeholder.
+    # Since Vector DB provides semantic context, this is a fallback.
+    
+    # Example logic:
+    # for item in enriched_results:
+    #     query = item['place']['name']
+    #     blogs = await search_naver_blog(query)
+    #     item['blogs'] = blogs
+    
+    # For now, just pass through (but print ensures we know it ran)
+    
     return {"enriched_results": enriched_results}

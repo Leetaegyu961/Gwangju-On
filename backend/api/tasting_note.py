@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from backend.db import get_database
 from backend.models.user import TastingNoteEntry
+from backend.api.preference_utils import learn_from_tasting_note
 from datetime import datetime
 import uuid
 
@@ -36,5 +37,19 @@ async def save_tasting_note(user_id: str, note: dict):
             "last_activity_at": datetime.now().isoformat()
         }}
     )
-    
+
+    # 3. [Preference Learning] 만족도 기반 선호도 점진 학습
+    try:
+        satisfaction = note.get("satisfaction", 3)
+        session_themes = []
+        if session:
+            intent_ctx = session.get("intent_context", {})
+            if isinstance(intent_ctx, dict):
+                survey = intent_ctx.get("survey_data", {})
+                if isinstance(survey, dict):
+                    session_themes = survey.get("themes", [])
+        await learn_from_tasting_note(db, user_id, satisfaction, session_themes)
+    except Exception as e:
+        print(f"⚠️ [Preference Learning] tasting-note failed: {e}")
+
     return {"status": "success", "message": "Tasting note saved and session completed"}

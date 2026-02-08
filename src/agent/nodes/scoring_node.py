@@ -7,6 +7,8 @@ LLM이 4개 차원(맛/서비스/가성비/재방문)별로 직접 채점하는 
 import os
 import json
 import asyncio
+import time
+import random
 from typing import Any, List, Dict, Tuple
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..state import AgentState
@@ -97,9 +99,28 @@ async def analyze_sentiment_batch(llm: ChatGoogleGenerativeAI, batch_items: List
         blog_summary = "\n".join(blog_texts) if blog_texts else "블로그 리뷰 없음"
         review_summary = "\n".join(review_texts) if review_texts else "Google 리뷰 없음"
         
+        # Keywords Summary (from vector metadata)
+        keywords = place.get("keywords", {})
+        keywords_text = ""
+        if keywords:
+            # Flatten important keys
+            important_keys = ["menu_type", "signature_menu", "ambiance", "special_features", "recommended_for"]
+            lines = []
+            for k in important_keys:
+                if k in keywords and keywords[k]:
+                    val = keywords[k]
+                    if isinstance(val, list):
+                        val = ", ".join(val)
+                    lines.append(f"- {k}: {val}")
+            if lines:
+                keywords_text = "\n".join(lines)
+        
+        keywords_section = f"#### Key Attributes (Metadata)\n{keywords_text}" if keywords_text else "#### Key Attributes\n정보 없음"
+
         places_text += f"""
 ---
 ### Place {idx + 1}: {place.get('name', 'Unknown')}
+{keywords_section}
 #### Google Reviews
 {review_summary}
 #### Blog Reviews
@@ -226,10 +247,13 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
             from backend.db import get_database
             # Async DB call inside sync/async node
             db = await get_database()
-            profile = await db["user_preferences"].find_one({"userId": user_id})
-            if profile:
-                user_profile = profile
-                print(f"👤 [Scoring Node] User Profile Found: {user_id}")
+            if db is not None:
+                profile = await db["user_preferences"].find_one({"userId": user_id})
+                if profile:
+                    user_profile = profile
+                    print(f"👤 [Scoring Node] User Profile Found: {user_id}")
+            else:
+                print(f"⚠️ [Scoring Node] DB not initialized. Skipping user profile fetch.")
         except Exception as e:
             print(f"⚠️ [Scoring Node] Failed to fetch user profile: {e}")
 
@@ -248,16 +272,24 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
             
     else:
         scoring_system = get_scoring_system(data_dir)
+        # 세션 테마가 있어도 Personalized가 아니면 적용 불가할 수 있으나,
+        # 기본 시스템에서도 테마 매칭을 원하면 PersonalizedScoringSystem을 기본으로 쓰되 profile을 비워도 됨.
+        if state.get("themes"):
+             scoring_system = PersonalizedScoringSystem(data_dir, {})
+             scoring_system.set_session_themes(state.get("themes", []))
+             print(f"🔥 [Scoring Node] Session Themes Applied (No User Profile): {state.get('themes')}")
     
-    # 배치 처리 준비
+    # 배치 처리 준비 (최적화: 배치 크기 증가로 LLM 호출 횟수 감소)
     batch_size = 5
     batches = [enriched_results[i:i + batch_size] for i in range(0, len(enriched_results), batch_size)]
     
     print(f"🤖 LLM 배치 채점 실행 중 ({len(batches)} 배치)...")
     
-    # 비동기 병렬 실행
+    # 비동기 병렬 실행 + 타이밍 측정
+    t_scoring_start = time.time()
     tasks = [analyze_sentiment_batch(llm, batch) for batch in batches]
     batch_results = await asyncio.gather(*tasks)
+    print(f"⏱️ [Scoring] LLM 배치 채점 완료: {time.time() - t_scoring_start:.2f}초")
     
     # 결과 평탄화 (Flatten)
     flat_sentiment_results = [item for sublist in batch_results for item in sublist]
@@ -318,4 +350,175 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
     
     print(f"\n✅ [Scoring Node v4] 스코어링 완료: {len(analyzed_results)}개 음식점")
     
-    return {"scored_results": analyzed_results}
+    # ========================================
+    # [v5] 코스 생성 (Weighted Sampling + Exploration Factor)
+    # 문제: 기존 Top-N 방식은 매번 같은 장소만 추천 (결정적 스코어링)
+    # 해결: 상위권 후보군에서 가중 확률 샘플링으로 다양성 확보
+    # ========================================
+    themes = state.get("themes", ["맛집", "카페", "힐링"])
+    places_per_course = 4
+
+    # 테마별 키워드 매핑 (테마에 맞는 장소 우선 선택)
+    theme_keywords = {
+        "데이트": ["데이트", "분위기", "로맨틱", "감성", "커플"],
+        "맛집": ["맛집", "맛있", "인생맛집", "JMT", "존맛"],
+        "카페": ["카페", "디저트", "커피", "베이커리"],
+        "디저트": ["디저트", "케이크", "빙수", "달콤"],
+        "뷰맛집": ["뷰", "전망", "야경", "통유리", "탁트인"],
+        "힐링": ["힐링", "조용", "편안", "휴식"],
+        "가성비": ["가성비", "저렴", "푸짐", "합리적"],
+    }
+
+    # Exploration 설정
+    CANDIDATE_POOL_SIZE = 10  # 상위 N개 후보군에서 샘플링 (기존: 1등만 선택)
+    EXPLORATION_WEIGHT = 0.4  # 랜덤 노이즈 비율 (0=결정적, 1=완전랜덤)
+
+    generated_courses = []
+    used_place_ids = set()  # 코스 간 중복 방지
+
+    for theme_idx, theme in enumerate(themes[:3]):
+        keywords = theme_keywords.get(theme, [theme])
+
+        # 테마에 맞는 장소 점수 부여
+        scored_for_theme = []
+        for item in analyzed_results:
+            if item.get("place", {}).get("id") in used_place_ids:
+                continue
+
+            place = item.get("place", {})
+            base_score = item.get("score", 0)
+
+            # 테마 매칭 보너스 (가중치 강화: 기존 0.5 → 2.0)
+            theme_bonus = 0
+            reason_text = item.get("score_breakdown", {}).get("sentiment_summary", "")
+            place_keywords = place.get("keywords", {})
+
+            matched_kw = set()
+            for kw in keywords:
+                if kw in reason_text and kw not in matched_kw:
+                    theme_bonus += 2.0
+                    matched_kw.add(kw)
+                for v in place_keywords.values():
+                    if isinstance(v, str) and kw in v and kw not in matched_kw:
+                        theme_bonus += 1.5
+                        matched_kw.add(kw)
+                    elif isinstance(v, list):
+                        for item_v in v:
+                            if kw in str(item_v) and kw not in matched_kw:
+                                theme_bonus += 1.0
+                                matched_kw.add(kw)
+
+            # Exploration Factor: 점수에 랜덤 노이즈 추가
+            noise = random.uniform(0, EXPLORATION_WEIGHT * base_score) if base_score > 0 else 0
+
+            scored_for_theme.append({
+                **item,
+                "theme_score": base_score + theme_bonus + noise
+            })
+
+        # 테마 점수순 정렬
+        scored_for_theme.sort(key=lambda x: x["theme_score"], reverse=True)
+
+        # Weighted Sampling: 상위 후보군에서 가중 확률로 선택
+        selected_places = []
+        candidates = [c for c in scored_for_theme if c.get("place", {}).get("id") not in used_place_ids]
+        pool = candidates[:CANDIDATE_POOL_SIZE]
+
+        while len(selected_places) < places_per_course and pool:
+            # 점수를 확률 가중치로 변환 (softmax-like)
+            scores = [max(c["theme_score"], 0.1) for c in pool]
+            total = sum(scores)
+            weights = [s / total for s in scores]
+
+            # 가중 확률 샘플링
+            chosen = random.choices(pool, weights=weights, k=1)[0]
+            place = chosen.get("place", {})
+            place_id = place.get("id")
+
+            if place_id and place_id not in used_place_ids:
+                used_place_ids.add(place_id)
+
+                base_reason = chosen.get("score_breakdown", {}).get("sentiment_summary", "")
+                theme_context = {
+                    "데이트": "연인과 함께하기 좋은 곳입니다.",
+                    "맛집": "맛집 탐방에 빠질 수 없는 곳입니다.",
+                    "카페": "커피 한 잔의 여유를 즐기기 좋습니다.",
+                    "디저트": "달콤한 디저트를 즐기기에 완벽합니다.",
+                    "뷰맛집": "탁 트인 전망과 함께 즐기기 좋습니다.",
+                    "힐링": "조용히 힐링하기 좋은 공간입니다.",
+                    "가성비": "가성비 좋게 즐길 수 있습니다.",
+                }
+                context_suffix = theme_context.get(theme, f"{theme}에 어울리는 곳입니다.")
+
+                if base_reason and len(base_reason) >= 10:
+                    reason = f"{base_reason[:80]}. {context_suffix}"
+                else:
+                    reason = f"종합 점수 {chosen.get('score', 0)}점으로 {context_suffix}"
+
+                selected_places.append({
+                    "id": f"p{len(selected_places)+1}",
+                    "name": place.get("name", "알 수 없음"),
+                    "type": _infer_place_type(place),
+                    "lat": place.get("lat", 0),
+                    "lng": place.get("lng", 0),
+                    "reason": reason[:120]
+                })
+
+            pool.remove(chosen)
+            # 후보군 보충 (pool이 줄면 다음 순위에서 채움)
+            next_idx = CANDIDATE_POOL_SIZE + len(selected_places)
+            if next_idx < len(candidates) and len(pool) < CANDIDATE_POOL_SIZE // 2:
+                pool.append(candidates[next_idx])
+
+        # 예산 계산 (Dynamic Budget)
+        total_budget = 0
+        price_map = {
+            "PRICE_LEVEL_FREE": 0, "PRICE_LEVEL_INEXPENSIVE": 8000,
+            "PRICE_LEVEL_MODERATE": 15000, "PRICE_LEVEL_EXPENSIVE": 30000,
+            "PRICE_LEVEL_VERY_EXPENSIVE": 50000, "": 12000
+        }
+        for item in analyzed_results:
+            p = item.get("place", {})
+            if p.get("name") in [sp["name"] for sp in selected_places]:
+                total_budget += price_map.get(p.get("price_level", ""), 12000)
+        budget_str = f"약 {total_budget:,}원" if total_budget > 0 else "약 50,000원"
+
+        course = {
+            "course_id": theme_idx + 1,
+            "course_name": f"{theme} 코스",
+            "course_description": f"'{theme}' 테마에 맞춰 엄선된 {len(selected_places)}곳을 추천합니다.",
+            "places": selected_places,
+            "total_budget": budget_str
+        }
+        generated_courses.append(course)
+        print(f"[Scoring] 📍 코스 {theme_idx+1} '{theme}' 생성 완료 ({len(selected_places)}개 장소)")
+
+    print(f"✅ [Scoring Node v5] 코스 생성 완료: {len(generated_courses)}개 코스 (Exploration Factor 적용)")
+    
+    return {
+        "scored_results": analyzed_results,
+        "generated_courses": generated_courses  # 직접 코스 반환!
+    }
+
+
+def _infer_place_type(place: dict) -> str:
+    """장소 타입 추론"""
+    name = place.get("name", "").lower()
+    keywords = place.get("keywords", {})
+    
+    # 키워드에서 타입 추론
+    menu_type = keywords.get("menu_type", "")
+    if isinstance(menu_type, str):
+        if "카페" in menu_type or "커피" in menu_type or "디저트" in menu_type:
+            return "카페"
+        if "베이커리" in menu_type or "빵" in menu_type:
+            return "베이커리"
+    
+    # 이름에서 추론
+    if "카페" in name or "커피" in name or "coffee" in name:
+        return "카페"
+    if "베이커리" in name or "빵" in name:
+        return "베이커리"
+    
+    return "식당"
+

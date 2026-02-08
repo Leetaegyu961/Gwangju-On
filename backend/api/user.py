@@ -84,9 +84,10 @@ async def update_survey(survey: SurveyResult):
             current_weights = existing_pref["preference_weights"].get("themes", {})
         
         # 설문에서 선택된 테마에 가중치 부여 (+1.0)
-        # 이미 존재하는 경우에도 강화
+        # 상한 5.0 적용하여 편향 방지 (반복 설문으로 무한 증가 방지)
         for theme in survey.themes:
-            current_weights[theme] = current_weights.get(theme, 0.0) + 1.0
+            current_val = current_weights.get(theme, 0.0) + 1.0
+            current_weights[theme] = min(5.0, current_val)
             
         # 예산 민감도 추정 (예산이 낮으면 민감도 높음)
         # budget: [min, max] (단위: 만원)

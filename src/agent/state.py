@@ -35,6 +35,15 @@ class AgentState(TypedDict):
     # 쿼리 계획 (LLM이 생성한 검색 쿼리)
     query_plan: dict | None
 
+    # [New] Vector DB 검색 결과 (Parallel Hybrid RAG)
+    vector_candidates: list | None
+    
+    # [New] Keyword 검색 결과 (Parallel Hybrid RAG - Lightweight)
+    keyword_candidates: list | None
+    
+    # [Deprecated] 이전 버전 호환성 유지 (필요 시 삭제)
+    vector_search_results: list | None
+
     # Place API 결과 저장 (가게 목록 + 리뷰)
     place_data: list | None
 
@@ -58,6 +67,13 @@ class AgentState(TypedDict):
 
     # [New] 사용자 ID (개인화 스코어링용)
     userId: str | None
+
+    # [New] Naver Blog Search 실행 여부
+    run_blog_search: bool | None
+    
+    # [New] Parallel Retrieval Candidates
+    vector_candidates: list | None
+    keyword_candidates: list | None
 
 
 

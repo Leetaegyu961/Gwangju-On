@@ -6,6 +6,7 @@ Course Generation Node
 
 from typing import Any
 import json
+import time
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -28,8 +29,8 @@ def _format_place_data(state: AgentState) -> str:
     if has_scores:
         context_parts.append("*점수가 높은 순서대로 정렬되어 있습니다.*")
     
-    # 상위 60개까지 컨텍스트에 포함 (다양성 확보를 위해 대폭 증가)
-    for idx, item in enumerate(results_data[:60], 1):
+    # 상위 30개까지 컨텍스트에 포함 (최적화: 토큰 수 절감)
+    for idx, item in enumerate(results_data[:30], 1):
         place = item.get('place', {})
         place_name = place.get('name', '알 수 없음')
         address = place.get('address', '주소 정보 없음')
@@ -156,7 +157,9 @@ async def _generate_single_course(state: AgentState, theme_idx: int) -> dict[str
 """
 
     try:
+        t_course_start = time.time()
         response = await llm.ainvoke(prompt)
+        print(f"⏱️ [Course Gen {theme_idx+1}] LLM 응답: {time.time() - t_course_start:.2f}초")
         content = response.content.strip()
         
         # JSON 파싱
@@ -179,10 +182,23 @@ async def _generate_single_course(state: AgentState, theme_idx: int) -> dict[str
 
 
 async def generate_course_1(state: AgentState) -> dict[str, Any]:
+    # Scoring에서 이미 생성했으면 스킵
+    if state.get("generated_courses"):
+        print("[Course Gen 1] ⏭️ Scoring에서 이미 생성됨 - 스킵")
+        return {"generated_courses": []}
     return await _generate_single_course(state, 0)
 
 async def generate_course_2(state: AgentState) -> dict[str, Any]:
+    # Scoring에서 이미 생성했으면 스킵
+    if state.get("generated_courses"):
+        print("[Course Gen 2] ⏭️ Scoring에서 이미 생성됨 - 스킵")
+        return {"generated_courses": []}
     return await _generate_single_course(state, 1)
 
 async def generate_course_3(state: AgentState) -> dict[str, Any]:
+    # Scoring에서 이미 생성했으면 스킵
+    if state.get("generated_courses"):
+        print("[Course Gen 3] ⏭️ Scoring에서 이미 생성됨 - 스킵")
+        return {"generated_courses": []}
     return await _generate_single_course(state, 2)
+

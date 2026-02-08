@@ -1,0 +1,1832 @@
+[
+  {
+    "case_id": 1,
+    "case_name": "동명동 맛집",
+    "user_id": "test_user_1_6eaaca81",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동에서 맛집 추천해줘",
+    "start_time": "2026-02-08T12:50:43.654379",
+    "end_time": "2026-02-08T12:51:05.665538",
+    "duration_sec": 22.01,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "카페 코스",
+        "데이트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "요시로",
+        "츠바메",
+        "연어쁘다",
+        "러블리카페",
+        "오드블랙",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "캬베츠",
+        "주식",
+        "오보에루",
+        "정희 동명점",
+        "호시정",
+        "동명동 티앗"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 2,
+    "case_name": "시내권 맛집",
+    "user_id": "test_user_2_2e2ad0a8",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "광주 시내에서 맛집 추천해줘",
+    "start_time": "2026-02-08T12:51:05.748575",
+    "end_time": "2026-02-08T12:51:29.659078",
+    "duration_sec": 23.91,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "감성 코스",
+        "노포 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "보광옥",
+        "1960백선 청원모밀",
+        "마한지",
+        "호시정",
+        "꾸다",
+        "박순자 녹두집",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "비비드",
+        "명덕식당",
+        "민속촌 광주본점",
+        "신성식당",
+        "러블리카페"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 3,
+    "case_name": "조대권 맛집",
+    "user_id": "test_user_3_bf7dcf57",
+    "survey": {
+      "region": "조대권",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "조대 근처 맛집 추천해줘",
+    "start_time": "2026-02-08T12:51:29.739500",
+    "end_time": "2026-02-08T12:51:57.237233",
+    "duration_sec": 27.5,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "가성비 코스",
+        "혼밥 코스",
+        "데이트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "진식당 1호점",
+        "덮덮밥광주조선대점",
+        "진심왕돈까스 첨단점",
+        "박순자 녹두집",
+        "뼈칼집",
+        "마한지",
+        "온천보리밥집",
+        "크림집",
+        "호양호림",
+        "면식당 전북대점",
+        "광주 수완 대형 아트카페 갤러리 고유",
+        "신성식당"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 4,
+    "case_name": "광주 전체 맛집",
+    "user_id": "test_user_4_add3f578",
+    "survey": {
+      "region": "광주 전체",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "광주 맛집 추천해줘",
+    "start_time": "2026-02-08T12:51:57.335543",
+    "end_time": "2026-02-08T12:52:24.436884",
+    "duration_sec": 27.1,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "노포 코스",
+        "데이트 코스",
+        "가성비 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "서울곱창",
+        "옥된장 상무지구점",
+        "진식당 1호점",
+        "뼈칼집",
+        "하원재",
+        "꾸다",
+        "크림집",
+        "호양호림",
+        "평화식당",
+        "나주식당",
+        "신성식당",
+        "상무초밥"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 5,
+    "case_name": "동명동 데이트",
+    "user_id": "test_user_5_7f968474",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "데이트"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        10,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동에서 데이트하기 좋은 곳 추천해줘",
+    "start_time": "2026-02-08T12:52:24.515625",
+    "end_time": "2026-02-08T12:53:00.202549",
+    "duration_sec": 35.69,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "데이트 코스",
+        "맛집 코스",
+        "카페 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "츠바메",
+        "Avvio(아비오)",
+        "요시로",
+        "캬베츠",
+        "주식",
+        "오보에루",
+        "비비드",
+        "퍼드커피",
+        "호시정",
+        "데이오프나이트",
+        "디엑스커피",
+        "아우르 광주동명본점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 6,
+    "case_name": "동명동 카페",
+    "user_id": "test_user_6_cf8d15fe",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "카페투어"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        10
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 분위기 좋은 카페 추천",
+    "start_time": "2026-02-08T12:53:00.336288",
+    "end_time": "2026-02-08T12:53:05.843623",
+    "duration_sec": 5.51,
+    "analysis": {
+      "success": true,
+      "has_courses": false,
+      "num_courses": 0,
+      "course_names": [],
+      "total_places": 0,
+      "place_names": [],
+      "has_evidence": false,
+      "response_text_length": 46
+    },
+    "error": null,
+    "response_summary": {
+      "text": "죄송해요, 여행 정보를 찾는 중에 문제가 발생했어요. 잠시 후 다시 시도해 주세요.",
+      "isDecisionPoint": false,
+      "num_evidence": 0,
+      "num_courses": 0
+    }
+  },
+  {
+    "case_id": 7,
+    "case_name": "동명동 힐링",
+    "user_id": "test_user_7_c97b32b1",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "힐링"
+      ],
+      "companions": [
+        "혼자"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동에서 조용히 힐링할 수 있는 곳",
+    "start_time": "2026-02-08T12:53:05.931211",
+    "end_time": "2026-02-08T12:53:30.374802",
+    "duration_sec": 24.44,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "힐링 코스",
+        "서점 코스",
+        "카페 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "데이오프나이트",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "캬베츠",
+        "정희 동명점",
+        "츠바메",
+        "아우르 광주동명본점",
+        "오보에루",
+        "미미원",
+        "호시정",
+        "동명동 티앗",
+        "투썸플레이스 광주동명동카페거리점",
+        "산수쌈밥동명점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 8,
+    "case_name": "동명동 가성비",
+    "user_id": "test_user_8_ec525c42",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "가성비"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        3,
+        8
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 가성비 좋은 맛집 카페",
+    "start_time": "2026-02-08T12:53:30.464272",
+    "end_time": "2026-02-08T12:54:19.192868",
+    "duration_sec": 48.73,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "가성비 코스",
+        "맛집 코스",
+        "디저트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "츠바메",
+        "산수쌈밥",
+        "퍼드커피",
+        "호시정",
+        "산수쌈밥동명점",
+        "컴피코지",
+        "데이오프나이트",
+        "첨단공원국밥 동명직영점",
+        "동명동 카페골목",
+        "캬베츠",
+        "오보에루",
+        "비비드"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 9,
+    "case_name": "혼자 여행",
+    "user_id": "test_user_9_75c4ffe1",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "힐링",
+        "맛집탐방"
+      ],
+      "companions": [
+        "혼자"
+      ],
+      "budget": [
+        5,
+        10
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "혼자 조용히 광주 여행할래",
+    "start_time": "2026-02-08T12:54:19.390126",
+    "end_time": "2026-02-08T12:54:44.146176",
+    "duration_sec": 24.76,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "힐링 코스",
+        "혼밥 코스",
+        "카페 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "다이브인커피",
+        "광주사직공원 전망타워",
+        "첨단공원국밥 동명직영점",
+        "요시로",
+        "신성식당",
+        "광주 수완 대형 아트카페 갤러리 고유",
+        "캬베츠",
+        "옥된장 상무지구점",
+        "다락 Darak Coffee",
+        "부띠크그레이어",
+        "하원재",
+        "진심왕돈까스 첨단점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 10,
+    "case_name": "연인과 여행",
+    "user_id": "test_user_10_cd7cd50a",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "데이트",
+        "맛집탐방"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        15,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "여자친구랑 광주 데이트 코스 짜줘",
+    "start_time": "2026-02-08T12:54:44.241699",
+    "end_time": "2026-02-08T12:55:07.605950",
+    "duration_sec": 23.36,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "데이트 코스",
+        "맛집 코스",
+        "감성 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "양림동 역사문화마을",
+        "크림집",
+        "테이트모던(Tate Modern)",
+        "드로잉카페 헨젤",
+        "카페하논",
+        "수완지구폼",
+        "호양호림",
+        "캬베츠",
+        "프로머스",
+        "광주시립미술관",
+        "츠바메",
+        "장소"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 11,
+    "case_name": "친구와 여행",
+    "user_id": "test_user_11_65609fcc",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "맛집탐방",
+        "놀거리"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        10,
+        20
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "친구들이랑 광주에서 놀 곳 추천",
+    "start_time": "2026-02-08T12:55:07.693842",
+    "end_time": "2026-02-08T12:55:13.633628",
+    "duration_sec": 5.94,
+    "analysis": {
+      "success": true,
+      "has_courses": false,
+      "num_courses": 0,
+      "course_names": [],
+      "total_places": 0,
+      "place_names": [],
+      "has_evidence": false,
+      "response_text_length": 46
+    },
+    "error": null,
+    "response_summary": {
+      "text": "죄송해요, 여행 정보를 찾는 중에 문제가 발생했어요. 잠시 후 다시 시도해 주세요.",
+      "isDecisionPoint": false,
+      "num_evidence": 0,
+      "num_courses": 0
+    }
+  },
+  {
+    "case_id": 12,
+    "case_name": "가족 여행",
+    "user_id": "test_user_12_f03aeba2",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "힐링",
+        "맛집탐방"
+      ],
+      "companions": [
+        "가족"
+      ],
+      "budget": [
+        20,
+        40
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "부모님 모시고 광주 가족 여행 코스",
+    "start_time": "2026-02-08T12:55:13.724531",
+    "end_time": "2026-02-08T12:55:50.443831",
+    "duration_sec": 36.72,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "힐링 코스",
+        "맛집 코스",
+        "문화 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "한정식봄꽃",
+        "호양호림",
+        "나물꽃필무렵",
+        "파세아르",
+        "다온퓨전한정식",
+        "암브로시아",
+        "레몬테라스",
+        "미식가 이모카세 첨단직영점",
+        "옥된장 상무지구점",
+        "하원재",
+        "카페1890",
+        "식당 해이리 첨단본점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 13,
+    "case_name": "초저예산",
+    "user_id": "test_user_13_32954f10",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "가성비"
+      ],
+      "companions": [
+        "혼자"
+      ],
+      "budget": [
+        1,
+        5
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "만원으로 동명동 즐기기",
+    "start_time": "2026-02-08T12:55:50.820293",
+    "end_time": "2026-02-08T12:56:23.740412",
+    "duration_sec": 32.92,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "가성비 코스",
+        "산책 코스",
+        "소품 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "오리엔스",
+        "츠바메",
+        "산수쌈밥",
+        "첨단공원국밥 동명직영점",
+        "미미원",
+        "동명동 카페골목",
+        "오보에루",
+        "프라임픽(PRPK)",
+        "캬베츠",
+        "퍼드커피",
+        "포카포카",
+        "장소"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 14,
+    "case_name": "중간 예산",
+    "user_id": "test_user_14_121fb384",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        10,
+        20
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "적당한 가격대로 동명동 맛집 코스",
+    "start_time": "2026-02-08T12:56:23.866871",
+    "end_time": "2026-02-08T12:56:48.588678",
+    "duration_sec": 24.72,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "가성비 코스",
+        "맛집 코스",
+        "디저트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "비비드",
+        "산수쌈밥",
+        "츠바메",
+        "스시야스라기",
+        "호시정",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "오보에루",
+        "미미원",
+        "동명동 카페골목",
+        "데이오프나이트",
+        "캬베츠",
+        "포카포카"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 15,
+    "case_name": "고급 코스",
+    "user_id": "test_user_15_7c541b42",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "데이트"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        30,
+        50
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "특별한 날 동명동 고급 레스토랑 코스",
+    "start_time": "2026-02-08T12:56:48.684046",
+    "end_time": "2026-02-08T12:56:53.830668",
+    "duration_sec": 5.15,
+    "analysis": {
+      "success": true,
+      "has_courses": false,
+      "num_courses": 0,
+      "course_names": [],
+      "total_places": 0,
+      "place_names": [],
+      "has_evidence": false,
+      "response_text_length": 46
+    },
+    "error": null,
+    "response_summary": {
+      "text": "죄송해요, 여행 정보를 찾는 중에 문제가 발생했어요. 잠시 후 다시 시도해 주세요.",
+      "isDecisionPoint": false,
+      "num_evidence": 0,
+      "num_courses": 0
+    }
+  },
+  {
+    "case_id": 16,
+    "case_name": "맛집+카페",
+    "user_id": "test_user_16_6354e611",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방",
+        "카페투어"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        10,
+        20
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동에서 맛집 갔다가 카페 가는 코스",
+    "start_time": "2026-02-08T12:56:53.907033",
+    "end_time": "2026-02-08T12:57:20.070753",
+    "duration_sec": 26.16,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "디저트 코스",
+        "데이트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "동명동 티앗",
+        "산수쌈밥동명점",
+        "호시정",
+        "비비드",
+        "동명동 카페골목",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "캬베츠",
+        "주식",
+        "츠바메",
+        "장소",
+        "러블리카페",
+        "아우르 광주동명본점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 17,
+    "case_name": "데이트+포토존",
+    "user_id": "test_user_17_65382c0e",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "데이트",
+        "포토존"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        10,
+        25
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "사진 찍기 좋은 데이트 코스 추천",
+    "start_time": "2026-02-08T12:57:20.184306",
+    "end_time": "2026-02-08T12:57:51.358664",
+    "duration_sec": 31.17,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "포토존 코스",
+        "감성 코스",
+        "전시 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "어니언 성수점",
+        "아쿠아산타acqua santa Coffee & Cake Cafe | 聖水カフェ | 圣水咖啡馆",
+        "포인트 오브 뷰",
+        "성수연방",
+        "커스텀필름 성수 셀프사진관",
+        "포틀러 POTLER",
+        "까치화방 카페 성수점 CACHI CAFE SEONGSU 聖水駅カフェ 圣水站咖啡厅",
+        "미디엄스톤",
+        "플라츠2",
+        "노틀던",
+        "오버도즈 도넛앤커피 (OVDZ DONUT)",
+        "성수동 대림창고 갤러리"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 18,
+    "case_name": "힐링+맛집",
+    "user_id": "test_user_18_62959303",
+    "survey": {
+      "region": "조대권",
+      "themes": [
+        "힐링",
+        "맛집탐방"
+      ],
+      "companions": [
+        "혼자"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "조용한 곳에서 맛있는 거 먹고 싶어",
+    "start_time": "2026-02-08T12:57:51.441148",
+    "end_time": "2026-02-08T12:58:48.936741",
+    "duration_sec": 57.5,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "힐링 코스",
+        "미식 코스",
+        "여유 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "MOSS(모스)",
+        "만리재 비스트로 별관",
+        "틴서울 tiiin seoul",
+        "동화고옥 서울점(Bloom in the Palace)",
+        "희릿",
+        "리제로 서울 REZERO SEOUL",
+        "사직커피",
+        "내자상회",
+        "브레라 레스토랑",
+        "랑트 연남",
+        "조용한저녁",
+        "홍대 카페 놀거리 ㅎㄷ카페 | Seoul best coffee hongdae cafe | 韓国カフェ | 弘大カフェ| コーヒー"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 19,
+    "case_name": "디저트+카페",
+    "user_id": "test_user_19_1d31777a",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "디저트",
+        "카페투어"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 디저트 카페 투어",
+    "start_time": "2026-02-08T12:58:49.099803",
+    "end_time": "2026-02-08T12:59:09.777793",
+    "duration_sec": 20.68,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "디저트 코스",
+        "감성 코스",
+        "힐링 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "물흐르듯",
+        "소쿱",
+        "호시정",
+        "티소하",
+        "데이오프나이트",
+        "코코로나인",
+        "물고기 커피 로스터스 (Pisces Coffee Roasters)",
+        "한옥카페주연",
+        "카페 진정성",
+        "데일리오아시스,광주점",
+        "커피로드뷰 광주동명점",
+        "모드니"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 20,
+    "case_name": "한식 위주",
+    "user_id": "test_user_20_df546dd5",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "가족"
+      ],
+      "budget": [
+        15,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "광주 한식 맛집 추천해줘 특히 국밥이나 한정식",
+    "start_time": "2026-02-08T12:59:09.876097",
+    "end_time": "2026-02-08T12:59:58.497174",
+    "duration_sec": 48.62,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "국밥 코스",
+        "한정식 코스",
+        "노포 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "동국",
+        "별미콩나물국밥집",
+        "영명국밥",
+        "첨단공원국밥 동명직영점",
+        "첨단공원국밥 월계점",
+        "한정식봄꽃",
+        "신성식당",
+        "보향미",
+        "옥된장 상무지구점",
+        "한마음포차",
+        "전주24시참편한콩나물국밥",
+        "콩두레콩나물국밥"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 21,
+    "case_name": "야경 코스",
+    "user_id": "test_user_21_89cfaab5",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "데이트",
+        "뷰맛집"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        15,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "야경 보면서 저녁 먹을 수 있는 곳",
+    "start_time": "2026-02-08T12:59:58.610979",
+    "end_time": "2026-02-08T13:00:36.571511",
+    "duration_sec": 37.96,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "데이트 코스",
+        "루프탑 코스",
+        "한강 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "레스토랑괴르츠",
+        "모나크 비스트로",
+        "레스토랑 아이오유",
+        "르다 (Le Da)",
+        "무니",
+        "아스론가",
+        "블레스 브런치바",
+        "한강뷰당산",
+        "언더바서울 Underbar Seoul",
+        "어슬서울",
+        "428 레스토랑",
+        "루프808"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 22,
+    "case_name": "브런치 코스",
+    "user_id": "test_user_22_71748d38",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "카페투어",
+        "데이트"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        10,
+        20
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 브런치 카페 추천해줘",
+    "start_time": "2026-02-08T13:00:36.815597",
+    "end_time": "2026-02-08T13:01:03.676882",
+    "duration_sec": 26.86,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "브런치 코스",
+        "감성 코스",
+        "여유 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "요켈",
+        "캬베츠",
+        "오보에루",
+        "정희 동명점",
+        "비비드",
+        "미미원",
+        "카페아베크투와",
+        "츠바메",
+        "러블리카페",
+        "아우르 광주동명본점",
+        "오드블랙",
+        "동명동 티앗"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 23,
+    "case_name": "술집 코스",
+    "user_id": "test_user_23_ecb500b5",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "맛집탐방",
+        "놀거리"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        15,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "광주 시내 저녁 먹고 술 한잔 할 수 있는 코스",
+    "start_time": "2026-02-08T13:01:03.809601",
+    "end_time": "2026-02-08T13:01:38.300861",
+    "duration_sec": 34.49,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "술집 코스",
+        "데이트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "사랑각",
+        "돈부리바쇼유메노덴",
+        "마한지",
+        "미미원",
+        "숙수",
+        "공명",
+        "츠바메",
+        "캬베츠",
+        "동명공원",
+        "오보에루",
+        "정희 동명점",
+        "오늘, 와인한잔 광주동명점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 24,
+    "case_name": "20대 여성",
+    "user_id": "test_user_24_6cb1d496",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "포토존",
+        "디저트"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ],
+      "gender": "female",
+      "age": "20s"
+    },
+    "prompt": "20대 여자 친구들끼리 갈만한 동명동 핫플",
+    "start_time": "2026-02-08T13:01:38.482002",
+    "end_time": "2026-02-08T13:02:00.389621",
+    "duration_sec": 21.91,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "디저트 코스",
+        "포토존 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "티소하",
+        "물흐르듯",
+        "동명동 티앗",
+        "퍼드커피",
+        "호시정",
+        "돈부리바쇼유메노덴",
+        "동명동 카페골목",
+        "캬베츠",
+        "오보에루",
+        "정희 동명점",
+        "비비드",
+        "미미원"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 25,
+    "case_name": "30대 남성",
+    "user_id": "test_user_25_bcb381f1",
+    "survey": {
+      "region": "시내권",
+      "themes": [
+        "맛집탐방",
+        "가성비"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        10,
+        20
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ],
+      "gender": "male",
+      "age": "30s"
+    },
+    "prompt": "30대 남자들 모임 장소 추천",
+    "start_time": "2026-02-08T13:02:00.598822",
+    "end_time": "2026-02-08T13:02:58.975888",
+    "duration_sec": 58.38,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "술집 코스",
+        "액티비티 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "강남역 고깃집 강남 돼지상회 무한리필 | Gangnam Korean bbq All you can eat | サムギョプサル | 焼肉 | 烤肉",
+        "다몽집 / damongzip",
+        "강삼가든",
+        "이자카야 고코",
+        "육미안 강남점 / yookmian gangnam",
+        "전설의우대갈비 강남 ( Legendary Ribs Gangnam )",
+        "고기꾼김춘배 강남점",
+        "센야 본점",
+        "야키토리 나루토 강남점",
+        "강남역 맛집 화설 강남직영점 l Korean BBQ HWASEOL Gangnam Main Branch",
+        "이자카야 나무 강남점",
+        "라인볼링센터 강남점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 26,
+    "case_name": "40대 부부",
+    "user_id": "test_user_26_62f7af04",
+    "survey": {
+      "region": "광주 전체",
+      "themes": [
+        "힐링",
+        "맛집탐방"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        20,
+        40
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ],
+      "gender": "female",
+      "age": "40s"
+    },
+    "prompt": "40대 부부 광주 나들이 코스",
+    "start_time": "2026-02-08T13:02:59.300019",
+    "end_time": "2026-02-08T13:03:26.449654",
+    "duration_sec": 27.15,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "힐링 코스",
+        "미식 코스",
+        "산책 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "송정공원",
+        "광주사직공원 전망타워",
+        "옥된장 상무지구점",
+        "오라운트 로스터리 카페",
+        "쌍암공원",
+        "원당산공원",
+        "운천호수공원",
+        "갤러리24",
+        "크림집",
+        "미식가 이모카세 첨단직영점",
+        "커볶",
+        "이에스씨투"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 27,
+    "case_name": "짧은 코스 (3곳)",
+    "user_id": "test_user_27_2aa99059",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 빠르게 3곳만 돌 수 있는 코스",
+    "start_time": "2026-02-08T13:03:26.540440",
+    "end_time": "2026-02-08T13:03:51.956844",
+    "duration_sec": 25.42,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "카페 코스",
+        "소품샵 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "돈부리바쇼유메노덴",
+        "비비드",
+        "데이오프나이트",
+        "캬베츠",
+        "프라임픽(PRPK)",
+        "동명동 티앗",
+        "호시정",
+        "디엑스커피",
+        "오보에루",
+        "정희 동명점",
+        "미미원",
+        "츠바메"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 28,
+    "case_name": "긴 코스 (5곳)",
+    "user_id": "test_user_28_18b502d0",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방",
+        "카페투어"
+      ],
+      "companions": [
+        "친구"
+      ],
+      "budget": [
+        10,
+        25
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동 하루종일 돌아볼 코스 5곳",
+    "start_time": "2026-02-08T13:03:52.069355",
+    "end_time": "2026-02-08T13:04:15.655714",
+    "duration_sec": 23.59,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "카페 코스",
+        "문화 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "산수쌈밥동명점",
+        "캬베츠",
+        "오보에루",
+        "정희 동명점",
+        "러블리카페",
+        "비비드",
+        "데이오프나이트",
+        "디엑스커피",
+        "츠바메",
+        "미미원",
+        "아우르 광주동명본점",
+        "투썸플레이스 광주동명동카페거리점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 29,
+    "case_name": "테마 없음",
+    "user_id": "test_user_29_c390e39e",
+    "survey": {
+      "region": "시내권",
+      "themes": [],
+      "companions": [
+        "혼자"
+      ],
+      "budget": [
+        5,
+        15
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "광주 아무데나 좋으니 추천해줘",
+    "start_time": "2026-02-08T13:04:15.741586",
+    "end_time": "2026-02-08T13:04:38.798275",
+    "duration_sec": 23.06,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "맛집 코스",
+        "카페 코스",
+        "힐링 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "진식당 1호점",
+        "광주사직공원 전망타워",
+        "커볶",
+        "하원재",
+        "카페304 (상무본점)",
+        "크림집",
+        "오라운트 로스터리 카페",
+        "송산유원지",
+        "테이트모던(Tate Modern)",
+        "광주 수완 대형 아트카페 갤러리 고유",
+        "옥된장 상무지구점",
+        "칸세이스시 본점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  },
+  {
+    "case_id": 30,
+    "case_name": "매우 구체적",
+    "user_id": "test_user_30_56c3ed59",
+    "survey": {
+      "region": "동명동",
+      "themes": [
+        "맛집탐방",
+        "데이트",
+        "카페투어"
+      ],
+      "companions": [
+        "연인"
+      ],
+      "budget": [
+        15,
+        30
+      ],
+      "courses": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    },
+    "prompt": "동명동에서 점심은 파스타, 디저트는 케이크, 저녁은 일식으로 코스 짜줘",
+    "start_time": "2026-02-08T13:04:38.879001",
+    "end_time": "2026-02-08T13:05:09.641103",
+    "duration_sec": 30.76,
+    "analysis": {
+      "success": true,
+      "has_courses": true,
+      "num_courses": 3,
+      "course_names": [
+        "미식 코스",
+        "감성 코스",
+        "데이트 코스"
+      ],
+      "total_places": 12,
+      "place_names": [
+        "츠바메",
+        "빠리꼬미",
+        "요시로",
+        "노지",
+        "주식",
+        "오보에루",
+        "캬베츠",
+        "코너 베이크샵 (cornerbakeshop)",
+        "호시정",
+        "포카포카",
+        "피제리아 라그로소",
+        "데일리오아시스,광주점"
+      ],
+      "has_evidence": true,
+      "response_text_length": 25
+    },
+    "error": null,
+    "response_summary": {
+      "text": "3가지 테마의 맞춤형 코스를 추천해 드립니다.",
+      "isDecisionPoint": true,
+      "num_evidence": 4,
+      "num_courses": 3
+    }
+  }
+]

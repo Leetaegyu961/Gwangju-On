@@ -332,25 +332,29 @@ class PersonalizedScoringSystem(RestaurantScoringSystem):
     def calculate_preference_score(self, place_tags: List[str]) -> float:
         """
         Soft Boosting 알고리즘: 태그 가중치 합을 Tanh 함수로 정규화
+        편향 방지: 같은 pref_tag가 여러 place_tags와 중복 매칭되는 것을 방지
         """
         if not self.weights and not self.session_weights:
             return 0.0
-            
+
         raw_score = 0.0
-        
-        # 1. Long-term Profile Weights
+
+        # 1. Long-term Profile Weights (중복 매칭 방지)
+        matched_prefs = set()
         for tag in place_tags:
             for pref_tag, weight in self.weights.items():
-                if pref_tag in tag or tag in pref_tag:
+                if pref_tag not in matched_prefs and (pref_tag in tag or tag in pref_tag):
                     raw_score += weight
-                    
-        # 2. Session Context Weights (Real-time Boost)
-        # 사용자가 방금 언급한 테마는 더 강력하게 반영 (+2.0)
+                    matched_prefs.add(pref_tag)
+
+        # 2. Session Context Weights (Real-time Boost, 중복 매칭 방지)
+        matched_session = set()
         for tag in place_tags:
             for session_tag in self.session_weights:
-                if session_tag in tag or tag in session_tag:
+                if session_tag not in matched_session and (session_tag in tag or tag in session_tag):
                     raw_score += 2.0
-        
+                    matched_session.add(session_tag)
+
         # Soft Boosting: 점수가 무한정 커지지 않도록 tanh 적용
         # raw_score가 2.0이면 tanh(2.0) ~= 0.96 -> 0.96 * MAX_BOOST(2.0) = 1.92점
         soft_score = math.tanh(raw_score) * self.MAX_BOOST
@@ -358,33 +362,53 @@ class PersonalizedScoringSystem(RestaurantScoringSystem):
 
     def calculate_final_score(self, enriched_item: Dict) -> Tuple[float, Dict]:
         """
-        기본 품질 점수 + 개인화 가산점
+        기본 품질 점수 + 개인화 가산점 + 가격 민감도 보정
         """
         # 1. 기본 품질 점수 (Base Score) - 부모 클래스 메서드 사용
         base_score, base_breakdown = self.calculate_score(enriched_item)
-        
+
         # 2. 태그 수집
         place = enriched_item.get("place", {})
-        # Google Types
         types = place.get("types", [])
-        # LLM 분석 결과 키워드 (scoring_node에서 주입 가정)
         llm_keywords = enriched_item.get("llm_keywords", [])
-        # 블로그 키워드 (있다면)
-        blog_keywords = []
-        for blog in enriched_item.get("blogs", []):
-            # 간단히 제목/본문에서 추출하거나 미리 추출된 키워드 사용
-            pass
-            
-        all_tags = types + llm_keywords
-        
+
+        # Vector DB에서 가져온 키워드도 태그로 활용
+        place_keywords = place.get("keywords", {})
+        keyword_tags = []
+        for v in place_keywords.values():
+            if isinstance(v, str) and v:
+                keyword_tags.append(v)
+            elif isinstance(v, list):
+                keyword_tags.extend([str(item) for item in v if item])
+
+        all_tags = types + llm_keywords + keyword_tags
+
         # 3. 개인화 가산점 계산
         preference_boost = self.calculate_preference_score(all_tags)
-        
-        # 4. 최종 점수 합산
-        final_score = base_score + preference_boost
-        
+
+        # 4. 가격 민감도 보정 (price_sensitivity)
+        price_sensitivity = self.user_profile.get("preference_weights", {}).get("price_sensitivity", 0.5)
+        price_level = place.get("price_level", "")
+
+        price_adjustment = 0.0
+        if price_sensitivity >= 0.7:
+            # 가격에 민감한 사용자: 비싼 곳 페널티, 저렴한 곳 보너스
+            if price_level in ("PRICE_LEVEL_EXPENSIVE", "PRICE_LEVEL_VERY_EXPENSIVE"):
+                price_adjustment = -0.5
+            elif price_level == "PRICE_LEVEL_INEXPENSIVE":
+                price_adjustment = 0.3
+        elif price_sensitivity <= 0.3:
+            # 가격에 둔감한 사용자: 고급 레스토랑 약간 보너스
+            if price_level in ("PRICE_LEVEL_EXPENSIVE", "PRICE_LEVEL_VERY_EXPENSIVE"):
+                price_adjustment = 0.2
+
+        # 5. 최종 점수 합산
+        final_score = base_score + preference_boost + price_adjustment
+
         # 점수 내역 업데이트
         base_breakdown["preference_boost"] = preference_boost
+        base_breakdown["price_adjustment"] = price_adjustment
+        base_breakdown["price_sensitivity"] = price_sensitivity
         base_breakdown["final_total"] = round(final_score, 2)
-        
+
         return round(final_score, 2), base_breakdown

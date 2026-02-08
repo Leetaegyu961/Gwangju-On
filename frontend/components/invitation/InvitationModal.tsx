@@ -23,6 +23,12 @@ const InvitationModal: React.FC<InvitationModalProps> = ({ isOpen, onClose, invi
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-md animate-fade-in">
             <div className="w-full max-w-lg p-6 relative">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-10"
+                >
+                    <X size={24} />
+                </button>
 
                 {/* Header */}
                 <div className="text-center text-white mb-8">

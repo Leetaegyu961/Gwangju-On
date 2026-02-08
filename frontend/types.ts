@@ -55,6 +55,9 @@ export interface SavedCourse {
   totalBudget: string;
   createdAt: string;
   description: string;
+  is_selected?: boolean;
+  timeline_generated?: boolean;
+  groupId?: string;
 }
 
 // 코스 정보 (3개 코스 선택용)

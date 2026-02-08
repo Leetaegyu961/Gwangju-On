@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from fastapi import FastAPI
@@ -48,6 +49,11 @@ origins = [
     "http://127.0.0.1:3000",
 ]
 
+# Cloud Run 배포 시 프론트엔드 URL 허용 (환경변수 FRONTEND_URL로 주입)
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -68,12 +74,14 @@ app.include_router(tmap.router, prefix="/api")  # Tmap POI Search
 app.include_router(auth.router, prefix="/api")
 app.include_router(journey.router, prefix="/api")
 app.include_router(tasting_note.router, prefix="/api")
-from backend.api import search
-app.include_router(search.router, prefix="/api")
 
 # Invitation System
 from backend.api import invitation
 app.include_router(invitation.router, prefix="/api")
+
+# Session System
+from backend.api import session
+app.include_router(session.router, prefix="/api")
 
 @app.get("/")
 def read_root():
