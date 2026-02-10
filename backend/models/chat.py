@@ -31,3 +31,11 @@ class ChatResponse(BaseModel):
     evidenceCards: Optional[List[EvidenceCard]] = None
     allCourses: Optional[List[CourseInfo]] = None  # 3개 코스 전체
     status: Optional[str] = "done"
+
+class ValidateRequest(BaseModel):
+    message: str
+
+class ValidateResponse(BaseModel):
+    isValid: bool
+    message: str
+    suggestions: Optional[List[str]] = None

@@ -1,0 +1,7563 @@
+{
+  "region": "seogu_양동·광천·농성권",
+  "metadata": {
+    "model": "gemini-2.0-flash",
+    "total_places": 621,
+    "elapsed_seconds": 79.5
+  },
+  "places": [
+    {
+      "place_name": "지하",
+      "keywords": {
+        "menu_type": [
+          "중식",
+          "도너츠",
+          "홍어"
+        ],
+        "signature_menu": [
+          "찹쌀도너츠",
+          "꽈배기",
+          "짜장면"
+        ],
+        "price_info": [
+          "짜장면 3,000원"
+        ],
+        "ambiance": [
+          "노포 느낌"
+        ],
+        "interior": [],
+        "facilities": [
+          "양동시장 공영주차장 (지하주차장 1시간 30분 무료, 지상주차장 30분 무료)",
+          "주차장 없음 (지하식당)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주광역시 서구 양동 350번지 일원 (양동3구역 재개발)",
+          "광주 서구 천변과로 238 (양동시장)",
+          "광주 서구 천변좌로 154 (지하식당)",
+          "양동시장 주변 광주천 옆 (지하식당)",
+          "광주광역시 서구 양동 302번지 일원 (양동3구역 재개발)"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매장별로 상이 (양동시장)",
+          "매달 1, 3, 5번째 수요일 정기휴무 (양동시장)",
+          "월 ~ 토 10:30 ~ 20:00 (지하식당)",
+          "일 10:30 ~ 19:00 (지하식당)",
+          "격주 수요일 정기 휴무 (지하식당)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "쯔양 방문 (지하식당)",
+          "전라남도권에서 가장 큰 시장 (양동시장)",
+          "양동3구역 재개발: 공동주택 13개동, 총 1,218세대 (분양세대 약 1114세대, 임대주택 약 104세대) 지하3~지상 28층 규모",
+          "양동3구역 재개발 총 세대수 1,218세대에서 1,212세대로 6세대 감소",
+          "양동3구역 재개발 주차대수 1,592대 (세대당 1.31대)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "영창",
+      "keywords": {
+        "menu_type": [
+          "불고기 백반"
+        ],
+        "signature_menu": [
+          "불고기 백반"
+        ],
+        "price_info": [
+          "불고기 백반 1인분 12,000원 (2인 이상 주문)"
+        ],
+        "ambiance": [
+          "레트로 감성",
+          "노포 감성"
+        ],
+        "interior": [],
+        "facilities": [
+          "양동시장 공영주차장 이용 가능",
+          "양동 닭전길시장 공영주차장 이용 가능",
+          "양동전통시장연합공영주차장 이용 가능"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 양동시장 내",
+          "광주 서구 천변좌로 224-1 복개상가 2층",
+          "양동시장 3번 중앙통로 계단 이용"
+        ],
+        "accessibility": [
+          "양동시장역 1번 출구",
+          "지하철 이용 가능",
+          "광주송정역에서 지하철로 이동 가능"
+        ],
+        "hours": [
+          "오전 11시 ~ 17시 30분",
+          "매주 일요일 휴무"
+        ],
+        "service": [
+          "주차권 제공 (식사 후 요청)"
+        ],
+        "policy": [],
+        "special_features": [
+          "쯔양 방문"
+        ],
+        "recommended_for": [
+          "광주 여행객",
+          "현지인 추천"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "진흥",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [
+          "뼈해장국",
+          "양동시장통닭"
+        ],
+        "price_info": [
+          "농지 매매가 454,000,000원",
+          "농지 단가 3.3㎡ 당 330,000원"
+        ],
+        "ambiance": [
+          "조용하고 차분한 공간"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 가능 (건물 1층 주차장, 공용 주차장, 골목 갓길 주차)"
+        ],
+        "bathroom": [],
+        "location": [
+          "경기도 양평군 양동면 쌍학리",
+          "광주 서구 양동 61-7 (KDB빌딩 옆)",
+          "광주 양동시장 근처",
+          "지하철 돌고개역 4번 출구 도보 2분",
+          "광주",
+          "서울 망원시장",
+          "수원 남문시장",
+          "대구 서문시장",
+          "양동면사무소 소재지 자동차 6분 거리",
+          "동양평IC 2분 거리"
+        ],
+        "accessibility": [
+          "광주 원주간 고속도로 동양평IC에서 자동차 2분 거리",
+          "2차선 도로 접함",
+          "동양평IC 2분 거리"
+        ],
+        "hours": [
+          "10:30 - 21:00",
+          "10:00~22:00 (라스트오더 21:30)",
+          "통맥축제: 16시 ~ 22시 (매주 금, 토)",
+          "통맥축제: 2024.04.19 ~ 2024.05.04 (매주 금, 토)"
+        ],
+        "service": [],
+        "policy": [
+          "브레이크 타임: 15:00 - 16:30"
+        ],
+        "special_features": [
+          "농업진흥구역",
+          "농업용 창고, 버섯재배사, 농가시설 용도",
+          "비닐하우스 시설재배 지역",
+          "통맥축제"
+        ],
+        "recommended_for": [
+          "농업용 창고",
+          "버섯 재배사 용도",
+          "비닐하우스 재배"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "대호",
+      "keywords": {
+        "menu_type": [
+          "불고기 백반(한식)",
+          "새우로제 리조또(양식)",
+          "스테이크(양식)",
+          "초계국수"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "뷰가 좋은 카페(남양주)"
+        ],
+        "interior": [],
+        "facilities": [
+          "시장 공용 주차장(광주 양동 영창식당)",
+          "족욕 시설(남양주 아쿠아필드)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 양동시장",
+          "광주 서구 양동 441, 복개상가 2층(영창식당)",
+          "남양주",
+          "전라남도"
+        ],
+        "accessibility": [
+          "복개상가 나2동 1층에서 '안성 그릇' 또는 '대호혼수'를 찾은 후 계단으로 2층 이동(영창식당)"
+        ],
+        "hours": [
+          "월~토 11:00~17:30 (라스트 오더 17:00)(영창식당)",
+          "매주 일요일 정기 휴무(영창식당)"
+        ],
+        "service": [
+          "바베큐소스, 핑크솔트, 와사비, 홀그레인 머스타드 제공(스테이크)"
+        ],
+        "policy": [],
+        "special_features": [
+          "40년 이상 된 노포 식당(영창식당)",
+          "2024년 오월광주 나눔세일"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "수일통닭",
+      "keywords": {
+        "menu_type": [
+          "치킨"
+        ],
+        "signature_menu": [
+          "반반 치킨"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "활기찬",
+          "붐비는"
+        ],
+        "interior": [
+          "2층"
+        ],
+        "facilities": [
+          "주차 가능 (양동시장 공영주차장 이용)",
+          "30분 주차권 제공 (계산 시 요청)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 천변좌로262번길 1-1",
+          "양동시장 내",
+          "양동통닭 맞은편",
+          "양동시장역 1번 출구에서 도보 5분 거리"
+        ],
+        "accessibility": [
+          "양동시장 공영주차장에서 도보 약 3분 거리"
+        ],
+        "hours": [
+          "06:00-22:30",
+          "라스트오더 22:25",
+          "휴무 없음"
+        ],
+        "service": [
+          "포장 가능",
+          "캐치테이블 이용 가능 (웨이팅 시)"
+        ],
+        "policy": [],
+        "special_features": [
+          "닭발, 닭똥집 함께 튀겨 제공",
+          "페트병 음료 판매"
+        ],
+        "recommended_for": [
+          "현지인",
+          "단골"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "1969양동통닭",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "변사또 꼬치구이",
+      "keywords": {
+        "menu_type": [
+          "꼬치구이",
+          "골뱅이소면",
+          "제육볶음",
+          "통닭",
+          "칼국수",
+          "갈치조림",
+          "육회",
+          "떡볶이",
+          "닭강정",
+          "공주밤빵",
+          "조기매운탕",
+          "생선구이",
+          "반건조 생선",
+          "햄버거"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "사랑방 느낌",
+          "활기찬 야시장 분위기"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (변사또 꼬치구이집: 매장 앞 주차 공간 없음, 주변 대로변/아파트 상가 내 주차장 이용)"
+        ],
+        "bathroom": [],
+        "location": [
+          "농성동 삼익맨션아파트 상가 (변사또 꼬치구이)",
+          "양동시장",
+          "서울 중구 남대문시장4길 21 (남대문시장)",
+          "서울 종로구 창경궁로 88 (광장시장)",
+          "광주광역시 무등산",
+          "여수 항",
+          "여객선 터미널 앞 (여수)"
+        ],
+        "accessibility": [
+          "무등산: 도심과 가까워 뚜벅이에게 좋음"
+        ],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "양동 통맥축제 개최 (10월 30일, 양동시장)",
+          "2025 여수 밤바다 불꽃 축제 개최 (11월 8일, 여수 항)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "대정회관",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "전라남도 나주시 동신대길 67",
+          "전라남도 순천시 송광면 낙수리"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "동신대학교 통학버스 무료 운행"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "난이식당",
+      "keywords": {
+        "menu_type": [
+          "막국수",
+          "만두",
+          "고기",
+          "디저트",
+          "규카츠",
+          "돈까스",
+          "마라탕",
+          "생고기"
+        ],
+        "signature_menu": [
+          "들기름막국수"
+        ],
+        "price_info": [
+          "규카츠 가격이 비쌈"
+        ],
+        "ambiance": [
+          "조용하고 아기자기한 주택들이 몰려있는 시골풍경 (일본)"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "오사카",
+          "소코아 (식당 위치)",
+          "일본"
+        ],
+        "accessibility": [
+          "라피트 이용 (오사카)"
+        ],
+        "hours": [],
+        "service": [
+          "배달"
+        ],
+        "policy": [],
+        "special_features": [
+          "일본 여행",
+          "웨이팅 (규카츠, 1시간)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "전통 나주곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동해회바다",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "선우",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "신설종합시장: 서울특별시 종로구 숭인동 206-9",
+          "광장시장: 서울특별시 종로구 예지동 2-1",
+          "종로신진시장: 서울특별시 종로구 종로5가 225-21",
+          "한일상가: 서울특별시 종로구 종로5가 314-7",
+          "청오가방도매상가 동대문종합시장: 서울특별시 종로구 종로6가 289-3",
+          "동대문종합시장D동상가: 서울특별시 종로구 종로6가 262-1",
+          "동대문종합시장 신관(동대문쇼핑타운): 서울특별시 종로구 종로 266",
+          "동대문종합시장 신관지하1층81호",
+          "동문시장㈜: 서울특별시 종로구 창신동 436-4",
+          "양동시장 (북구, 서구, 남구 중간 지점)"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "방울이와 가야금: 루트머지 공식 캐릭터가 노래하고 연기하며 국악을 알려주는 어린이 국악극",
+          "방울이와 가야금: 덩기덕쿵덕 두번째 버전",
+          "방울이와 가야금: 체험형 국악뮤지컬",
+          "루트머지: 국·공립 유치원, 어린이집, 도서관 등 공연 진행 경력 다수",
+          "에블린 솔리드 반팔 파자마 제공"
+        ],
+        "recommended_for": [
+          "아이들 (가야금이야기로 국악을 알아가고 배울 수 있도록 만든 체험형 국악뮤지컬)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "술마시기 좋은시간",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "갈매기봉",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "자미생선구이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성원",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "유미식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "복덩이 식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "순채네집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "어머나반점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "춘원",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이가네 김밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명인만두유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "덥(dub",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "강변식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "문경정 짱뚱어탕 전문점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "하오츠옛날짬뽕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "가매",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페, 봄날",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "창신식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "양지식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "예향맛집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "푸른바다",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "프라자호프",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더솥(THE 솥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "옥이반상",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "월산달빛",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "샤갈",
+      "keywords": {
+        "menu_type": [
+          "베이커리",
+          "삼겹살",
+          "에스프레소",
+          "브런치",
+          "클라이밍"
+        ],
+        "signature_menu": [
+          "두쫀쿠",
+          "생삼겹살",
+          "피에노",
+          "오네로소"
+        ],
+        "price_info": [
+          "클라이밍 일일권 2만원",
+          "티셔츠 재고떨이 10,000원"
+        ],
+        "ambiance": [
+          "깔끔한 분위기",
+          "모던한 분위기"
+        ],
+        "interior": [
+          "깔끔한 인테리어",
+          "모던한 인테리어"
+        ],
+        "facilities": [
+          "주차 가능",
+          "아기의자",
+          "지하주차장",
+          "탈의실",
+          "세족실",
+          "샤워실",
+          "삼각대 대여",
+          "대여화",
+          "초크백 대여"
+        ],
+        "bathroom": [
+          "화장실 내부 위치",
+          "화장실 남녀 분리"
+        ],
+        "location": [
+          "수완지구",
+          "쌍촌동 986-40",
+          "첨단강변로87번길 5 야스텍타워 2층",
+          "상무지구"
+        ],
+        "accessibility": [],
+        "hours": [
+          "10시 ~ 17시",
+          "17:00 ~ 03:00",
+          "11:00 - 22:00 (브레이크타임 3시-5시)"
+        ],
+        "service": [
+          "오픈 키친",
+          "인원당 음료 무료 (리뷰 작성 시)"
+        ],
+        "policy": [
+          "예약 가능 (무두 첨단점)",
+          "현장 대기 (왕솥뚜껑생삼겹살)"
+        ],
+        "special_features": [
+          "항아리보쌈 건물 2층 (무두 첨단점)",
+          "두 곳 운영 (무두 첨단점, 진월점)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "태자관 중화요리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "한국회관",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "소고기 구이"
+        ],
+        "signature_menu": [
+          "갈비탕",
+          "한우생불고기",
+          "냉면"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "차분한 분위기",
+          "품격 있는 분위기"
+        ],
+        "interior": [
+          "오픈 주방",
+          "깔끔함",
+          "쾌적함"
+        ],
+        "facilities": [
+          "주차 가능 (무료)",
+          "룸 완비"
+        ],
+        "bathroom": [],
+        "location": [
+          "서래마을",
+          "신반포역 근처",
+          "서울 서초구 사평대로18길 10 1층"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "직원 친절",
+          "위생 철저"
+        ],
+        "policy": [],
+        "special_features": [
+          "생방송투데이 수도권 갈비탕 1위",
+          "한식명인 조리"
+        ],
+        "recommended_for": [
+          "회식",
+          "가족 모임",
+          "단체"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "남도손맛",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "여수원조서대회",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "전철우 빨강냉면",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "백악관 숯불구이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고흥만민물장어",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신토불이국민동태탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "개마고원",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "별이네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "금호",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "들깨사랑칼국수전문",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "들깨칼국수",
+      "keywords": {
+        "menu_type": [
+          "닭요리",
+          "백반",
+          "한식",
+          "메밀전"
+        ],
+        "signature_menu": [
+          "양동통닭",
+          "백반",
+          "메밀전"
+        ],
+        "price_info": [
+          "양동통닭(한마리) 23,000원",
+          "백반(1인) 9,000원"
+        ],
+        "ambiance": [
+          "시장 분위기"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주광역시 서구 천변좌로 238",
+          "경기 양평군 양동면 학둔지아래길 115 1층",
+          "광주 북구 첨단",
+          "무안 일로",
+          "강진",
+          "나주",
+          "담양",
+          "화순",
+          "장흥"
+        ],
+        "accessibility": [
+          "광주 지하철 1호선 양동시장역 1번 또는 2번 출구 연결"
+        ],
+        "hours": [
+          "오전 9시부터 오후 8시까지 (점포별 상이)",
+          "월요일 11:00~15:00",
+          "수~일 11:00~19:30",
+          "화요일 정기휴무"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "100년 이상의 역사 (양동시장)",
+          "호남 지역 최대 규모의 전통 상설시장",
+          "양동통닭, 57년 운영",
+          "닭발, 닭똥집 튀김 제공 (양동통닭)",
+          "1인 백반 주문 가능 (진수식당)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "별미",
+      "keywords": {
+        "menu_type": [
+          "호떡",
+          "닭강정",
+          "국밥",
+          "통닭",
+          "치킨"
+        ],
+        "signature_menu": [
+          "씨앗호떡",
+          "올바른 닭강정",
+          "옛날통닭",
+          "후라이드 치킨",
+          "닭발 튀김",
+          "똥집 튀김(모래주머니)"
+        ],
+        "price_info": [
+          "후라이드 반 마리 주문 가능"
+        ],
+        "ambiance": [
+          "정겨운 시장 풍경",
+          "로컬 분위기"
+        ],
+        "interior": [
+          "돼지머리 장식 (입구)"
+        ],
+        "facilities": [
+          "공영주차장 (양동시장 근처)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 양동시장",
+          "광주 서구 경열로 148-1 (하나분식)",
+          "광주 서구 천변좌로 260-1 (1969양동통닭 본점)",
+          "양동시장 국밥 골목",
+          "양동시장 끄트머리"
+        ],
+        "accessibility": [
+          "대중교통 이용 용이",
+          "자가용 이용 용이",
+          "버스 정류장 근처",
+          "광주 지하철 1호선 양동시장역 2번 출구 앞"
+        ],
+        "hours": [
+          "매일 07:00 ~ 23:00 (1969양동통닭)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "노무현 대통령 방문 (하나분식)",
+          "유튜브 '또간집', '홍석천이원일' 채널 소개 (하나분식)",
+          "1969년부터 영업",
+          "tvN ‘서른, 아홉’ 등 방송 소개 (양동통닭)",
+          "56년 전통"
+        ],
+        "recommended_for": [
+          "광주 로컬 맛집 탐방",
+          "옛날 통닭 맛을 느끼고 싶은 경우"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "청해명가",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "대전 중구 보문산 카페마루자리",
+          "대전 중구 대사동",
+          "대전 동구 자양동 우송정보대학교 자리 (마야MAYA, 새마을회관, 웰빙와 세정, 이안와 성심49)",
+          "대전대학교",
+          "전남 완도군 명사십리 해변 (완도해양치유센터)",
+          "제주시"
+        ],
+        "accessibility": [],
+        "hours": [
+          "설 연휴 기간 업소별 휴무일 상이 (방문 전 전화 확인 필수)"
+        ],
+        "service": [],
+        "policy": [
+          "온누리상품권 가맹점 정보 확인 필요"
+        ],
+        "special_features": [
+          "2025년 전라남도 아파트 매매 실거래가 순위 (출처: 국토교통부 실거래가 공개시스템)",
+          "완도: 해양치유 1번지, 전복 생산량 전국 7할 차지"
+        ],
+        "recommended_for": [
+          "설 연휴 제주도 여행객"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "시골농장",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "오리요리"
+        ],
+        "signature_menu": [
+          "병어조림",
+          "등갈비찜 (등갈비 김치찜)",
+          "오리부추구이",
+          "수제쪽갈비",
+          "제육볶음",
+          "삼겹살",
+          "갈치조림"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "집밥 스타일",
+          "프라이빗 (개별 룸)"
+        ],
+        "interior": [
+          "초록 식물 장식"
+        ],
+        "facilities": [
+          "포장",
+          "배달",
+          "단체 이용 가능",
+          "예약",
+          "애견 동반 가능",
+          "주차 (협소)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 농성동 먹자골목",
+          "광주 서구 농성동 626-27",
+          "광주 서구청 근처",
+          "용인 양지면",
+          "아시아나cc 인근",
+          "경기도 용인시",
+          "경기도 광주 정온펜션 근처"
+        ],
+        "accessibility": [
+          "용인터미널에서 자차 15분",
+          "82-1번 또는 95번 버스 (배차 간격 2시간)"
+        ],
+        "hours": [
+          "영업 중",
+          "라스트 오더 21시 0분",
+          "추석 연휴 정상 영업"
+        ],
+        "service": [
+          "메뉴 외 음식 주문 가능 (문의 필요)",
+          "점심시간 혼잡 (전화 문의 권장)"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "가족 식사",
+          "회식",
+          "점심 식사 (서구청 직장인)",
+          "반려견 동반 고객",
+          "라운딩 후 식사"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "양푼이 동태탕",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "일식",
+          "탕",
+          "해산물",
+          "육개장",
+          "김치찌개",
+          "닭볶음탕",
+          "양곱창",
+          "추어탕",
+          "족발",
+          "칼국수",
+          "돈까스",
+          "해장국",
+          "민어회",
+          "동태탕",
+          "알탕"
+        ],
+        "signature_menu": [
+          "두레국수",
+          "동태탕",
+          "알탕"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 가능"
+        ],
+        "bathroom": [],
+        "location": [
+          "서울 압구정",
+          "옥련동",
+          "북창동",
+          "대방역",
+          "암사동",
+          "가양동",
+          "방배동",
+          "동부이촌동",
+          "신사동",
+          "청천동",
+          "영등포",
+          "시장역",
+          "낙성대역",
+          "인헌시장",
+          "송파역",
+          "석촌",
+          "천호",
+          "종로3가",
+          "익선동",
+          "창신동",
+          "길음",
+          "양평동",
+          "청담",
+          "건대입구역",
+          "광주 광산구 첨단중앙로152번길 81-12",
+          "첨단 이비가짬뽕 옆",
+          "첨단 am city 2차 옆",
+          "송정역",
+          "송정동"
+        ],
+        "accessibility": [
+          "송정역에서 도보 10분"
+        ],
+        "hours": [
+          "매일 10:00 ~ 22:00",
+          "매일 11:00 ~ 22:00",
+          "브레이크 타임 15:00 ~ 17:00",
+          "매달 1, 3째주 일요일 정기휴무"
+        ],
+        "service": [
+          "점심특선"
+        ],
+        "policy": [],
+        "special_features": [
+          "독채 건물"
+        ],
+        "recommended_for": [
+          "혼밥",
+          "회식",
+          "해장"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "유)아웃백스테이크하우스코리아 광천점",
+      "keywords": {
+        "menu_type": [
+          "하이볼 전문점"
+        ],
+        "signature_menu": [
+          "피치블라썸 하이볼",
+          "바질크림 토마토"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "하이바 보이저 진월점",
+          "보이저 진월점 (집 근처)"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "하이볼 종류 다양"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "로또7080",
+      "keywords": {
+        "menu_type": [
+          "중식"
+        ],
+        "signature_menu": [
+          "짬뽕"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "활기찬",
+          "붐비는"
+        ],
+        "interior": [
+          "카페 스타일"
+        ],
+        "facilities": [
+          "주차 어려움 (골목 주차, 주차장 없음)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 광산구 목련로394번길 23-26"
+        ],
+        "accessibility": [],
+        "hours": [
+          "화요일~일요일 11:00 ~ 20:30 (20:00 라스트오더)",
+          "브레이크 타임 14:30 ~ 16:30",
+          "매주 월요일 정기 휴무"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "주말 점심 웨이팅 있음"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "화정식육식당",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "육류"
+        ],
+        "signature_menu": [
+          "생고기",
+          "벌집삼겹살",
+          "부채살",
+          "제비추리",
+          "꽃등심",
+          "소고기",
+          "삼겹살",
+          "학식",
+          "과카몰리"
+        ],
+        "price_info": [
+          "벌집삼겹살 2인 30,000원"
+        ],
+        "ambiance": [
+          "노포 감성"
+        ],
+        "interior": [],
+        "facilities": [
+          "유아 의자",
+          "무선 인터넷",
+          "주차 가능 (화정식육식당은 불가, 주변 골목 주차 가능)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 북구 임동",
+          "양동시장 10분 거리",
+          "광주 서구 군분로 230",
+          "농성역 3번 출구에서 복개도로 서석고 정문 가는 방향 200m 위치",
+          "농성동"
+        ],
+        "accessibility": [],
+        "hours": [
+          "월-토 11:00~21:00 (라스트 오더 21:00)",
+          "일요일 정기 휴무",
+          "11:00 - 21:30 (21:00 라스트 오더, 일요일 휴무)"
+        ],
+        "service": [
+          "제로페이 결제 가능"
+        ],
+        "policy": [],
+        "special_features": [
+          "양동시장 내 정육점 고기 퀄리티 좋고 양 많음",
+          "농성화로 바로 옆에 위치",
+          "유명 유튜버 촬영"
+        ],
+        "recommended_for": [
+          "아저씨들이 술 마시는 분위기"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "희림골",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "서해식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아주커치킨",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "무등회관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "한우촌",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매일식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "메가엠지씨커피 광주농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "삼삼구이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "맥주천지",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "토종골 생태탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "민주네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "돌돌이등갈비촌",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투인방 발산점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "비어컴퍼니",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "행복한상",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오빠가만든족발(오만족",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "여포참숯구이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아!청춘을적신다",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "까투리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "첼로",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투모아",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "느그집(상무버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투인방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "깻잎통닭",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "별미해장국집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "철주네식육식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "시카고",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "노블레스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "편한자리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "한마루",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "돌곱 1991 서구직영점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "저스트",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "시골집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "피자스쿨 버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투사랑",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "땅끝뻘낙지",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "일흥 식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "선술집 왕대포",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "구수숯불갈비",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "부광식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "비어11번가",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "황제쟁반짜장",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "다복촌",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "월매전집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "주막",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [
+          "하늘빛 수목정원 튤립축제 입장료: 성인 5,000원, 청소년(초, 중, 고) 4,000원, 유치원생 3,000원"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "ACC (아시아문화전당) 내 쉴 곳 많음",
+          "하늘빛 수목정원 글램핑장"
+        ],
+        "bathroom": [],
+        "location": [
+          "하늘빛 수목정원: 전라남도 장흥군 용산면 장흥대로 2746",
+          "정남진장흥토요시장: 전라남도 장흥군 장흥읍 토요시장1길 21",
+          "장흥회관: 전라남도 장흥군 장흥읍 읍성로 96",
+          "우드랜드카페: 전라남도 장흥군 유치면 봉덕리 55",
+          "펭귄마을: 광주",
+          "동학: 서울대벤처타운역 2번 출구에서 670m (신림선 이용)"
+        ],
+        "accessibility": [
+          "동학: 신림선 이용",
+          "동학: 서울대벤처타운역 2번 출구에서 670m"
+        ],
+        "hours": [
+          "하늘빛 수목정원 튤립축제 기간: 2025년 4월 7일(월) ~ 4월 30일(수)",
+          "동학: 월~일 17:00-01:00 (재료 소진 시 조기 마감)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "하늘빛 수목정원 튤립축제: 3만여 평의 수목원이 튤립으로 물드는 봄맞이 축제",
+          "충장축제: 스트리트 테마 10개 정도",
+          "펭귄마을: 소화기로 만든 펭귄 조형물"
+        ],
+        "recommended_for": [
+          "하늘빛 수목정원 튤립축제: 가족 단위"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "김밥나라(버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "살아있는고등어회전문점",
+      "keywords": {
+        "menu_type": [
+          "회",
+          "고등어회",
+          "장어구이",
+          "도다리회",
+          "활고등어회"
+        ],
+        "signature_menu": [
+          "고등어회",
+          "고등어회 + 도다리회"
+        ],
+        "price_info": [
+          "장어구이 1인분 30,000원",
+          "고등어회 대 85,000원",
+          "고등어회 소 65,000원"
+        ],
+        "ambiance": [
+          "조용하고 아늑한 분위기",
+          "잔잔한 분위기",
+          "일본 이자카야 감성"
+        ],
+        "interior": [
+          "따뜻한 조명",
+          "일본식 간판",
+          "테이블 배치"
+        ],
+        "facilities": [
+          "주차 가능 (쌈지주차장)",
+          "넓은 룸"
+        ],
+        "bathroom": [],
+        "location": [
+          "경기 광주 경안동",
+          "첨단 중심가 골목",
+          "송학산 주차장에서 1분 거리",
+          "대구 신천시장",
+          "성산일출봉 근처",
+          "성산일출봉 주차장에서 차로 3분 거리"
+        ],
+        "accessibility": [],
+        "hours": [
+          "연중무휴",
+          "12:00 ~ 22:00",
+          "18:00 - 02:00 (라스트오더 01:00)",
+          "16:00-22:00"
+        ],
+        "service": [
+          "포장 가능"
+        ],
+        "policy": [],
+        "special_features": [
+          "활고등어 사용",
+          "수족관에 살아있는 고등어 보관",
+          "2024년 전현무계획2 제주편 방송"
+        ],
+        "recommended_for": [
+          "데이트 코스",
+          "친구 모임",
+          "가족 식사",
+          "회식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "엄지척 냉삼 그집",
+      "keywords": {
+        "menu_type": [
+          "삼겹살",
+          "냉동 삼겹살",
+          "대패 삼겹살",
+          "항정살",
+          "고추장 대패 삼겹살"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "급랭삼겹살 (180g) 14,000원",
+          "생항정살 (120g) 15,000원",
+          "대패삼겹살 1만원 (하남2지구 냉삼오두막)"
+        ],
+        "ambiance": [
+          "연말 회식 모임에 좋음 (일품대패)",
+          "프라이빗 식사 가능 (냉삼오두막)"
+        ],
+        "interior": [
+          "테이블 간격이 넓음 (일품대패)",
+          "홀이 넓음 (냉삼오두막)",
+          "파티션 있음 (냉삼오두막)"
+        ],
+        "facilities": [
+          "매장 앞 주차 가능 (패대기)",
+          "공영주차장 이용 가능 (일품대패)",
+          "무료 콜키지 (패대기)"
+        ],
+        "bathroom": [],
+        "location": [
+          "구리시 인창동 (그집랭삼 본점, 경기 구리시 인창동 309-6)",
+          "행정타운 아이파크 근처 (일품대패)",
+          "경기광주 (일품대패)",
+          "하남2지구 우체국 사거리 윗편 샵 돼일리 맞은편 (냉삼오두막, 광주 광산구 하남대로54번안길 17 1층, 광주 광산구 하남동 636)",
+          "석촌호수 주변, 잠수교 바로 옆 (패대기, 서울 송파구 송파대로49길 53 1층)"
+        ],
+        "accessibility": [
+          "행정타운 아이파크 근처라 접근성 좋음 (일품대패)"
+        ],
+        "hours": [
+          "월~일 11:30-23:30 (냉삼오두막)",
+          "라스트오더 22:30 (냉삼오두막)",
+          "15:30 - 23:00 (패대기)"
+        ],
+        "service": [
+          "쌈 채소 제공 (냉삼오두막)",
+          "밑반찬 제공 (냉삼오두막)"
+        ],
+        "policy": [],
+        "special_features": [
+          "브레이크 타임 없음 (냉삼오두막)"
+        ],
+        "recommended_for": [
+          "연말 회식 모임 (일품대패)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "명품대패 무한리필",
+      "keywords": {
+        "menu_type": [
+          "삼겹살",
+          "소고기",
+          "돼지고기",
+          "쭈꾸미"
+        ],
+        "signature_menu": [
+          "대패삼겹살",
+          "한우한돈 무한리필",
+          "이베리코목살",
+          "명품대패"
+        ],
+        "price_info": [
+          "명품 무한리필 가격 정보는 본문에 없음"
+        ],
+        "ambiance": [
+          "로컬 맛집 분위기",
+          "깔끔한 분위기",
+          "동네 맛집 분위기",
+          "야장 컨셉"
+        ],
+        "interior": [
+          "프라이빗 룸 (2층)",
+          "단체석 마련"
+        ],
+        "facilities": [
+          "주차 가능",
+          "주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 금호동 먹자골목",
+          "광주 첨단",
+          "첨단 병원 정문 맞은편",
+          "광주 광산구 운남동 주공7단지 정문 앞",
+          "전대 근처 전철우사거리",
+          "동명동"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매일 16:00 - 다음 날 02:00 (라스트 오더 01:00)",
+          "매일 10:30 - 22:00 (라스트 오더 21:30, 브레이크 타임 없음)",
+          "매일 11:00 - 15:00 (02:30 라스트오더)",
+          "금, 토요일 1시간 연장 영업"
+        ],
+        "service": [
+          "쌈채소 무한리필",
+          "샐러드바"
+        ],
+        "policy": [
+          "민생회복 지원금 사용 가능"
+        ],
+        "special_features": [],
+        "recommended_for": [
+          "모임",
+          "가족 모임",
+          "친구 모임",
+          "단체"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "버들꽃게장",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "순이소주방전집",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "경상남도 밀양"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "대한민국 수석사 재구성 (인물 중심, 돌 중심)",
+          "애석인 기록 (연대순)",
+          "온누리상품권 가맹 말소 예고 정보 (중소벤처기업부 2025년 6월 27일 공지)",
+          "중소벤처기업부 공고 제2025-390호 온누리상품권 가맹 말소 예고"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "농성화로",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "한잔어때",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "늘솜뷔페",
+      "keywords": {
+        "menu_type": [
+          "국밥",
+          "추어탕",
+          "고기",
+          "회"
+        ],
+        "signature_menu": [
+          "모둠국밥",
+          "내장",
+          "우렁추어탕",
+          "추어탕",
+          "추어군만두",
+          "제주 난축맛돈",
+          "평양냉면",
+          "대방어 모듬회",
+          "광어+우럭모듬회"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "여수 여천역 근처",
+          "방이동 잠실역",
+          "강남역 근처",
+          "노량진 수산시장",
+          "묵호항"
+        ],
+        "accessibility": [],
+        "hours": [
+          "아침식사 가능"
+        ],
+        "service": [
+          "포장 가능"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 1
+    },
+    {
+      "place_name": "진수식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "리얼펍 유촌점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "맛나식당",
+      "keywords": {
+        "menu_type": [
+          "갈치조림",
+          "곱도리탕",
+          "김치필라프",
+          "고등어회",
+          "대구뽈찜",
+          "푸딩"
+        ],
+        "signature_menu": [
+          "갈치조림",
+          "푸딩"
+        ],
+        "price_info": [
+          "갈치조림 소 39000원",
+          "김영갑갤러리두모악 관람료 저렴"
+        ],
+        "ambiance": [
+          "제주스러운 공간",
+          "갬성",
+          "숲",
+          "초록초록"
+        ],
+        "interior": [
+          "그림",
+          "돌"
+        ],
+        "facilities": [
+          "주차 (황해식당)",
+          "반려견 동반 가능 (숙소)"
+        ],
+        "bathroom": [],
+        "location": [
+          "제주도",
+          "광주공항",
+          "해운대",
+          "부산",
+          "서문시장",
+          "성산",
+          "성산일출봉",
+          "제주공항 근처 (황해식당)",
+          "롯데백화점 뒤 (대구뽈찜)"
+        ],
+        "accessibility": [
+          "공항과 가까운 위치 (황해식당)"
+        ],
+        "hours": [
+          "수요일 오후 반차"
+        ],
+        "service": [
+          "제주도민 할인 (김영갑갤러리두모악)",
+          "갈치조림 주문 시 갈치구이 제공 (부뚜막식당)"
+        ],
+        "policy": [
+          "예약 (맛나식당 웨이팅)",
+          "노키즈존 (언급 없음)"
+        ],
+        "special_features": [
+          "멋진 엽서 제공 (김영갑갤러리두모악)",
+          "탈선 열차 뒤에 열차였던 이슈"
+        ],
+        "recommended_for": [
+          "가족 (부뚜막식당 옆 테이블)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "꼬사랑",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이모네",
+      "keywords": {
+        "menu_type": [
+          "해산물",
+          "이자카야"
+        ],
+        "signature_menu": [
+          "양념꽃게무침",
+          "홍어무침",
+          "고등어회",
+          "교촌 허니레드순살 반반",
+          "전복죽"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "자동 급식기",
+          "반자동 급식기"
+        ],
+        "bathroom": [],
+        "location": [
+          "양동시장",
+          "청운고시원 503호, 504호 (바로 옆)",
+          "중앙대학교",
+          "여의도 신영증권 1층 로비",
+          "상도",
+          "강화도 막내이모네 농막",
+          "종로",
+          "첨단"
+        ],
+        "accessibility": [],
+        "hours": [
+          "양동통맥축제 (매년 열림, 정식행사 4시부터)"
+        ],
+        "service": [],
+        "policy": [
+          "축제 상인 및 부스 알바생 보건증 제출"
+        ],
+        "special_features": [
+          "양동통맥축제에서 홍어무침, 게장, 김치 등을 판매"
+        ],
+        "recommended_for": [
+          "해산물 처돌이"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "버들튀김",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "바다로",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "솥뚜껑 삼겹살",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "홍제등갈비오겹살",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투싼",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "해광",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마르",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "뼈칼국수",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "캘리스코 사보텐 광주신세계",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "영광식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "장성식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "광주김밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "소문난식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "함평대포집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세계분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "일등분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "육수당 광주터미널점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "따봉통닭",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신갈비어천가",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "짱뚱어탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "외갓집국밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "중산(터미널점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "진성회관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동광고속구내식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동고리집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "서울깍두기(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "비어치킨",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동네 수산물",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이삭 토스트",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "혜선네 오리명가",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "뜰안에",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "상하이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미소야(푸드코트점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "유)광주옥1947",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "돌샘",
+      "keywords": {
+        "menu_type": [
+          "한식"
+        ],
+        "signature_menu": [
+          "삼겹살",
+          "볼테기탕"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "편안한 분위기"
+        ],
+        "interior": [
+          "테이블 좌석 (과거 방 좌석에서 변경)"
+        ],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주 서구 농성동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "직원 고기 손질"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "회식",
+          "모임"
+        ]
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "노가리앤비어(유촌버들점",
+      "keywords": {
+        "menu_type": [
+          "맥주",
+          "건어물",
+          "튀김",
+          "닭요리",
+          "탕",
+          "꼬치",
+          "초밥",
+          "돈까스",
+          "스파게티"
+        ],
+        "signature_menu": [
+          "특모듬초밥 10P"
+        ],
+        "price_info": [
+          "특모듬초밥 10P: 15,000원"
+        ],
+        "ambiance": [
+          "동네 술집 분위기"
+        ],
+        "interior": [
+          "넓음",
+          "깔끔함",
+          "테이블 多"
+        ],
+        "facilities": [
+          "주차 (골목 또는 주변 공터 이용)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 유촌동",
+          "광주 운암동",
+          "광주 선운지구 먹자골목 안쪽",
+          "광주 북구 첨단",
+          "광주 광산구 선운로20번길 22",
+          "첨단지구"
+        ],
+        "accessibility": [],
+        "hours": [
+          "18:00 - 01:00",
+          "화요일~토요일: 17:00 ~ 익일 03:00",
+          "일요일: 17:00 ~ 24:00",
+          "오후 5시 ~ 새벽 1시",
+          "오후 5시 ~ 자정 12시"
+        ],
+        "service": [
+          "서울 호텔 주방장 출신 사장"
+        ],
+        "policy": [
+          "매주 일요일 정기 휴무",
+          "매주 월요일 정기 휴무",
+          "예약 가능"
+        ],
+        "special_features": [],
+        "recommended_for": [
+          "가족",
+          "친구",
+          "2차",
+          "간단한 맥주"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "경성한우식육식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고향에봄",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "투모아농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "수미식당",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "휴게음식"
+        ],
+        "signature_menu": [
+          "모듬생선구이정식",
+          "생선구이",
+          "갈치조림",
+          "모찌네 당고(mochine dango)"
+        ],
+        "price_info": [
+          "모듬생선구이정식 17,000원"
+        ],
+        "ambiance": [
+          "정겨운",
+          "깔끔한",
+          "여유로운"
+        ],
+        "interior": [
+          "농가 개조",
+          "시골집 리모델링",
+          "테이블 간 간격 넉넉",
+          "창가 논과 들이 보임"
+        ],
+        "facilities": [
+          "주차 가능 (식당 옆 넓은 마당)",
+          "웨이팅 공간 마련"
+        ],
+        "bathroom": [],
+        "location": [
+          "전남 담양군",
+          "광주 근교 담양 한재골",
+          "부산광역시 부산진구 부전동 롯데백화점부산본점"
+        ],
+        "accessibility": [],
+        "hours": [
+          "11:00 - 21:00",
+          "브레이크 타임 15:30 - 17:00",
+          "화요일 휴무"
+        ],
+        "service": [
+          "웨이팅 발생"
+        ],
+        "policy": [],
+        "special_features": [
+          "노포",
+          "로컬 맛집"
+        ],
+        "recommended_for": [
+          "가족 외식",
+          "어른 동반"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "포베이 유.스퀘어점",
+      "keywords": {
+        "menu_type": [
+          "베트남 음식"
+        ],
+        "signature_menu": [
+          "베트남 쌀국수",
+          "썸머롤"
+        ],
+        "price_info": [
+          "베트남 쌀국수&썸머롤 세트: 28,500원"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 가능",
+          "단체석"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 유스퀘어 (광주버스터미널)",
+          "유스퀘어 2층 (어나더키친 근처)",
+          "광천터미널"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매일 11:00 ~ 21:00",
+          "09:00~21:00"
+        ],
+        "service": [
+          "민생쿠폰 사용 가능",
+          "승차권 할인 20% 가능 (매장 확인 필요)",
+          "혼밥 가능",
+          "물은 컵에 제공",
+          "숙주 따로 제공"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "혼밥"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "김가네",
+      "keywords": {
+        "menu_type": [
+          "칼국수",
+          "분식",
+          "덮밥",
+          "국밥",
+          "콩물국수",
+          "삼계탕"
+        ],
+        "signature_menu": [
+          "해물칼국수",
+          "굴국밥"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [
+          "깔끔한 외관"
+        ],
+        "facilities": [
+          "주차 가능",
+          "전용 주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 북구 임동",
+          "양동시장 근처",
+          "광주 남구 월산동",
+          "돌고개역과 양동역 사이 (초역세권)",
+          "효천지구 메인 상가",
+          "광주 북구 천변우로 197 (광주 북구 임동 94-93)"
+        ],
+        "accessibility": [
+          "큰 대로변에 위치",
+          "간판이 눈에 잘 띔",
+          "건물 앞쪽으로 전용 주차 공간 마련"
+        ],
+        "hours": [
+          "매일 10:30 - 21:00"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "재능과 숙박 교환 프로그램 운영 (전남 보성 청년마을)"
+        ],
+        "recommended_for": [
+          "혼밥"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "통돼지볶삼",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "무한식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "프라하",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오매인자오셨소",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "내가찜한코다리찜(서구점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마포숯불구이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청출어람",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오리랑 아구랑",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "골목길",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "리얼펍 월산점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "리치네스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "다크호스집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "참설렁탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "금모래국밥(돌고개점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "애슐리퀸즈 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매일묵은지삼겹살",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "만인각",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "국수나무(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "나주곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "낙지사냥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "혜민이네추어탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "어란항",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "지글지글불",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "황제소바",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고송국밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쑤기분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "부뚜막",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "너구리 알탕 아구찜",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "촌닭이두마리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피타임",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "양동통닭",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "송강",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "시장국밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "양동짜장나라",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명창호프",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성골",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신신 포항물회(농성본점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "춘천닭갈비막국수",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "행운반찬",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "채가곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "종순이네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "행복만들기",
+      "keywords": {
+        "menu_type": [
+          "식혜",
+          "쌀국수",
+          "베트남 음식"
+        ],
+        "signature_menu": [
+          "식:소 하이볼",
+          "뎁꾸아 (베트남 스타일 쌀국수)"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "활기찬 시장 분위기",
+          "따뜻하고 편안한 느낌",
+          "이국적인 분위기"
+        ],
+        "interior": [
+          "소박한 분위기",
+          "아늑한 쉼터"
+        ],
+        "facilities": [
+          "주차 (매장 앞)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 말바우시장",
+          "광주 양동시장",
+          "광주 서구 천변좌로 238 양동시장 1층 277~278호 (행복만들기)",
+          "광주 서구 치평동 202-14 (점심엔쌀국수 뎁꾸아 광주치평동점)",
+          "광주 쌍촌동",
+          "광주 치평동"
+        ],
+        "accessibility": [
+          "쌍촌역 (점심엔쌀국수 뎁꾸아 광주치평동점)"
+        ],
+        "hours": [
+          "10:00–21:00 (점심엔쌀국수 뎁꾸아 광주치평동점)",
+          "브레이크 타임 15:00–17:00 (주말, 공휴일 포함, 점심엔쌀국수 뎁꾸아 광주치평동점)"
+        ],
+        "service": [],
+        "policy": [
+          "예약 가능 (네이버 예약, 전화 예약, 점심엔쌀국수 뎁꾸아 광주치평동점)"
+        ],
+        "special_features": [
+          "전통 방식 식혜 제조",
+          "상표권 출원 (식:소)",
+          "현지 레시피 (점심엔쌀국수 뎁꾸아 광주치평동점)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "하손추어탕장어탕",
+      "keywords": {
+        "menu_type": [
+          "추어탕",
+          "장어탕",
+          "돈가스",
+          "오리탕",
+          "매기탕"
+        ],
+        "signature_menu": [
+          "추어탕",
+          "장어탕"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 가능",
+          "무선 인터넷"
+        ],
+        "bathroom": [
+          "남/녀 화장실 구분"
+        ],
+        "location": [
+          "광주 서구",
+          "광주 서구청 근처",
+          "광주 서구 군분2로 16 1층",
+          "광주 서구 화정동 179-24",
+          "1농성역 4번 출구에서 250m"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매일 11:00 - 21:00",
+          "브레이크 타임 15:00 ~ 17:00"
+        ],
+        "service": [
+          "포장 가능",
+          "예약 가능",
+          "단체 이용 가능"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "가족",
+          "혼밥"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "백년미가(유촌점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "생태한마리",
+      "keywords": {
+        "menu_type": [
+          "생태탕",
+          "동태탕"
+        ],
+        "signature_menu": [
+          "생태탕"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "맛집 분위기"
+        ],
+        "interior": [
+          "황토 벽",
+          "나무 테이블"
+        ],
+        "facilities": [
+          "주차 가능",
+          "대기석"
+        ],
+        "bathroom": [],
+        "location": [
+          "돌고개역 근처",
+          "광주 서구 경열로75번길 7",
+          "신가동 우미아파트 옆"
+        ],
+        "accessibility": [],
+        "hours": [
+          "오전 11시 - 오후 3시 (월~토)",
+          "점심 장사만 함"
+        ],
+        "service": [
+          "혼자 온 손님 합석 (점심 피크 시간)"
+        ],
+        "policy": [
+          "아파트 단지 내 금연"
+        ],
+        "special_features": [
+          "단일 메뉴"
+        ],
+        "recommended_for": [
+          "직장인 해장국"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "짚신매운갈비찜&치킨호프",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "금덕이와돈이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "엠에프지코리아 매드포갈릭광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미향",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "가정식",
+          "백반",
+          "뭉티기",
+          "생차돌"
+        ],
+        "signature_menu": [
+          "뭉티기",
+          "생차돌",
+          "백반"
+        ],
+        "price_info": [
+          "백반 7,000원"
+        ],
+        "ambiance": [
+          "활기찬",
+          "붐빔"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (골목 주차)"
+        ],
+        "bathroom": [],
+        "location": [
+          "목포 고하도 전망대",
+          "목포 시화골목 (영화 1987 촬영지)",
+          "광주 서구 상무버들로54번길 21 (유촌동 857-4)",
+          "동대구역",
+          "용산역 2층"
+        ],
+        "accessibility": [
+          "광주에서 대구까지 버스로 2시간 40분 소요"
+        ],
+        "hours": [
+          "11:30 ~ 22:00",
+          "브레이크 타임 15:00 ~ 17:00",
+          "매주 일요일 정기 휴무",
+          "백반 가능 시간 11:30 ~ 14:00"
+        ],
+        "service": [
+          "친절함",
+          "메뉴가 나오는 속도 빠름"
+        ],
+        "policy": [
+          "예약 가능"
+        ],
+        "special_features": [
+          "매일 메인 메뉴 변경"
+        ],
+        "recommended_for": [
+          "가정식 집밥을 먹고 싶을 때",
+          "점심시간"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "코지(Cozy",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "갑순이네",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "제주시"
+        ],
+        "accessibility": [],
+        "hours": [
+          "설 연휴 기간 영업 (업소별 하루 또는 특정 날짜 휴무)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "제주 공식 홈페이지 설 연휴 운영 음식점 자료 기반"
+        ],
+        "recommended_for": [
+          "설 연휴 제주 여행객"
+        ]
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "바빈스유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피로운",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쉐프의초밥",
+      "keywords": {
+        "menu_type": [
+          "도넛",
+          "한정식",
+          "삼치회",
+          "찹쌀도너츠",
+          "팥빙수",
+          "전"
+        ],
+        "signature_menu": [
+          "말차 도넛",
+          "보리굴비",
+          "돌돔채비",
+          "메가커피 팥빙수",
+          "산적",
+          "생선전",
+          "육전",
+          "막전"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "오락기",
+          "컴퓨터",
+          "보드게임"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주",
+          "용산역",
+          "양동시장",
+          "상무지구",
+          "신안동"
+        ],
+        "accessibility": [
+          "KTX 이용 시 용산역에서 2시간 소요"
+        ],
+        "hours": [
+          "저녁까지 영업 안 하는 맛집 多"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "건물 한 채에서 식사, 놀이 가능"
+        ],
+        "recommended_for": [
+          "광주 접대"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "부부국밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "현대옥(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "영터리국밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "버들곱창",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "루키초밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청춘을적신다",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "영양족발",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "앤드커피(And coffee",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "대청마루",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "만석궁회관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "영양식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미스사이공 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마실",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "섬진강추어탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "유가네닭갈비 유스퀘어몰",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더불어포차",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "모모정(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "달다(DAL-DAH",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쟝리6-6",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "백선이네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "온니네지글보글",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "하랑은 유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "올데이밀",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "섬마을해초",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "티 소로다",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "행운소주방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오반식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오뉴월",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "옛날옛집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명품짬뽕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "열평집밥김치찌개",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "참일능이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "천년지기",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "임실치즈피자&비어(양동점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "어짜피 샤브",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "나주곰탕 별관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "건강한식뷔페",
+      "keywords": {
+        "menu_type": [
+          "한식 뷔페"
+        ],
+        "signature_menu": [
+          "계란말이",
+          "돈가스",
+          "한우곱창"
+        ],
+        "price_info": [
+          "8,000원",
+          "6,500원",
+          "식권 10매 63,000원",
+          "9,000원"
+        ],
+        "ambiance": [],
+        "interior": [
+          "깔끔함",
+          "심플함"
+        ],
+        "facilities": [
+          "주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "유스퀘어",
+          "금호월드 지하",
+          "금남로 신한은행 골목 5호점",
+          "진곡산단",
+          "하남공단",
+          "광주 동구 무등로 295 1층",
+          "계경목장 오포점"
+        ],
+        "accessibility": [],
+        "hours": [
+          "월~금 9:00~19:30 (라스트오더 19:00)",
+          "토 9:00~14:00",
+          "일요일 정기휴무",
+          "오전 11시부터 오후 2시 (점심)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "수익금 일부 기부"
+        ],
+        "recommended_for": [
+          "가족",
+          "직장인"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "샛별분식",
+      "keywords": {
+        "menu_type": [
+          "분식"
+        ],
+        "signature_menu": [
+          "떡볶이",
+          "참치김밥",
+          "돈가스 김밥"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "친근함",
+          "소박함"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "경기 광주 송정동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "산들바다",
+      "keywords": {
+        "menu_type": [
+          "해산물 요리"
+        ],
+        "signature_menu": [
+          "해물탕",
+          "아귀탕"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "단체 이용 가능",
+          "포장 가능",
+          "예약 가능",
+          "주차 가능 (창평 교회 우측 공영주차장, 창평 파출소 또는 근처 빈자리)"
+        ],
+        "bathroom": [],
+        "location": [
+          "전남 담양군 창평",
+          "창평면사무소 바로 옆",
+          "담양 메타세쿼이아 가로수길"
+        ],
+        "accessibility": [],
+        "hours": [
+          "11:00~20:30",
+          "브레이크 타임 14:00~16:30"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "가족",
+          "수정한과 친구들"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "쿠바하우스",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [
+          "성인 8,500원",
+          "미취학아동 6,500원",
+          "36개월 미만 무료"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주 첨단",
+          "국립광주과학관 별빛누리관 내"
+        ],
+        "accessibility": [
+          "광주과학관 내 위치"
+        ],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "구내식당"
+        ],
+        "recommended_for": [
+          "아이 동반 가족",
+          "가성비 점심"
+        ]
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "플롱(FLONG",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "교촌치킨 화정2호점",
+      "keywords": {
+        "menu_type": [
+          "치킨",
+          "피자",
+          "국수",
+          "햄버거",
+          "커피"
+        ],
+        "signature_menu": [
+          "교촌 허니콤보",
+          "파파존스 수퍼파파스 피자",
+          "천원국시"
+        ],
+        "price_info": [
+          "파파스윙 9,900원",
+          "간장순살 12,000원",
+          "수퍼파파스 레귤러피자 19,900원",
+          "국수 1,000원"
+        ],
+        "ambiance": [
+          "활기찬",
+          "따뜻한"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (골목 주차)"
+        ],
+        "bathroom": [],
+        "location": [
+          "파파존스 광주서구점",
+          "교촌치킨 화정2호점",
+          "천원국시 유덕점: 광주 서구 칠성로 33 (광주 서구 쌍촌동 807-22)",
+          "천원국시 쌍촌점: 광주시 서구 상일로 14번 길 5~13 1층"
+        ],
+        "accessibility": [
+          "토스 페이스페이 결제 가능 매장",
+          "우리 집에서 가까운 브랜드 검색 가능"
+        ],
+        "hours": [
+          "천원국시 유덕점 운영시간: 11:00 ~ 14:00",
+          "천원국시 쌍촌점 운영시간: 11:00~14:00",
+          "천원국시 쌍촌점 휴무일: 토요일, 일요일"
+        ],
+        "service": [
+          "페이스페이 결제 가능",
+          "맵기 조절 가능 (짬뽕)",
+          "외식업체 주문 가능 (단체)"
+        ],
+        "policy": [],
+        "special_features": [
+          "광주 서구, 천원국시 착한 식당 운영 (2003년부터)",
+          "우리밀 촉진 및 노인 일자리 창출 노력",
+          "지역 상생형 매장",
+          "독거노인에게 식사 제공 (천원국시)"
+        ],
+        "recommended_for": [
+          "어르신",
+          "임산부",
+          "취약계층"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "오마니덕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "로댕",
+      "keywords": {
+        "menu_type": [
+          "한식 포차",
+          "이자카야",
+          "마라탕",
+          "글램핑 식당",
+          "커피"
+        ],
+        "signature_menu": [
+          "이모카세",
+          "아메리카노"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "노포 분위기",
+          "포차 스타일",
+          "깔끔함"
+        ],
+        "interior": [
+          "이자카야 스타일",
+          "포차 스타일"
+        ],
+        "facilities": [
+          "주차장 (가비로스팅, 썬바라기)",
+          "전용 주차장 (썬바라기, 황룡강 근처 강변 쪽)",
+          "주차 불가 (화궁방 선운호남대점)"
+        ],
+        "bathroom": [
+          "외부 위치 (화궁방 선운호남대점)",
+          "세면대 온수 X (화궁방 선운호남대점)",
+          "손세정제 없음 (화궁방 선운호남대점)"
+        ],
+        "location": [
+          "광주 광산구 선운로20번길 10 (연남희나리, 해광샹그릴라 아파트, 선운지구 다사로움 사이)",
+          "광주 광산구 어등대로 410 3층 (가비로스팅, 선운지구, 호대정문 앞)",
+          "광주광역시 광산구 삼도중방길 55 (썬바라기, 황룡강 근처)",
+          "광주 광산구 선운중앙로 50 105호, 광주 광산구 선암동 564 (화궁방 마라탕 선운호남대점, 아파트 단지 쪽)"
+        ],
+        "accessibility": [
+          "호남대와 가까움 (연남희나리)",
+          "선운지구 먹자골목 (연남희나리)",
+          "호대정문 앞 (가비로스팅)"
+        ],
+        "hours": [
+          "17:00 ~ 02:00, 매주 일요일 정기휴무 (연남희나리)",
+          "10:00 ~ 20:00, 매주 토요일 일요일 정기휴무 (가비로스팅)",
+          "11:30 - 21:30, 라스트오더 21:00, 매일 (썬바라기)",
+          "11:00 ~ 22:00, 라스트 오더 21:30, 월-일 (화궁방 마라탕 선운호남대점)"
+        ],
+        "service": [
+          "카페 컨설팅 및 설비 시공 (가비로스팅, 휴무 시 인스타그램 공지)",
+          "텀블러 지참 시 오전 9시-10시 아메리카노 무료 (가비로스팅)"
+        ],
+        "policy": [],
+        "special_features": [
+          "애견 동반 가능 (썬바라기, 잔디 광장)",
+          "글램핑 식당 (썬바라기)"
+        ],
+        "recommended_for": [
+          "아이 동반 (썬바라기)",
+          "애견 동반 (썬바라기)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "유레카",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "소소한밤",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청춘샌드위치",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "좋은분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "진하수산",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "주부9단",
+      "keywords": {
+        "menu_type": [
+          "분식"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "정겨운 분위기"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차장 없음 (인근 골목 주차)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 양동",
+          "광천초등학교 앞",
+          "양3동 행정복지센터 맞은편",
+          "양동시장역에서 도보 10분 거리",
+          "첨단 (설화옥)",
+          "보이저, 포플레이, 더시너지 건물 근처 (설화옥)"
+        ],
+        "accessibility": [
+          "차량으로 방문 가능 (설화옥)",
+          "아이파크 주차장 주차 지원 (설화옥, 도보 5분 거리)"
+        ],
+        "hours": [
+          "가게 문의 (주부9단분식)",
+          "평일 오후 4시 30분 ~ 저녁 11시 30분 (마지막 주문 10시, 설화옥)"
+        ],
+        "service": [],
+        "policy": [
+          "콜키지프리 (설화옥)"
+        ],
+        "special_features": [
+          "뽑기 (주부9단분식)",
+          "식자재마트 (다담식자재마트 운남점)",
+          "할인 행사 (다담식자재마트 운남점)",
+          "단체룸 (설화옥)"
+        ],
+        "recommended_for": [
+          "연말 모임 (설화옥)",
+          "회식 장소 (설화옥)",
+          "데이트 코스 (설화옥)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "수내닭꼬치 월산(돌고개역)점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "돌잔치전문점 르베베",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "웨딩그룹위더스광주",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "연이네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "풀무원푸드앤컬처-케이디비생명광주",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "민족감자탕(본점), 수유리혼밥왕 서구청점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "송학식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "연주회",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "대성",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "갤러리24(Gallery 24",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카짱수제돈까스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "샤방샤방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "달밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페라디오",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "톰아저씨족발보쌈",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마루스시 광주신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고렝",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "홍대개미 신세계백화점광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "속초코다리냉면",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "밀밭에서",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "양동카페 158",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동진계절음식점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신락원",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "버들김밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "차이(chai)797신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "나도식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "왕뼈사랑",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "대박집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더툰",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "사이코",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고궁담양숯불갈비",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "지중해 참치",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "사임당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더프레쉬테이블(Thefreshtable",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "케이에스푸드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "빕스(VIPS) 광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피스토리",
+      "keywords": {
+        "menu_type": [
+          "디저트",
+          "초콜릿",
+          "커피"
+        ],
+        "signature_menu": [
+          "두바이 쫀득쿠키",
+          "핸드드립 커피",
+          "씨컬 속눈썹펌"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "차분한 분위기",
+          "조용한 분위기"
+        ],
+        "interior": [
+          "가죽 체어",
+          "바 자리"
+        ],
+        "facilities": [
+          "주차 가능 (건물 뒤편 주차장)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 광산구",
+          "광주 북구 일곡동",
+          "광주 광산구 어등대로 410 3층 301호",
+          "남해 미조항 주변"
+        ],
+        "accessibility": [
+          "일곡동 자연마을 위치"
+        ],
+        "hours": [
+          "월-금 10:00-20:00",
+          "토, 일 정기휴무",
+          "월~토 09:00 ~ 22:00",
+          "매주 일요일 휴무"
+        ],
+        "service": [
+          "카페 창업 컨설팅",
+          "원두 로스팅",
+          "승모근 관리",
+          "속눈썹펌"
+        ],
+        "policy": [
+          "네이버 플레이스 예약 가능"
+        ],
+        "special_features": [
+          "오션뷰"
+        ],
+        "recommended_for": [
+          "어깨, 목 뭉침이 잦은 분",
+          "조용한 핸드드립 카페 찾는 분"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "푸라닭 광주광천점",
+      "keywords": {
+        "menu_type": [
+          "치킨",
+          "국수"
+        ],
+        "signature_menu": [
+          "나폴라 투움바",
+          "매드갈릭 반반",
+          "후라이드 치킨",
+          "양념 치킨",
+          "닭발 튀김",
+          "똥집 튀김",
+          "국수"
+        ],
+        "price_info": [
+          "회비 2만원 (등산 트레이닝)",
+          "국수 1000원"
+        ],
+        "ambiance": [
+          "활기찬",
+          "친목 도모"
+        ],
+        "interior": [
+          "테이블 5개 (푸라닭 광주광천점)",
+          "넓은 공간 (양동통닭, 수일통닭)"
+        ],
+        "facilities": [
+          "아파트 주차장 (푸라닭 광주광천점): 1층, 지상 2층, 지하 1층, 지하 2층",
+          "주차 3시간 무료 (푸라닭 광주광천점): 카운터에서 차량 등록"
+        ],
+        "bathroom": [],
+        "location": [
+          "푸라닭 광주광천점: 광주 농성동 중해마루힐 상가 1층",
+          "천원국시 유덕점: 광주 서구 칠성로 33 (광주 서구 쌍촌동 807-22)",
+          "양동통닭, 수일통닭: 양동시장",
+          "증심사 버스 종점 (등산 트레이닝 집결 장소)"
+        ],
+        "accessibility": [],
+        "hours": [
+          "푸라닭 광주광천점: 12시까지 정상 운영",
+          "천원국시 유덕점: 11:00 ~ 14:00",
+          "양동통닭, 수일통닭: 라스트 오더 10:30",
+          "등산 트레이닝: 2024년 5월 4일(토) 오전 10시"
+        ],
+        "service": [
+          "만두 서비스 제공"
+        ],
+        "policy": [
+          "박소영 왕만두: 예약 필수 (전화)"
+        ],
+        "special_features": [
+          "권성준 쉐프 협업 메뉴 (푸라닭)",
+          "3대천왕 맛집 (양동통닭, 수일통닭)",
+          "천원국시: 우리밀 촉진 및 노인 일자리 창출",
+          "천원국시: 독거노인에게 식사 제공",
+          "등산 트레이닝"
+        ],
+        "recommended_for": [
+          "회원 간 상호 친목 도모 (등산 트레이닝)",
+          "독거노인 (천원국시)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "돼지전설",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [
+          "떡갈비",
+          "갈치조림",
+          "육회",
+          "양동통닭",
+          "우족찜"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "야시장 분위기 (남대문시장)"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (송정떡갈비 골목)",
+          "와이파이"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주",
+          "KTX 광주송정역 도보 5분 거리 (광주송정떡갈비 골목)",
+          "서울 중구 남대문시장4길 21 (남대문시장)",
+          "서울 종로구 창경궁로 88 (광장시장)"
+        ],
+        "accessibility": [
+          "KTX 광주송정역 도보 5분 (광주송정떡갈비 골목)"
+        ],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "광주 5미 (떡갈비)",
+          "호남의 '개미진 맛'",
+          "10여 곳의 떡갈비 전문점 (송정떡갈비 골목)",
+          "가장 오래된 떡갈비 전문점 (송정떡갈비 골목)"
+        ],
+        "recommended_for": [
+          "추석 여행",
+          "가족",
+          "연인",
+          "혼자 여행객"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "빠키카세",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "멕시카나 유촌점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "자담치킨 광천점",
+      "keywords": {
+        "menu_type": [
+          "분식",
+          "햄버거",
+          "빵",
+          "콩국수"
+        ],
+        "signature_menu": [
+          "신전 로제",
+          "프랭크 베이컨치즈버거",
+          "소금빵",
+          "김명화 서리태 콩국수"
+        ],
+        "price_info": [
+          "양동시장 빵: 저렴"
+        ],
+        "ambiance": [
+          "축제 분위기"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "신혼집",
+          "양동시장",
+          "야구장",
+          "광주"
+        ],
+        "accessibility": [],
+        "hours": [
+          "대성콩물: 9월에 문 닫음"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "양동시장 통맥축제 개최"
+        ],
+        "recommended_for": [
+          "혼밥 (프랭크버거)",
+          "야구장 방문객 (간식 구매)",
+          "축제 방문객"
+        ]
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "진미아구랑낙지랑",
+      "keywords": {
+        "menu_type": [
+          "해물찜",
+          "아귀찜",
+          "곱창볶음",
+          "쭈꾸미",
+          "고기",
+          "주먹밥",
+          "라면"
+        ],
+        "signature_menu": [
+          "인생아구찜"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "행복하고 맛있는 시간"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주",
+          "농성1동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "만점 손질",
+          "만점 서비스"
+        ],
+        "policy": [],
+        "special_features": [
+          "특제 소스",
+          "천연 재료 사용"
+        ],
+        "recommended_for": [
+          "건강한 아귀찜 선호 고객"
+        ]
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "아사(ASA)커피랩 광주광천점",
+      "keywords": {
+        "menu_type": [
+          "커피",
+          "음료",
+          "떡카페",
+          "아이스크림",
+          "김밥"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "세련된 분위기",
+          "차분하고 깔끔하고 현대적인 느낌의 조화"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (갓길 주정차 가능)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 쌍촌동",
+          "광주 서구 상무민주로 11 (쌍촌동 969-4)",
+          "광천터미널 근처",
+          "농성동 671-64",
+          "부산광역시 부산진구 부전동 503-15 롯데백화점부산본점",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하2층 일부호 (부전동)",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하1층 일부호 (부전동)"
+        ],
+        "accessibility": [
+          "유동 인구 많음"
+        ],
+        "hours": [
+          "매일 07:00 ~ 23:00",
+          "평일 8:00 ~ 22:00",
+          "토요일 10:00 ~ 21:30",
+          "일요일 12:30 ~ 21:00"
+        ],
+        "service": [
+          "본사 운영 시스템 및 마케팅 지원",
+          "지역 특성에 맞는 메뉴 개발 지원"
+        ],
+        "policy": [],
+        "special_features": [
+          "매장마다 개성있는 메뉴",
+          "반려견 동반 가능한 인조잔디 공간"
+        ],
+        "recommended_for": [
+          "미팅"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "노랑통닭(농성,임동점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "화향",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "광맥주 광주신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "금커피별빙수 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "레전드 고기한상",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "푸른길라이브7080",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명인면옥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "희연이네맛집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "해가",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "땡초푸드파이터",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "길동우동",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매일밥집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "도담도담",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "Rest 레스트",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "멕시카나 광주월산유보라점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "한솥 유스퀘어 터미널점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고흥식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "정성카츠 광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "자연과일카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "KFC광주터미널 유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "바람난 치킨",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "탕화쿵푸마라탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "어바웃키친",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "전복집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "돈마당 식육식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아띠멍멍",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "장수나주곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "BHC 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "어나더키친",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "헤이커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이뮨죽&샐러드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명품수산",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성제일식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "백년미가(별관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "빈티지양동",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "채가 김밥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "사계절포차",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "바른초밥 본점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "밥집 술집",
+      "keywords": {
+        "menu_type": [
+          "양꼬치",
+          "한식",
+          "술집",
+          "한식포차",
+          "곱도리탕"
+        ],
+        "signature_menu": [
+          "마라꼬치",
+          "두부 오이 무침",
+          "마라 전골",
+          "소고기 말이찜",
+          "한우곱창전골",
+          "곱도리탕"
+        ],
+        "price_info": [
+          "신묘한 곱도리탕: 가성비 좋음"
+        ],
+        "ambiance": [
+          "활기찬",
+          "깔끔한 분위기",
+          "조용한 룸",
+          "붉은 조명"
+        ],
+        "interior": [
+          "세련된 인테리어"
+        ],
+        "facilities": [
+          "상가 주차장 (2시간 무료)",
+          "단체 이용 가능",
+          "포장 가능",
+          "배달 가능"
+        ],
+        "bathroom": [],
+        "location": [
+          "남광주역 인근",
+          "조선대학교 인근",
+          "전남대학교 학동 인근",
+          "전남대학교 병원 인근",
+          "남광주 시장 인근",
+          "봉선동",
+          "풍암동",
+          "상무지구 핫플레이스",
+          "양산동"
+        ],
+        "accessibility": [
+          "상무지구 코너에 위치"
+        ],
+        "hours": [
+          "국제시장: PM6 ~ AM4 (라스트 오더 AM3), 매주 일요일 정기 휴무",
+          "유월 풍암점: 매일 17:00 - (익일)02:00 (라스트 오더 01:00), 휴무일 정보 없음",
+          "전포여관 광주상무점: 18시 ~ 06시 (금, 토 18시 ~ 08시)",
+          "신묘한 곱도리탕: 월~일 16:00-24:00"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "일부 테이블 8인까지 가능",
+          "유월 풍암점: 의자 편안함"
+        ],
+        "recommended_for": [
+          "모임",
+          "회식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "맛나리치킨",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "대왕솥뚜껑",
+      "keywords": {
+        "menu_type": [
+          "삼겹살"
+        ],
+        "signature_menu": [
+          "생삼겹살"
+        ],
+        "price_info": [
+          "생삼겹살 150g 14,000원",
+          "계란찜 3,000원",
+          "냉면 8,000원",
+          "볶음밥 2인 6,000원 (1인 3,000원)"
+        ],
+        "ambiance": [
+          "한적함",
+          "여유로움",
+          "활기찬 분위기"
+        ],
+        "interior": [
+          "깔끔함",
+          "정돈됨",
+          "쾌적함",
+          "4인 테이블"
+        ],
+        "facilities": [
+          "주차 가능 (가게 옆 주차장, 주변 골목 주차 가능)",
+          "TV (야구 중계 시청 가능)",
+          "셀프바 (추가 반찬, 김치, 쌈야채)",
+          "솥뚜껑 불판"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 농성동",
+          "광주 서구 내방로418번길 4",
+          "농성1동 415-16",
+          "농성동삼익맨션아파트 부근",
+          "신세계 백화점 근처",
+          "유스퀘어 근처"
+        ],
+        "accessibility": [
+          "도보 이용 가능 (회사 근처)"
+        ],
+        "hours": [
+          "월-토 16:00-24:00",
+          "매주 일요일 정기 휴무"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "솥뚜껑 불판에 구워 먹는 삼겹살"
+        ],
+        "recommended_for": [
+          "회식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "까사피에스타 광주서구점",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "국립현대미술관"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "Freizeit 서울청년문화패스 선정"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "청화반점",
+      "keywords": {
+        "menu_type": [
+          "중화요리"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "짜장면 6000원"
+        ],
+        "ambiance": [],
+        "interior": [
+          "홀, 60명 수용 가능"
+        ],
+        "facilities": [
+          "단체석, 포장, 배달"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주광역시 서구 구성로 123-1",
+          "광주광역시 서구 양동 147-2",
+          "광주공원 근처",
+          "광주공원과 양동 사이"
+        ],
+        "accessibility": [
+          "광주공원 안에 위치 (빛고을 시민문화관)"
+        ],
+        "hours": [
+          "매일 10:00 ~ 21:00",
+          "매주 일요일 휴무",
+          "월~토 10:30 ~20:00"
+        ],
+        "service": [
+          "35년 경력 사장 직접 요리"
+        ],
+        "policy": [
+          "단체 예약 가능"
+        ],
+        "special_features": [],
+        "recommended_for": [
+          "단체 손님"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "정희네",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 공간"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주광역시",
+          "광주광역시 시청 광장 일원",
+          "광주광역시 내방로 111 광주광역시청",
+          "김대중컨벤션센터 건물 사이 공터"
+        ],
+        "accessibility": [
+          "조치원역에서 ITX 새마을 탑승하여 광주역으로 이동 가능"
+        ],
+        "hours": [
+          "2025년 10월 31일 - 2025년 11월 02일 (일요일까지)"
+        ],
+        "service": [
+          "경품 이벤트 준비"
+        ],
+        "policy": [],
+        "special_features": [
+          "빵페스타, 김치축제, 양동치맥축제 등 축제 개최",
+          "천인의 밥상 운영"
+        ],
+        "recommended_for": [
+          "4D 영화 관람객 (더 문)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "행복호프",
+      "keywords": {
+        "menu_type": [
+          "짬뽕",
+          "낙지볶음",
+          "칼국수",
+          "화채",
+          "불닭볶음면",
+          "짜장면",
+          "탕수육",
+          "바지락술찜",
+          "갈비",
+          "와플",
+          "크로플",
+          "필터커피",
+          "드립백 커피"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "낭만적",
+          "편안한 분위기",
+          "라이브 공연"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 남구 봉선동 178-15",
+          "시카고 2층",
+          "동명동",
+          "상지로",
+          "충남 서산시 지곡면 중왕리",
+          "부산 부산진구 금정봉"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "신청곡 접수",
+          "가래떡 제공",
+          "아이스크림 제공"
+        ],
+        "policy": [],
+        "special_features": [
+          "통기타 연주 가능",
+          "즉석 연주 가능"
+        ],
+        "recommended_for": [
+          "통기타 동호회",
+          "추억의 노래를 좋아하는 사람",
+          "애창곡 부르기를 좋아하는 사람"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "기와",
+      "keywords": {
+        "menu_type": [
+          "디저트",
+          "음료"
+        ],
+        "signature_menu": [
+          "땅콩크림라떼"
+        ],
+        "price_info": [
+          "단독주택 매매대금 6억원"
+        ],
+        "ambiance": [
+          "아이와 함께 방문하기 편한 분위기"
+        ],
+        "interior": [
+          "천변 뷰",
+          "기와지붕 뷰"
+        ],
+        "facilities": [
+          "옥상 루프탑"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 양동",
+          "천변가",
+          "광주광역시 서구 지하철 양동시장역 부근"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "헤어스타일 상담"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "가족",
+          "아이 동반 고객"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "사랑방",
+      "keywords": {
+        "menu_type": [
+          "분식",
+          "국수"
+        ],
+        "signature_menu": [
+          "국수 (천원국시 유덕점)"
+        ],
+        "price_info": [
+          "국수 1,000원 (천원국시 유덕점)",
+          "치아교정 500만원",
+          "크라운, 인레이 등 (총 치과 치료 비용 1500만원 이상)"
+        ],
+        "ambiance": [
+          "옛 정서 (주부9단분식)",
+          "사랑방 같은 느낌 (주부9단분식)"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차장 별도 없음 (주부9단분식, 인근 골목 주차)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 양동 (주부9단분식)",
+          "광천초등학교 앞 (주부9단분식)",
+          "양3동 행정복지센터 바로 맞은편 (주부9단분식)",
+          "양동시장역에서 도보 10분 (주부9단분식)",
+          "광주 서구 칠성로 33 (천원국시 유덕점)",
+          "광주 서구 쌍촌동 807-22 (천원국시 유덕점)"
+        ],
+        "accessibility": [],
+        "hours": [
+          "가게 문의 (주부9단분식)",
+          "11:00 ~ 14:00 (천원국시 유덕점)"
+        ],
+        "service": [
+          "광주 사랑방 구인구직 사이트에서 중장년층 여성에게 특화된 일자리 정보 제공",
+          "광주 서구에서 2003년부터 천원국시 착한 식당 운영 (우리밀 촉진 및 노인 일자리 창출)",
+          "독거노인에게 따뜻한 한끼 식사 제공 (천원국시 유덕점)"
+        ],
+        "policy": [],
+        "special_features": [
+          "뽑기 (주부9단분식)",
+          "광주에는 5.18 민주화 운동과 관련된 29개소 존재 (사적5호 포함)",
+          "광주 서구는 가치나눔 함께서구를 실천하는 착한 식당 운영 (천원국시)",
+          "지역 상생형 매장 (천원국시)"
+        ],
+        "recommended_for": [
+          "어린 학생 (주부9단분식)",
+          "인근 주민 (주부9단분식)",
+          "50~60대 여성 (광주 사랑방신문, 빌딩 청소원, 미화원)",
+          "끼니를 거르는 독거노인 (천원국시 유덕점)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "유카이카레(ゆかい",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "광주든든김밥",
+      "keywords": {
+        "menu_type": [
+          "분식",
+          "한식"
+        ],
+        "signature_menu": [
+          "장터국밥",
+          "팥죽 (팥칼국수)",
+          "김밥",
+          "족발",
+          "잡채",
+          "순대",
+          "떡볶이",
+          "국밥",
+          "통닭"
+        ],
+        "price_info": [
+          "떡볶이 5,000원",
+          "가격대가 보통 1만원을 안넘음"
+        ],
+        "ambiance": [
+          "축제 분위기",
+          "활기찬 분위기"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 (양동시장 공영주차장 이용 가능 추정)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주광역시 서구 천변좌로 238",
+          "광주 양동시장",
+          "양동시장 통닭 거리"
+        ],
+        "accessibility": [
+          "광주 지하철 1호선 양동시장역 1번 또는 2번 출구에서 바로 연결"
+        ],
+        "hours": [
+          "오전 9시부터 오후 8시까지",
+          "연중무휴 (점포별로 운영 시간 상이)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "100년이 넘는 오랜 역사",
+          "호남 지역 통틀어 가장 큰 전통 상설시장",
+          "약 700여 개에 이르는 상가 규모",
+          "양동통닭 본점 57년째 운영 중",
+          "백종원의 3대 천왕, 6시 내고향 등 다양한 TV 프로그램에 소개"
+        ],
+        "recommended_for": [
+          "광주 여행객",
+          "현지인"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "맛단식육식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페레디쉬",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "파스쿠찌 광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페다름",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "1도씨(1℃)맥주",
+      "keywords": {
+        "menu_type": [
+          "라멘",
+          "샐러드"
+        ],
+        "signature_menu": [
+          "연어 샐러드"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주"
+        ],
+        "accessibility": [
+          "광주 버스 파업으로 택시 이용 어려움"
+        ],
+        "hours": [
+          "브레이크 타임 존재"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "단체"
+        ]
+      },
+      "analyzed_post_count": 1
+    },
+    {
+      "place_name": "알엠스튜디오(모어레스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "김복남맥주",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "머리고기 전문점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "무드165(mood165",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "라이크앤",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오!인절미(oh!인절미",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "천원국시 양동전통시장점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "여수왕대포",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성집",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "올바른 옛날닭강정",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "기승전우;광",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "꿀꿀이네족발(농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "머글스(muggle's",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "벚꽃마을다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피밀",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "화채업자 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "벌과 나비",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "라이크 마이 베이커리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "에이징(Aging",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "스텔라떡볶이 광주화정점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마선생",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "다정카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "도토리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더 시그너스 웨딩",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "브리티 갤러리카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "프랭크버거 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "양동호떡",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "광주 조개창고",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "국민동태탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "수유리우동집 서구청점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "무진회관",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "황후쟁반짜장",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더 드롭(The drop",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "요고?요거!",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "일품 양평해장국 농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "맥시칸치킨 (농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "온기정 광주신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "서울떡갈비&개항로통닭 신세계백화점 광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "천원국시 농성점",
+      "keywords": {
+        "menu_type": [
+          "국수"
+        ],
+        "signature_menu": [
+          "국수"
+        ],
+        "price_info": [
+          "국수 1000원 (일부 대상)",
+          "국수 3000원 (일반)"
+        ],
+        "ambiance": [
+          "혼밥 가능",
+          "가볍게 식사 가능"
+        ],
+        "interior": [
+          "깔끔함",
+          "테이블석",
+          "다찌 테이블"
+        ],
+        "facilities": [
+          "나눔냉장고",
+          "후원함"
+        ],
+        "bathroom": [],
+        "location": [
+          "천원국시 농성점",
+          "천원국시 유덕점: 광주 서구 칠성로 33 (광주 서구 쌍촌동 807-22)",
+          "천원국시 4호점 쌍촌점: 광주광역시 서구 상일로 14번길 5-13"
+        ],
+        "accessibility": [
+          "점포 앞에 알림판 설치"
+        ],
+        "hours": [
+          "11:00 ~ 14:00",
+          "월요일 ~ 금요일",
+          "공휴일 휴무",
+          "재료 소진 시 조기 마감 (하루 100그릇)"
+        ],
+        "service": [
+          "주문 즉시 면 삶음"
+        ],
+        "policy": [
+          "65세 이상, 40세 이상 요금 할인 (지점별 상이)"
+        ],
+        "special_features": [
+          "광주 서구 착한 복지 정책",
+          "노인 일자리 창출",
+          "우리밀 사용",
+          "지역 상생형 매장",
+          "독거노인 식사 제공"
+        ],
+        "recommended_for": [
+          "혼밥",
+          "가벼운 식사"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "늑대족발 농성점",
+      "keywords": {
+        "menu_type": [
+          "피자",
+          "치킨",
+          "족발"
+        ],
+        "signature_menu": [
+          "메가쉬림프 피자",
+          "화이트고구마무스 피자",
+          "닭강정",
+          "후라이드 치킨",
+          "오븐 족발",
+          "마늘 족발"
+        ],
+        "price_info": [
+          "오븐족발 소: 33,400원"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "왕손피자 광주쌍촌점",
+          "맥시칸치킨 두암점",
+          "광주통닭 봉선시장점",
+          "두마리양동시장통닭",
+          "늑대족발: 광주광역시 북구 호동로75번길 16",
+          "우산주공아파트 3차 후문 건너편 골목"
+        ],
+        "accessibility": [
+          "전대 근처 (늑대족발)",
+          "전대 배달 맛집 (늑대족발)"
+        ],
+        "hours": [
+          "늑대족발: 매일 16:00 - 23:00",
+          "늑대족발: 일요일 정기 휴무"
+        ],
+        "service": [
+          "포장 가능",
+          "배달 가능 (요기요, 배민)",
+          "방문포장 할인 (늑대족발): 4,000원",
+          "영수증 리뷰 작성 시 막국수 소 사이즈 or 음료 사이즈 업 이벤트 (늑대족발)"
+        ],
+        "policy": [
+          "국내산 족발 20족 한정 판매 (늑대족발)"
+        ],
+        "special_features": [
+          "온누리상품권 결제 가능 (늑대족발)",
+          "북구머니 결제 가능 (늑대족발)",
+          "상생카드 결제 가능 (늑대족발)",
+          "음식점 위생등급 매우 우수 (늑대족발)",
+          "포장, 배달 전문 (늑대족발)",
+          "기본 구성: 막국수, 주먹밥 (늑대족발)"
+        ],
+        "recommended_for": [
+          "야식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "신청담한우",
+      "keywords": {
+        "menu_type": [
+          "한우"
+        ],
+        "signature_menu": [
+          "한우 육사시미"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [
+          "룸"
+        ],
+        "facilities": [
+          "주차 가능"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 농성동",
+          "농성역 인근 (1번 출구에서 도보 2분)",
+          "광주상록 근린공원 앞"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매일 영업",
+          "토요일~월요일 11:00~22:00",
+          "화요일 ~금요일 11:00~23:00",
+          "브레이크 타임 (화요일~금요일) 15:00~17:00"
+        ],
+        "service": [
+          "배달 가능",
+          "포장 가능",
+          "온누리상품권 결제 가능 (최대 30% 할인)"
+        ],
+        "policy": [
+          "예약 가능"
+        ],
+        "special_features": [
+          "당일 도축한 A++ 한우 사용",
+          "전국 최초 골목상권 100% 온누리상품권 사용 가능 매장"
+        ],
+        "recommended_for": [
+          "회식",
+          "가족 외식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "강호연파",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "점심한끼",
+      "keywords": {
+        "menu_type": [
+          "백반",
+          "머리고기",
+          "편육",
+          "뼈다귀 해장국"
+        ],
+        "signature_menu": [
+          "백반",
+          "머리고기",
+          "편육",
+          "뼈다귀 해장국"
+        ],
+        "price_info": [
+          "백반 9,000원",
+          "양동시장 주차장 30분 500원"
+        ],
+        "ambiance": [
+          "정겨운 시장 분위기"
+        ],
+        "interior": [],
+        "facilities": [
+          "양동시장 공영주차장",
+          "주차 가능 (병원 주차장 이용)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 양동시장",
+          "광주 서구 구성로 13"
+        ],
+        "accessibility": [],
+        "hours": [
+          "진수식당: 월/화/수/목/금/토 10:30 ~ 16:00 (라스트오더 15:30), 매주 일요일 정기휴무",
+          "광주축산: 월 ~ 토 04:00 - 17:00, 일 04:00 - 08:00"
+        ],
+        "service": [
+          "신속한 음식 제공"
+        ],
+        "policy": [
+          "2월말까지 양동시장 공영주차장 무료이용 (주차권 요구)"
+        ],
+        "special_features": [
+          "풍자 또간집 광주편 1등 백반집",
+          "풍자 선정 양동시장 원픽 맛집"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "찡찡꼬마김밥(광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이지(easy",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "코끼리호프",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "과일담은",
+      "keywords": {
+        "menu_type": [
+          "요거트 아이스크림",
+          "과일모찌"
+        ],
+        "signature_menu": [
+          "요거트 아이스크림 (딸기/블루베리/소프트/요거트)",
+          "딸기모찌"
+        ],
+        "price_info": [
+          "요거트 아이스크림 S 사이즈 (150g) 4,500원",
+          "요거트 아이스크림 S 사이즈 쿠팡이츠 신규 오픈 행사 할인가 2,500원",
+          "요거트 아이스크림 M사이즈 (300g) 8,000원",
+          "요거트 아이스크림 L사이즈 (600g) 13,000원"
+        ],
+        "ambiance": [
+          "활기",
+          "심플",
+          "깔끔"
+        ],
+        "interior": [
+          "넓음"
+        ],
+        "facilities": [
+          "전용 주차장 (서너 대 주차 가능)"
+        ],
+        "bathroom": [
+          "외부 화장실 (건물 외부, 계단 이용)"
+        ],
+        "location": [
+          "양동시장",
+          "광산구 풍영로 101번안길 11-8 1층 (마카리조)",
+          "수완지구"
+        ],
+        "accessibility": [
+          "네비게이션 이용 시 마카리조 검색",
+          "휠체어/유모차 접근 가능 (바퀴 달린 거 이용)"
+        ],
+        "hours": [],
+        "service": [
+          "포장 가능",
+          "쿠팡이츠 배달 가능",
+          "꼼꼼한 포장"
+        ],
+        "policy": [],
+        "special_features": [
+          "얇고 쫀득한 찹쌀피",
+          "큼직한 과일",
+          "곱게 갈린 팥 앙금"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "다원",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "전남 보성"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "재능과 숙박 교환 형식 프로그램 운영 (전남 보성 청년마을)",
+          "재능기부 프로그램 운영 (농촌)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "박's냥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "칠분통닭 버들마을점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "바리에 광주신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "노티드 광주 신세계",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "예든",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "엄마손추어탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매드피자 농성광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "월간맥주 광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "밥이나 한잔해",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "장수회관식육식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신포우리만두",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "황금곰탕",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신날개",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "황금다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아띠몽",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "노바토로스터스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "유진이네 칼국수",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청춘매점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "사바나",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "닭볶음탕&떡볶이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "보드란 족발",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피나라",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 농성다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "족&전",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "참죽&강릉초당짬뽕순두부",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "야참",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "천원국시 농성1동점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "원조대청마루",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "금닭",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "수일",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "서안(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "주르르 케이크(JURURU CAKE",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "썸커피(SUMCOFFEE",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "피에프창 신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명장미가(광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "정민이네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 베즐리 광주 플래그십 스토어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "신쭈꾸미 광주상무버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "심가네",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미미슈퍼",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "농성국밥",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [
+          "후라이드",
+          "마왕파이",
+          "양념돼지갈비",
+          "마늘돼지갈비",
+          "오리숯불구이",
+          "육사시미",
+          "오리구이",
+          "통닭",
+          "보쌈김치",
+          "애호박찌개",
+          "크림짬뽕",
+          "탄탄면"
+        ],
+        "price_info": [
+          "후라이드 24,000원",
+          "오리숯불구이 한마리 45,000원",
+          "오리숯불구이 반마리 23,000원",
+          "크림짬뽕 13,000원",
+          "탄탄면 11,000원"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "포장",
+          "배달"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주송정역",
+          "금남로",
+          "문화전당",
+          "버스터미널",
+          "상무지구",
+          "충장로",
+          "김대중컨벤션센터"
+        ],
+        "accessibility": [
+          "광주 지하철 1호선 이용 가능",
+          "KTX/SRT 광주송정역 연결"
+        ],
+        "hours": [
+          "명화식육식당 매일 11:00 - 21:00",
+          "명화식육식당 매주 일요일 정기 휴무",
+          "맛찬들왕소금구이 매일 11:10 - 02:00"
+        ],
+        "service": [
+          "예약 가능 (상무암뽕순대국밥, 한우촌)",
+          "오리 해체쇼 (올히 상무점)"
+        ],
+        "policy": [],
+        "special_features": [
+          "수제 통닭 (상무암뽕순대국밥)",
+          "제과명장 (베비에르 풍암 본점)",
+          "저온 튀김 통닭 (양동통닭 본점)"
+        ],
+        "recommended_for": [
+          "광주 여행객",
+          "광주 맛집 탐방객"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "하우스오브커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "토담",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "화정동",
+          "진월동 한국아델리움 아파트",
+          "수완지구 모아엘가",
+          "주택"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "석면 텍스 철거 시 지정 폐기물 신고 처리 필요",
+          "비석면 텍스는 일반 폐기물과 동일하게 처리 가능"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "투게더 SK점",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주 양동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "인터넷 설치/가입"
+        ],
+        "policy": [],
+        "special_features": [
+          "LG, SK, KT 통신사 인터넷 서비스 비교 및 현금 지원 혜택 정보 제공"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "달빛",
+      "keywords": {
+        "menu_type": [
+          "닭 요리"
+        ],
+        "signature_menu": [
+          "치킨"
+        ],
+        "price_info": [
+          "59타입 분양가 2.36억 ~ 2.44억 + 발코니 확장비용 770만원",
+          "74타입 분양가 2.97억 ~ 3.07억 + 발코니 확장비용 850만원",
+          "84타입 분양가 3.34억 ~ 3.51억 + 발코니 확장비용 1,080만원",
+          "84타입 최고 분양가 361,800,000원"
+        ],
+        "ambiance": [
+          "따뜻한 분위기"
+        ],
+        "interior": [
+          "창 인테리어"
+        ],
+        "facilities": [
+          "양동시장 공영주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 천변좌로 260-1 (양동통닭)",
+          "양동시장",
+          "양동시장역",
+          "임동"
+        ],
+        "accessibility": [
+          "양동시장역에서 가까움",
+          "광주 도시철도 2호선 (2028년 초 개통 예정, 시청→광주역 구간)"
+        ],
+        "hours": [
+          "매일 05:50 ~ 23:00 (가게 앞 07시부터 영업)",
+          "이른 아침 전날 전화 주문 가능"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "1969년부터 운영",
+          "3대천왕 출연",
+          "각종 메스컴 소개",
+          "총 세대수 889세대",
+          "용적률 230%",
+          "건폐율 15%",
+          "석면 텍스 폐기물 신고 처리 (석면 텍스)",
+          "비석면 텍스 일반 폐기물 처리 (비석면 텍스)"
+        ],
+        "recommended_for": [
+          "전국민"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "아날로그 상록",
+      "keywords": {
+        "menu_type": [
+          "양식",
+          "이탈리안",
+          "브런치"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "가성비 좋음"
+        ],
+        "ambiance": [
+          "아늑한 분위기",
+          "감성적인 분위기",
+          "크리스마스 트리 장식"
+        ],
+        "interior": [],
+        "facilities": [
+          "온누리 카드 결제 가능",
+          "상생 카드 결제 가능",
+          "단체 테이블 예약 가능",
+          "애견 동반 가능",
+          "화장실 외부에 손 씻는 공간 마련"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 농성동",
+          "서구청 근처",
+          "상록도서관 옆",
+          "하정웅 미술관 인근",
+          "도로변"
+        ],
+        "accessibility": [],
+        "hours": [
+          "11:00 - 20:50",
+          "라스트 오더 20:10",
+          "브레이크 타임 (평일) 14:40 - 17:00",
+          "브레이크 타임 (주말) 15:40 - 17:00",
+          "휴무일 정보 없음"
+        ],
+        "service": [
+          "직원 안내",
+          "선결제"
+        ],
+        "policy": [
+          "단체 인원 방문 시 예약 필수"
+        ],
+        "special_features": [
+          "아날로그내방 2호점"
+        ],
+        "recommended_for": [
+          "데이트",
+          "지인/동료 동반",
+          "평일 점심시간 직장인"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "포동이네 가맥",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "김밥원칙",
+      "keywords": {
+        "menu_type": [
+          "김밥",
+          "어묵",
+          "샌드위치",
+          "한식",
+          "디저트",
+          "강아지 수제 간식"
+        ],
+        "signature_menu": [
+          "모듬김밥",
+          "쑥초코파이",
+          "샌드위치+쥬스+디저트 박스"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [
+          "오픈형 주방"
+        ],
+        "facilities": [
+          "주차 가능(매장 앞, 옆, 뒤)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 수완지구",
+          "광주 첨단",
+          "광주 북구 서강로66번길 15 1층 101호 (서영대학교 인근, 성결교회 근처)",
+          "서울 종로구 종로32길 25 1층 (광장시장 남1문)",
+          "광주 신가동 대성베르힐 정문 앞"
+        ],
+        "accessibility": [
+          "서울고속터미널에서 버스로 약 3시간 30분",
+          "지하철 종로5가역 7번출구에서 도보"
+        ],
+        "hours": [
+          "늘솜 꼬마김밥: 수완지구 8년 운영 후 첨단에 2호점 오픈",
+          "디마레테이블: 오전 07:00 ~ 예약주문시까지",
+          "쑥스초코파이 서울: 10시~20시"
+        ],
+        "service": [
+          "키오스크 (미작동)",
+          "김치, 단무지 셀프 제공",
+          "케이터링 서비스",
+          "예약 주문 가능 (전화, 문자, 카톡)"
+        ],
+        "policy": [
+          "디마레테이블: 예약 주문 없는 날 휴무 (최소 2일 전 예약)"
+        ],
+        "special_features": [
+          "쑥스초코파이: 2016년 대한민국 최초 특허 인증"
+        ],
+        "recommended_for": [
+          "광주 케이터링",
+          "광주 단체 도시락",
+          "강아지 생일 간식, 답례품"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "명품식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "만석가",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미뉴트빠삐용 강남 신세계",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "펀치 드렁크 러브271",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "참식당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미식정",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세기다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "명승다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐광천터미널고속점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "던킨도너츠 광주터미널점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "본죽 광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "꼬치리아",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐 광주갤러리점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "새로나 분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "버거킹광주터미널점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐 광주유촌버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "예픔 커피(신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "피자프렌드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피(유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페이쪼 (광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "파스쿠찌광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페라떼르",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "메가엠지씨커피 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "리유카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 에쏠로지",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "상무팥죽유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "Box커피 신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 히어로즈",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "창억 유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "풀잎카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "백미당 신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "GS25 농성대남점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "라피아(LapiA",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "플레이커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피향기",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐 광주유덕점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "고래사 신세계백화점광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "벌크커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청자다방 신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "썬아뜰리에",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "9stone(나인스톤",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "동네분식",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "삼육오DAYS",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "홍야장",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "다정한 작업실",
+      "keywords": {
+        "menu_type": [
+          "베이커리",
+          "양식",
+          "아시아 음식"
+        ],
+        "signature_menu": [
+          "청귤요거트 크림빵"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "고요함",
+          "연말 분위기"
+        ],
+        "interior": [
+          "연말 분위기"
+        ],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "경상남도 밀양",
+          "서울",
+          "대전",
+          "대구",
+          "부산",
+          "전라",
+          "원성천",
+          "석계역",
+          "이태원"
+        ],
+        "accessibility": [],
+        "hours": [
+          "목요일 새벽 (첫차 시간)"
+        ],
+        "service": [
+          "일대일 소개팅 진행",
+          "프로필 실시간 게시",
+          "지인 여부 확인",
+          "지역 확인",
+          "사진작가 채용"
+        ],
+        "policy": [
+          "게시 중단 (커플 성사 시)"
+        ],
+        "special_features": [
+          "수석 전시 (삼국시대~조선시대, 일제강점기 이후 근현대기)",
+          "미팅 파티 (훈남훈녀 참여)",
+          "매회차 30커플 이상 탄생",
+          "새로운 특집 소개팅"
+        ],
+        "recommended_for": [
+          "양식 선호",
+          "아시아 음식 선호",
+          "한 명에게 집중하여 빠른 만남 추구",
+          "여러명과의 대화가 부담스러운 경우"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "다르다김밥 광주신세계점",
+      "keywords": {
+        "menu_type": [
+          "김밥"
+        ],
+        "signature_menu": [
+          "구운치즈월남쌈",
+          "계란말이"
+        ],
+        "price_info": [
+          "2,500~3,800원 (김밥 1개당)",
+          "일반김밥 약 2개 분량"
+        ],
+        "ambiance": [
+          "깔끔한 분식집"
+        ],
+        "interior": [],
+        "facilities": [
+          "신세계 백화점 주차장 (계산 시 주차번호 등록 가능)",
+          "키오스크",
+          "셀프바",
+          "정수기",
+          "퇴식구"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 신세계 백화점 지하 1층 푸드코트",
+          "광주 서구 무진대로 932",
+          "유스퀘어",
+          "대전신세계점",
+          "광주 남구 진월동",
+          "봉선점 (본점)",
+          "상무점",
+          "풍암점",
+          "수완직영점",
+          "나주혁신도시점",
+          "진월점",
+          "현대백화점신촌점"
+        ],
+        "accessibility": [],
+        "hours": [
+          "10:30~20:00",
+          "광주 신세계백화점 휴무일 휴무"
+        ],
+        "service": [
+          "신세계포인트 적립 가능",
+          "단체주문 가능 (로드샵)",
+          "픽업 가능",
+          "배달 가능"
+        ],
+        "policy": [],
+        "special_features": [
+          "국내산 유기농 쌀 사용",
+          "국내산 친환경 김 사용",
+          "친환경 펄프케이스 포장 (백화점 매장)",
+          "21가지 김밥 종류"
+        ],
+        "recommended_for": [
+          "혼밥",
+          "가족"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "도리쿤",
+      "keywords": {
+        "menu_type": [
+          "베이커리",
+          "도넛",
+          "치즈케이크"
+        ],
+        "signature_menu": [
+          "노티드 도넛",
+          "수플레 치즈케이크"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "푸드코트"
+        ],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주광역시 서구 무진대로 932 신세계백화점 광주신세계점 본관 지하1층 푸드코트"
+        ],
+        "accessibility": [],
+        "hours": [
+          "팝업스토어: 11월 14일까지"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "다양한 메뉴"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 1
+    },
+    {
+      "place_name": "폴 바셋 광주신세계점",
+      "keywords": {
+        "menu_type": [
+          "케이크",
+          "덮밥",
+          "치킨",
+          "떡",
+          "피자",
+          "도넛",
+          "샤브샤브",
+          "뷔페"
+        ],
+        "signature_menu": [
+          "망고크림라떼케이크",
+          "복숭아그릭요거트라떼케이크",
+          "큐브 스테이크덮밥",
+          "매운포크슬라이스덮밥",
+          "양동통닭",
+          "우유크림 도넛"
+        ],
+        "price_info": [
+          "스테이크덮밥 폴 바셋 아이스크림 라테 7,000"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주 신세계백화점",
+          "광주 롯데백화점",
+          "광주 챔피언스필드"
+        ],
+        "accessibility": [
+          "푸드코트 쪽 바라보면 왼쪽 귀퉁이",
+          "폴 바셋 근처"
+        ],
+        "hours": [
+          "월요일 휴무 (슬라이폭스 본점)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "개인 인덕션 (샤브샤브 뷔페)"
+        ],
+        "recommended_for": [
+          "기아타이거즈 팬 (광주 챔피언스필드)"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "도제",
+      "keywords": {
+        "menu_type": [
+          "갈비",
+          "치킨",
+          "떡볶이",
+          "샤브샤브",
+          "쌈밥정식",
+          "카레",
+          "돈카츠",
+          "호두과자",
+          "아이스크림 라떼",
+          "쌀국수"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "명륜진사갈비 삼호점",
+          "상무쌈밥 1인 쌈밥정식 14,000원",
+          "백소정 상무점 머쉬룸포크카레+돈카츠 14,900원",
+          "광주학생교육문화회관 수영장 1일 5,000원",
+          "부창제과 신세계백화점 광주점 호두과자 12개(택 2종) 8,000원",
+          "신세계백화점 광주점 백미당 아이스크림 라떼 6,600원"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "방수 방석 증정"
+        ],
+        "bathroom": [],
+        "location": [
+          "영암",
+          "광주",
+          "충장로",
+          "상무지구",
+          "신세계백화점 광주점",
+          "서울",
+          "수원",
+          "광양",
+          "양동시장"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "능소화 개화 시기: 2024.08.01~2024.08.31"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "메가엠지씨커피 광주유촌점",
+      "keywords": {
+        "menu_type": [
+          "카페",
+          "샌드위치",
+          "샐러드",
+          "포케",
+          "한식",
+          "호프/통닭",
+          "백화점"
+        ],
+        "signature_menu": [
+          "아이스 허니 와앙슈",
+          "방어(겨울)"
+        ],
+        "price_info": [
+          "아이스 허니 와앙슈 ₩2,400"
+        ],
+        "ambiance": [
+          "편안함"
+        ],
+        "interior": [
+          "소파석"
+        ],
+        "facilities": [
+          "주차 (샌두 경기광주점)",
+          "포장 (샌두 경기광주점)",
+          "배달 (샌두 경기광주점)",
+          "예약 가능 (샌두 경기광주점)"
+        ],
+        "bathroom": [],
+        "location": [
+          "메가커피 광주태중로점",
+          "샌두 경기광주점: 경기 광주시 중앙로 95-3 서울클리닉 1층 101호",
+          "봄 일반음식점 기타: 서울특별시 서초구 양재동 1, 서울특별시 서초구 남부순환로 2624, 지하1층 (양재동)",
+          "방배굴찜 일반음식점 한식: 서울특별시 서초구 방배동 1776 1층, 서울특별시 서초구 서초대로1길 19-9, 1층 (방배동)",
+          "쁘이치킨 일반음식점 호프/통닭: 서울특별시 서초구 반포동 706-6 105호, 서울특별시 서초구 강남대로 545-12, 105호 (반포동)",
+          "시오팡야 스타필드수원점 휴게음식점 백화점: 경기도 수원시 장안구 정자동 111-14, 경기도 수원시 장안구 수성로 175, 스타필드 수원 1층 132"
+        ],
+        "accessibility": [],
+        "hours": [
+          "샌두 경기광주점: 평일 오전 10:00 - 오후 7:30",
+          "샌두 경기광주점: 토요일 오전 10:00 - 오후 2:30",
+          "샌두 경기광주점: 매주 일요일 정기 휴무"
+        ],
+        "service": [
+          "키오스크 주문 (메가커피 광주태중로점)",
+          "단체 이용 가능 (샌두 경기광주점)",
+          "혼밥 가능 (샌두 경기광주점)"
+        ],
+        "policy": [
+          "쿠폰 사용 (메가커피 광주태중로점)"
+        ],
+        "special_features": [
+          "디카페인 30여가지 (메가커피)",
+          "비건 메뉴 (샌두 경기광주점)",
+          "글루텐프리 메뉴 (샌두 경기광주점)"
+        ],
+        "recommended_for": [
+          "아이 동반 (메가커피 광주태중로점)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "지에스25 광주유촌점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유(cu)농성sk뷰센트럴",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페미뇽",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쁘앙송",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쉼,카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "감성커피(광주농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "또이또이베트남 신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페지요",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "파파도나스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "하타오 신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "메가엠지씨커피 광주양동점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "데일리603",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "공차 유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더카페 드롭탑",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "키친205",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "제이제이커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피하우스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "라온 샌드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "달리는 커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "써브웨이 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "로또복권방,로터리커피",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매머드익스프레스 상무버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "도가원",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "알토스카페",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 서구청점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "디아치앤갤러리",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피산울림",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "이가네 떡볶이",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청자다방",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컨트롤러스 커피웍스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "온정식탁",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "마스터쿡",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "와인앤푸드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐 광주군분로점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 버들점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "맘스터치 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페플라워92",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "요거얌서구점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "봉앤장",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 농성SK뷰점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "세븐일레븐 광주광천사거리점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "햇살커피(coffee",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "지에스25 양동센트럴점",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "호프/통닭",
+          "백화점",
+          "떡카페",
+          "아이스크림"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "서울특별시 강남구",
+          "서울특별시 서초구 양재동 1",
+          "서울특별시 서초구 남부순환로 2624, 지하1층 (양재동)",
+          "서울특별시 서초구 방배동 1776 1층",
+          "서울특별시 서초구 서초대로1길 19-9, 1층 (방배동)",
+          "서울특별시 서초구 반포동 706-6 105호",
+          "서울특별시 서초구 강남대로 545-12, 105호 (반포동)",
+          "경기도 수원시 장안구 정자동 111-14",
+          "경기도 수원시 장안구 수성로 175, 스타필드 수원 1층 132",
+          "부산광역시 부산진구 부전동 503-15 롯데백화점부산본점",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하2층 일부호 (부전동)",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하1층 일부호 (부전동)"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [
+          "강남구 종량제 봉투 사용 의무",
+          "미사용 시 과태료 부과 가능"
+        ],
+        "special_features": [
+          "강남구 종량제 봉투는 지정 판매소에서 구입해야 함",
+          "온누리상품권 가맹 말소 예고 (중소벤처기업부 공고 제2025-390호, 2025년 6월 27일)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "GS25 유촌버들점",
+      "keywords": {
+        "menu_type": [
+          "주꾸미볶음"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "소주/맥주 2900원"
+        ],
+        "ambiance": [
+          "낮술 가능"
+        ],
+        "interior": [
+          "넓음"
+        ],
+        "facilities": [
+          "주차 가능 (건물 옆, 2층 옆)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 상무버들로40번길 1, 1층",
+          "신쭈꾸미유촌버들점"
+        ],
+        "accessibility": [],
+        "hours": [
+          "오픈 14:00"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 1
+    },
+    {
+      "place_name": "로이카페",
+      "keywords": {
+        "menu_type": [
+          "오코노미야끼",
+          "디저트",
+          "빵"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "반값 할인"
+        ],
+        "ambiance": [
+          "유럽 감성",
+          "앤틱"
+        ],
+        "interior": [
+          "화이트",
+          "파스텔 톤"
+        ],
+        "facilities": [
+          "주차 공간 (매장 앞, 인근)",
+          "콜밴 예약"
+        ],
+        "bathroom": [],
+        "location": [
+          "화순 동구리호수공원",
+          "광주",
+          "수완지구",
+          "전농SK아파트(서울 동대문구 사가정로 148)",
+          "래미안위브(서울 동대문구 답십리동 답십리로 130)",
+          "이문동대림e편한세상아파트(동대문구 한천로63길 10)",
+          "마이크로 바이닐 하우스 광주 (광주 광산구 장신로 164)",
+          "수완지구 카페거리"
+        ],
+        "accessibility": [],
+        "hours": [
+          "매일 11시~23시 (크림집)",
+          "매일 7시~2시 (마이크로 바이닐 하우스 광주)"
+        ],
+        "service": [],
+        "policy": [
+          "예약 (콜밴)"
+        ],
+        "special_features": [
+          "제철 과일 케이크 (크림집)",
+          "DJ party (금, 토, 마이크로 바이닐 하우스 광주)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "텐퍼센트 커피(농성신세계점",
+      "keywords": {
+        "menu_type": [
+          "라멘",
+          "퓨전",
+          "감자탕",
+          "커피",
+          "샐러드",
+          "디저트",
+          "과자",
+          "케이크"
+        ],
+        "signature_menu": [
+          "메저린라떼",
+          "씨래기감자탕",
+          "카페라떼",
+          "딸기케이크"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "애옹이천국",
+          "사람이 꽤 많음"
+        ],
+        "interior": [
+          "이이남씨 작품 多"
+        ],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "동명동",
+          "화순",
+          "풍암동",
+          "농성동",
+          "농성역",
+          "구 상록회관/현 농성sk뷰아파트"
+        ],
+        "accessibility": [
+          "농성파출소 시내버스 정류장 앞"
+        ],
+        "hours": [
+          "수요일 점심 약속"
+        ],
+        "service": [
+          "패스오더 가능"
+        ],
+        "policy": [],
+        "special_features": [
+          "기아타이거즈 선수들의 맛집으로 유명"
+        ],
+        "recommended_for": [
+          "책 읽기 좋은 곳",
+          "든든한 식사",
+          "벚꽃 시즌 방문 (구 상록회관/현 농성sk뷰아파트)"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "케이크히어 디저트랩",
+      "keywords": {
+        "menu_type": [
+          "케이크",
+          "양식",
+          "백반",
+          "디저트"
+        ],
+        "signature_menu": [
+          "레터링 케이크",
+          "크리스마스 케이크 디자인",
+          "옥수수 무스",
+          "옥수수 케이크",
+          "삼치구이",
+          "고등어구이",
+          "애호박찌개"
+        ],
+        "price_info": [
+          "XS사이즈(지름 9cm) : 20,000원",
+          "S사이즈(지름 12cm) : 30,000원",
+          "M사이즈(1호)(원,하트)(15cm) : 40,000원",
+          "L사이즈(2호)(원,하트)(18cm) : 50,000원",
+          "당근시트 추가 : 3,000원",
+          "쇼콜라(꾸덕한 브라우니)시트 추가 : 3,000원",
+          "기본 레터링 케이크 디자인 기준 금액"
+        ],
+        "ambiance": [
+          "힙한 분위기",
+          "싱그러운 초록빛",
+          "야외 테라스"
+        ],
+        "interior": [
+          "4분할 카페트",
+          "인조잔디 매트",
+          "그린컬러 인테리어"
+        ],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "광주",
+          "농성동",
+          "광주광역시 서구청 인근",
+          "농성역 2번 출구"
+        ],
+        "accessibility": [],
+        "hours": [
+          "11:00-22:00",
+          "브레이크 타임 15:00-17:00",
+          "월요일은 카페만 운영",
+          "화-일 브레이크 타임 음료 가능",
+          "부부더상록: 목금토일 4일만 운영"
+        ],
+        "service": [
+          "주문제작 케이크",
+          "케이크 포장"
+        ],
+        "policy": [],
+        "special_features": [
+          "굴뚝 초 직접 제작"
+        ],
+        "recommended_for": [
+          "광주 레터링 케이크 샵",
+          "생일"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "필업(Fill up",
+      "keywords": {
+        "menu_type": [
+          "샌드위치",
+          "샐러드",
+          "떡볶이",
+          "커피"
+        ],
+        "signature_menu": [],
+        "price_info": [
+          "재료, 양에 비하면 적당한 금액"
+        ],
+        "ambiance": [
+          "야외 느낌"
+        ],
+        "interior": [
+          "잘 꾸며져 있음"
+        ],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "인창동"
+        ],
+        "accessibility": [
+          "동네"
+        ],
+        "hours": [],
+        "service": [
+          "친절한 사장님"
+        ],
+        "policy": [],
+        "special_features": [
+          "폴딩도어"
+        ],
+        "recommended_for": [
+          "아이 학교 보내고 샌드위치, 커피를 먹고 싶은 날"
+        ]
+      },
+      "analyzed_post_count": 3
+    },
+    {
+      "place_name": "텐퍼센트(상무버들점",
+      "keywords": {
+        "menu_type": [
+          "커피",
+          "초밥",
+          "분식",
+          "아이스크림",
+          "장어",
+          "빙수",
+          "국밥",
+          "핫도그",
+          "해장국",
+          "햄버거",
+          "오마카세"
+        ],
+        "signature_menu": [
+          "1리터보틀 음료",
+          "카페라테",
+          "생귤탱귤",
+          "망고 빙수",
+          "고사리국밥",
+          "감자핫도그",
+          "치즈버거",
+          "계란초밥",
+          "뼈해장국"
+        ],
+        "price_info": [
+          "명랑핫도그 100원 쿠폰"
+        ],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 가능 (유료)",
+          "상가 주차장 (넓음)",
+          "주차 2시간 무료"
+        ],
+        "bathroom": [],
+        "location": [
+          "텐퍼센트커피 상무역환승센터점 (상무역 6번 출구 → 스마트저축은행 건물)",
+          "텐퍼센트커피 광주임동제니스점",
+          "양동시장역 4번출구 도보 4분",
+          "광주",
+          "운천저수지",
+          "광주여대"
+        ],
+        "accessibility": [
+          "상무역환승센터점 (상무역 6번 출구)",
+          "광주임동제니스점 (양동시장역 4번출구 도보 4분)"
+        ],
+        "hours": [
+          "텐퍼센트커피 광주임동제니스점 매일 07:00 - 22:00"
+        ],
+        "service": [
+          "머리 드라이 서비스"
+        ],
+        "policy": [],
+        "special_features": [
+          "1리터 보틀에 음료 제공"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "양벽 로스터리",
+      "keywords": {
+        "menu_type": [
+          "로스터리 카페"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "대형 카페",
+          "갤러리 운영",
+          "복합 문화공간"
+        ],
+        "interior": [
+          "노출 콘크리트"
+        ],
+        "facilities": [
+          "주차 가능 (1층 주차장, 야외 주차장, 인근 골목 주차 가능)",
+          "엘리베이터",
+          "휠체어 이용 가능 (출입구, 좌석)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 유촌동",
+          "광주 서구 유촌동 34",
+          "광주 서구 천변우하로 309-20",
+          "유촌교 옆",
+          "빛고을 대로"
+        ],
+        "accessibility": [],
+        "hours": [
+          "평일 11:00-21:00",
+          "주말 12:00-22:00",
+          "라스트 오더: 평일 20:30, 주말 21:30",
+          "매일 11:00 - 22:00",
+          "월 ~ 일 11:00 - 21:00"
+        ],
+        "service": [
+          "단체 예약 가능",
+          "대관 가능",
+          "상생카드 사용 가능",
+          "핸드드립",
+          "생일 혜택",
+          "키즈 케어존"
+        ],
+        "policy": [],
+        "special_features": [
+          "건물 4층",
+          "갤러리 운영 (전시 관람 가능)",
+          "좌식 공간"
+        ],
+        "recommended_for": [
+          "가족",
+          "아기 동반"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "황금오리",
+      "keywords": {
+        "menu_type": [
+          "오리고기 전문점"
+        ],
+        "signature_menu": [
+          "오리 로스",
+          "오리 주물럭",
+          "뚝배기 오리탕",
+          "녹두죽",
+          "오리가족 한상 코스",
+          "생오리 주물럭",
+          "뼈해장국"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차장"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 북구 용봉동 1404-5",
+          "현대아파트 근처",
+          "먹자골목 근처",
+          "전철우 사거리"
+        ],
+        "accessibility": [
+          "대중교통 편리 (버스 정류장 근처)"
+        ],
+        "hours": [
+          "매일 11:30~21:30",
+          "매일 11:00 - 21:30"
+        ],
+        "service": [
+          "점심특선"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "모임"
+        ]
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "씨유 버들마을2단지점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "더리터 농성신세계점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 광주 광천중해점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유 광주화정힐스점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "따뜻한 밥상(광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "은하수산",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "컴포즈커피 광주양동시장점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "미미붕어빵",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "원티드버거(농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유 광천이편한점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "그래머시 스퀘어 빌리브트레비체 광주점(GRAMERCY SQUARE",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "스타벅스 광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "노아",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 발산",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "매머드익스프레스 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "북하우스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "느긋베이크",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "르베지왕 신세계 광주공간",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "CU유덕교차로점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "텐퍼센트 서구청점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유 광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "지에스25 농성스타점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "커피코너",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "유일유통",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아라스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "지에스25 농성상록점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "메가엠지씨커피광주서구청점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "와플샾 광주유스퀘어점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "달래커피양동센트럴점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오크베리(OAKBERRY)-신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "위드하우스",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "아사(ASA)커피랩 광주농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "구오(GUO",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "쥬노",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "텐퍼센트커피 광주화정로점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "텐퍼센트커피 광천힐스테이트점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "카페 상록",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "부창제과 신세계백화점광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "소몽당",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "조이컴퍼니",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "스타벅스 광주유스퀘어점",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [
+          "바닐라크림콜드브루",
+          "별별꾸러미"
+        ],
+        "price_info": [
+          "2만원 이상 구매 시 머그컵 증정 (오픈 이벤트)"
+        ],
+        "ambiance": [
+          "아담한 공간",
+          "테이크아웃 특화 형태"
+        ],
+        "interior": [
+          "통창",
+          "바 테이블",
+          "2인석 소파"
+        ],
+        "facilities": [
+          "터미널 주차장 유료 이용 가능"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 광천동",
+          "광주종합버스터미널 (광천터미널) 내부",
+          "영풍문고 옆",
+          "2번/3번 게이트 근처",
+          "매표소 근처",
+          "티켓박스 건너편"
+        ],
+        "accessibility": [
+          "버스 이용 전후 용이"
+        ],
+        "hours": [
+          "07:00 - 22:00 (딜리버리 21:00까지)"
+        ],
+        "service": [],
+        "policy": [
+          "사이렌오더 주문 시 오픈 이벤트 참여 가능 (소진 시까지)"
+        ],
+        "special_features": [],
+        "recommended_for": [
+          "버스 이용객",
+          "테이크아웃"
+        ]
+      },
+      "analyzed_post_count": 4
+    },
+    {
+      "place_name": "춘하추동",
+      "keywords": {
+        "menu_type": [
+          "한식"
+        ],
+        "signature_menu": [
+          "백반",
+          "쌈밥"
+        ],
+        "price_info": [
+          "점심특선 쌈밥 1인 10000원"
+        ],
+        "ambiance": [
+          "정다운 분위기",
+          "집밥 감성"
+        ],
+        "interior": [],
+        "facilities": [
+          "주차 가능 (매장 앞 3대, 센텀스포츠타워 2시간 무료)",
+          "단체 룸"
+        ],
+        "bathroom": [
+          "남녀공용"
+        ],
+        "location": [
+          "광주 광산구 첨단지구",
+          "비비큐치친 건너편"
+        ],
+        "accessibility": [
+          "첨단중앙로152번길 17-5, 1층",
+          "'계절맛집'이라는 글자가 크게 적혀 있어 찾기 쉬움"
+        ],
+        "hours": [
+          "매일 10:00 - 22:00",
+          "라스트오더 21:00"
+        ],
+        "service": [
+          "일회용 앞치마 제공",
+          "부부가 운영"
+        ],
+        "policy": [],
+        "special_features": [
+          "제철 메뉴"
+        ],
+        "recommended_for": [
+          "모임",
+          "회식"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "커피로드뷰 더시그너스점",
+      "keywords": {
+        "menu_type": [
+          "카페"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [
+          "유럽 감성"
+        ],
+        "interior": [
+          "우드톤",
+          "브라운+빨간 벽돌 외관"
+        ],
+        "facilities": [
+          "주차 가능",
+          "아기의자"
+        ],
+        "bathroom": [],
+        "location": [
+          "신세계백화점 건너편",
+          "더시그너스 웨딩홀 건물 내",
+          "유스퀘어 터미널 근처",
+          "광천터미널, 신세계백화점, 이마트 건너편 교직원공제회 건물"
+        ],
+        "accessibility": [
+          "대중교통 용이 (정류장 바로 앞)"
+        ],
+        "hours": [
+          "평일: 오전 7시 ~ 밤 9시 (라스트오더 20:30)",
+          "주말: 오전 8시 ~ 밤 10시 (라스트오더 21:30)"
+        ],
+        "service": [],
+        "policy": [],
+        "special_features": [
+          "130평 규모",
+          "단체석 구비"
+        ],
+        "recommended_for": [
+          "단체 손님",
+          "웨딩홀 이용 고객"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "세븐일레븐 광주광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "론다베이크샵",
+      "keywords": {
+        "menu_type": [
+          "디저트",
+          "중식"
+        ],
+        "signature_menu": [
+          "두바이 쫀득 떡/쿠키 (두쫀떡/두쫀쿠)",
+          "피스타치오 두바이 쫀득빵"
+        ],
+        "price_info": [],
+        "ambiance": [
+          "고급스러운 분위기",
+          "세련된 분위기"
+        ],
+        "interior": [
+          "유럽 감성 인테리어"
+        ],
+        "facilities": [
+          "주차 가능 (건물 뒷편)"
+        ],
+        "bathroom": [],
+        "location": [
+          "서울역",
+          "광주 신세계 백화점",
+          "용산 아이파크몰 2층",
+          "해운대 마린시티 마린시티3로 51번지 2층",
+          "달맞이길 근처"
+        ],
+        "accessibility": [
+          "이마트에서 진입 용이"
+        ],
+        "hours": [
+          "신세계 백화점 팝업 영업시간 10:30-20:00",
+          "신세계 백화점 팝업 금-일 10:30-20:30",
+          "부엌간 차이니즈 영업시간 오전 11시 ~ 밤"
+        ],
+        "service": [],
+        "policy": [
+          "노키즈존 여부 불확실",
+          "예약 여부 불확실"
+        ],
+        "special_features": [
+          "신세계 백화점 팝업 진행",
+          "무신사 메가스토어 용산 아이파크몰 2층에 위치",
+          "오션뷰 (부엌간 차이니즈)"
+        ],
+        "recommended_for": [
+          "데이트 (부엌간 차이니즈 창가 자리)"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "메가엠지씨커피 광주광천사거리점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "닭강정공방 신세계백화점광주점",
+      "keywords": {
+        "menu_type": [
+          "한식",
+          "중식",
+          "양식",
+          "분식",
+          "떡갈비",
+          "덮밥",
+          "꼬치",
+          "김밥",
+          "닭강정",
+          "족발",
+          "만두",
+          "어묵",
+          "베트남 음식",
+          "반미",
+          "스프링롤",
+          "샐러드",
+          "샐러드 보울",
+          "랩",
+          "유부초밥",
+          "마카롱",
+          "호두과자",
+          "빵",
+          "텐동",
+          "떡볶이",
+          "튀김",
+          "꼬마김밥",
+          "크로플",
+          "아사이베리",
+          "빅토리아 케이크",
+          "크리스마스 케이크",
+          "초콜릿",
+          "모카번",
+          "츄러스",
+          "딸기 케이크",
+          "오징어무침",
+          "꼬막무침",
+          "샤브샤브",
+          "편백찜"
+        ],
+        "signature_menu": [
+          "서울떡갈비",
+          "도리쿤 덮밥",
+          "김밥",
+          "닭강정",
+          "구오만두",
+          "고래사 어묵",
+          "또이또이 반미, 스프링롤",
+          "르베지왕 샐러드 보울, 샐러드, 랩",
+          "도제 유부초밥",
+          "아싸롱 마카롱",
+          "부창제과 호두과자",
+          "궁전제과 빵",
+          "온기정 텐동",
+          "이가네떡볶이 떡볶이, 튀김",
+          "김밥이 다르다 꼬마김밥",
+          "닭강정공방 닭강정",
+          "플러스크로플 크로플",
+          "오크베리 아사이베리",
+          "A_NEUKHAN 빅토리아케이크",
+          "메종세컨드 크리스마스케이크",
+          "TIMBALE 초콜릿",
+          "STANDARD BUN 모카번",
+          "미뇨트빠삐용 츄러스",
+          "키친205 딸기케이크",
+          "원조소문난무침회 오징어무침, 꼬막무침",
+          "진진샤브샤브편백찜"
+        ],
+        "price_info": [
+          "닭강정 100g 4900원"
+        ],
+        "ambiance": [],
+        "interior": [
+          "소박하고 깔끔한 외관"
+        ],
+        "facilities": [
+          "주차 가능",
+          "단체 이용 가능",
+          "예약 가능",
+          "반려견 동반 가능",
+          "아기의자"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주신세계백화점 푸드코트",
+          "서구",
+          "강릉 중앙시장",
+          "경기 광주시 초월읍 현산로 201 2층"
+        ],
+        "accessibility": [
+          "강릉중앙시장 공영주차장 이용 가능"
+        ],
+        "hours": [
+          "진진샤브샤브편백찜 영업시간 11:00 ~ 21:30",
+          "진진샤브샤브편백찜 평일 15:00 ~ 17:00 브레이크 타임",
+          "진진샤브샤브편백찜 매주 월요일 정기휴무",
+          "원조소문난무침회 월~목 11시~20시",
+          "원조소문난무침회 금 11시~21시",
+          "원조소문난무침회 토, 일 10시~21시"
+        ],
+        "service": [
+          "포장 가능",
+          "테이크 아웃 전문"
+        ],
+        "policy": [],
+        "special_features": [
+          "친환경 김, 유기농 쌀 사용 (김밥)",
+          "수제 프리미엄 닭강정",
+          "상해식 철판그릴만두",
+          "부산 프리미엄 수제 어묵",
+          "100% 국내산 안심 닭강정"
+        ],
+        "recommended_for": [
+          "가족"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "심심당",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "부산광역시 부산진구 부전동 503-15 롯데백화점부산본점",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하2층 일부호 (부전동)",
+          "부산광역시 부산진구 가야대로 772, 롯데백화점부산본점 지하1층 일부호 (부전동)"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 2
+    },
+    {
+      "place_name": "카페콘티고",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [
+          "엄돼",
+          "파블로 츄러스",
+          "보리숭어"
+        ],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [],
+        "bathroom": [],
+        "location": [
+          "동명동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "불친절"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 1
+    },
+    {
+      "place_name": "지젤카페(Ziegel Kaffee",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "티모(Teamo",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유 상무버들점",
+      "keywords": {
+        "menu_type": [
+          "초밥",
+          "쭈삼",
+          "김치찌개",
+          "미트볼 파스타",
+          "아보카도 샌드위치",
+          "카페라떼",
+          "당고",
+          "아이스크림",
+          "붕어빵"
+        ],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차 (롯데백화점부산본점)"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주",
+          "부산광역시 부산진구 부전동 503-15 롯데백화점부산본점",
+          "부산광역시 부산진구 가야대로 772",
+          "롯데백화점부산본점 지하 2층",
+          "롯데백화점부산본점 지하 1층",
+          "상무지구",
+          "서구",
+          "화정동"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [],
+        "policy": [
+          "격주 주 4일제 (회사)"
+        ],
+        "special_features": [
+          "온누리상품권 사용처 확대 (가맹 제한업종 완화)"
+        ],
+        "recommended_for": []
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "황금오리 양동점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "에스더블유 광주지점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "크레미뇽",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "리은푸드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "팔도못난이빵",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "청자다방 광천점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "씨유 어반센트럴점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "원티드711버거(농성점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "오니기리봉봉 신세계광주점",
+      "keywords": {},
+      "analyzed_post_count": 0
+    }
+  ]
+}

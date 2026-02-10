@@ -21,7 +21,10 @@ const UserSettingsModal: React.FC<UserSettingsModalProps> = ({
     if (!isOpen) return null;
 
     const handleSave = async () => {
-        if (!age || !gender) return;
+        if (!age || !gender) {
+            alert('연령대와 성별을 모두 선택해주세요.');
+            return;
+        }
         setIsSaving(true);
         try {
             // API Call

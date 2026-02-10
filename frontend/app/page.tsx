@@ -1,6 +1,10 @@
-
+import React, { Suspense } from 'react';
 import { LoginScreen } from "../screens/LoginScreen";
 
 export default function Home() {
-    return <LoginScreen />;
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center font-bold">로딩 중...</div>}>
+            <LoginScreen />
+        </Suspense>
+    );
 }

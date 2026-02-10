@@ -12,7 +12,7 @@ import random
 from typing import Any, List, Dict, Tuple
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ..state import AgentState
-from ..scoring_system import get_scoring_system, PersonalizedScoringSystem
+from ..scoring_system import get_scoring_system, PersonalizedScoringSystem, haversine_km, proximity_bonus
 from ..config import config
 
 
@@ -139,6 +139,7 @@ async def analyze_sentiment_batch(llm: ChatGoogleGenerativeAI, batch_items: List
 
 ## 출력 형식 (JSON List Only)
 반드시 아래 형식의 JSON 리스트만 출력하세요. 순서는 입력된 Place 1, Place 2... 순서를 지켜야 합니다.
+**중요: reason은 반드시 30자 이내로 핵심만 간결하게 작성하세요. 긍정/부정 톤을 일관성 있게 유지하세요.**
 
 [
   {{
@@ -148,7 +149,7 @@ async def analyze_sentiment_batch(llm: ChatGoogleGenerativeAI, batch_items: List
     "service": 2.0,
     "value": 1.0,
     "revisit": 1.0,
-    "reason": "맛과 분위기가 좋고 재방문 의사가 높음"
+    "reason": "맛과 분위기가 좋다는 평이 많음"
   }},
   ...
 ]
@@ -351,14 +352,30 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
     print(f"\n✅ [Scoring Node v4] 스코어링 완료: {len(analyzed_results)}개 음식점")
     
     # ========================================
-    # [v5] 코스 생성 (Weighted Sampling + Exploration Factor)
-    # 문제: 기존 Top-N 방식은 매번 같은 장소만 추천 (결정적 스코어링)
-    # 해결: 상위권 후보군에서 가중 확률 샘플링으로 다양성 확보
+    # [v6] 코스 생성 (Slot-based + Weighted Sampling)
+    # v5 문제: survey에서 설정한 코스 개수/타입 순서가 무시됨
+    # 해결: survey courses를 "슬롯"으로 사용하여 타입별 매칭
     # ========================================
     themes = state.get("themes", ["맛집", "카페", "힐링"])
-    places_per_course = 4
 
-    # 테마별 키워드 매핑 (테마에 맞는 장소 우선 선택)
+    # [FIX] survey에서 설정한 코스 구성 읽기
+    survey_data = state.get("survey_data", {})
+    survey_courses = []
+    if isinstance(survey_data, dict):
+        survey_courses = survey_data.get("courses", [])
+
+    # 슬롯 타입 시퀀스 추출 (예: ["식당", "카페", "숙박", "식당"])
+    slot_types = []
+    for sc in survey_courses:
+        if isinstance(sc, dict):
+            slot_types.append(sc.get("type", ""))
+        else:
+            slot_types.append("")
+
+    places_per_course = len(slot_types) if slot_types else 4
+    print(f"[Scoring v6] 코스당 장소 수: {places_per_course}, 슬롯 타입: {slot_types}")
+
+    # 테마별 키워드 매핑
     theme_keywords = {
         "데이트": ["데이트", "분위기", "로맨틱", "감성", "커플"],
         "맛집": ["맛집", "맛있", "인생맛집", "JMT", "존맛"],
@@ -369,17 +386,24 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
         "가성비": ["가성비", "저렴", "푸짐", "합리적"],
     }
 
-    # Exploration 설정
-    CANDIDATE_POOL_SIZE = 10  # 상위 N개 후보군에서 샘플링 (기존: 1등만 선택)
-    EXPLORATION_WEIGHT = 0.4  # 랜덤 노이즈 비율 (0=결정적, 1=완전랜덤)
+    # 타입 매칭 키워드 (survey 타입 → 장소 속성 매칭)
+    TYPE_MATCH_KEYWORDS = {
+        "식당": ["식당", "맛집", "한식", "일식", "중식", "양식", "분식", "고기", "국밥", "restaurant", "food"],
+        "카페": ["카페", "커피", "디저트", "베이커리", "빵", "케이크", "cafe", "coffee"],
+        "놀거리": ["놀거리", "체험", "관광", "공원", "전시", "문화", "레저", "activity"],
+        "숙박": ["숙박", "호텔", "펜션", "게스트하우스", "모텔", "hotel", "lodging"],
+    }
+
+    CANDIDATE_POOL_SIZE = 10
+    EXPLORATION_WEIGHT = 0.4
 
     generated_courses = []
-    used_place_ids = set()  # 코스 간 중복 방지
+    used_place_ids = set()
 
     for theme_idx, theme in enumerate(themes[:3]):
         keywords = theme_keywords.get(theme, [theme])
 
-        # 테마에 맞는 장소 점수 부여
+        # 모든 후보에 테마 점수 부여
         scored_for_theme = []
         for item in analyzed_results:
             if item.get("place", {}).get("id") in used_place_ids:
@@ -388,7 +412,6 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
             place = item.get("place", {})
             base_score = item.get("score", 0)
 
-            # 테마 매칭 보너스 (가중치 강화: 기존 0.5 → 2.0)
             theme_bonus = 0
             reason_text = item.get("score_breakdown", {}).get("sentiment_summary", "")
             place_keywords = place.get("keywords", {})
@@ -408,34 +431,94 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
                                 theme_bonus += 1.0
                                 matched_kw.add(kw)
 
-            # Exploration Factor: 점수에 랜덤 노이즈 추가
             noise = random.uniform(0, EXPLORATION_WEIGHT * base_score) if base_score > 0 else 0
+
+            # 장소의 추론 타입 미리 계산
+            inferred_type = _infer_place_type(place)
 
             scored_for_theme.append({
                 **item,
-                "theme_score": base_score + theme_bonus + noise
+                "theme_score": base_score + theme_bonus + noise,
+                "inferred_type": inferred_type
             })
 
-        # 테마 점수순 정렬
         scored_for_theme.sort(key=lambda x: x["theme_score"], reverse=True)
 
-        # Weighted Sampling: 상위 후보군에서 가중 확률로 선택
+        # [v6] 슬롯 기반 선택: 각 슬롯의 타입에 맞는 장소를 선택
         selected_places = []
-        candidates = [c for c in scored_for_theme if c.get("place", {}).get("id") not in used_place_ids]
-        pool = candidates[:CANDIDATE_POOL_SIZE]
 
-        while len(selected_places) < places_per_course and pool:
-            # 점수를 확률 가중치로 변환 (softmax-like)
-            scores = [max(c["theme_score"], 0.1) for c in pool]
+        for slot_idx in range(places_per_course):
+            required_type = slot_types[slot_idx] if slot_idx < len(slot_types) else ""
+
+            # 해당 타입에 맞는 후보 필터링
+            type_candidates = []
+            fallback_candidates = []
+
+            for c in scored_for_theme:
+                pid = c.get("place", {}).get("id")
+                if pid in used_place_ids:
+                    continue
+
+                inferred = c.get("inferred_type", "식당")
+
+                if required_type and required_type in TYPE_MATCH_KEYWORDS:
+                    # 타입 매칭 확인
+                    match_kws = TYPE_MATCH_KEYWORDS[required_type]
+                    place_name = c.get("place", {}).get("name", "").lower()
+                    place_kw = c.get("place", {}).get("keywords", {})
+                    menu_type = place_kw.get("menu_type", "") if isinstance(place_kw, dict) else ""
+
+                    is_match = (
+                        inferred == required_type or
+                        any(mk in place_name for mk in match_kws) or
+                        any(mk in str(menu_type) for mk in match_kws)
+                    )
+
+                    if is_match:
+                        type_candidates.append(c)
+                    else:
+                        fallback_candidates.append(c)
+                else:
+                    # 타입 미지정 슬롯: 모든 후보 허용
+                    type_candidates.append(c)
+
+            # 타입 매칭 후보가 있으면 거기서, 없으면 fallback에서 선택
+            pool = type_candidates[:CANDIDATE_POOL_SIZE] if type_candidates else fallback_candidates[:CANDIDATE_POOL_SIZE]
+
+            if not pool:
+                continue
+
+            # [v7] 왔다갔다(backtracking) 감지 페널티
+            # - 멀리 가는 것 자체는 OK (동명동→첨단 한 방향 이동)
+            # - 다시 돌아오는 것만 페널티 (동명동→첨단→동명동)
+            if len(selected_places) >= 2:
+                last = selected_places[-1]
+                scores = []
+                for c in pool:
+                    p = c.get("place", {})
+                    p_lat, p_lng = p.get("lat", 0), p.get("lng", 0)
+                    dist_to_last = haversine_km(last["lat"], last["lng"], p_lat, p_lng)
+                    # 이전 장소(마지막 제외)로 되돌아가는지 체크
+                    backtrack_penalty = 0
+                    for earlier in selected_places[:-1]:
+                        dist_to_earlier = haversine_km(earlier["lat"], earlier["lng"], p_lat, p_lng)
+                        if dist_to_earlier < dist_to_last * 0.5 and dist_to_last > 3.0:
+                            # 마지막 장소보다 이전 장소에 훨씬 가까움 = 되돌아감
+                            backtrack_penalty = -4.0
+                            break
+                    adjusted = max(c["theme_score"] + backtrack_penalty, 0.1)
+                    scores.append(adjusted)
+            else:
+                scores = [max(c["theme_score"], 0.1) for c in pool]
+
             total = sum(scores)
             weights = [s / total for s in scores]
 
-            # 가중 확률 샘플링
             chosen = random.choices(pool, weights=weights, k=1)[0]
             place = chosen.get("place", {})
             place_id = place.get("id")
 
-            if place_id and place_id not in used_place_ids:
+            if place_id:
                 used_place_ids.add(place_id)
 
                 base_reason = chosen.get("score_breakdown", {}).get("sentiment_summary", "")
@@ -450,27 +533,30 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
                 }
                 context_suffix = theme_context.get(theme, f"{theme}에 어울리는 곳입니다.")
 
-                if base_reason and len(base_reason) >= 10:
-                    reason = f"{base_reason[:80]}. {context_suffix}"
+                if base_reason and len(base_reason) >= 5:
+                    # 부정적 감성이면 테마 문구를 붙이지 않음 (앞뒤 모순 방지)
+                    negative_keywords = ["아쉽", "별로", "실망", "부족", "불친절", "비싸", "않"]
+                    is_negative = any(kw in base_reason for kw in negative_keywords)
+                    if is_negative:
+                        reason = base_reason[:30]
+                    else:
+                        reason = f"{base_reason[:30]}. {context_suffix}"
                 else:
-                    reason = f"종합 점수 {chosen.get('score', 0)}점으로 {context_suffix}"
+                    reason = context_suffix
+
+                # 타입은 survey 슬롯 타입 우선, 없으면 추론
+                final_type = required_type if required_type else chosen.get("inferred_type", "식당")
 
                 selected_places.append({
-                    "id": f"p{len(selected_places)+1}",
+                    "id": f"p{slot_idx+1}",
                     "name": place.get("name", "알 수 없음"),
-                    "type": _infer_place_type(place),
+                    "type": final_type,
                     "lat": place.get("lat", 0),
                     "lng": place.get("lng", 0),
-                    "reason": reason[:120]
+                    "reason": reason[:60]
                 })
 
-            pool.remove(chosen)
-            # 후보군 보충 (pool이 줄면 다음 순위에서 채움)
-            next_idx = CANDIDATE_POOL_SIZE + len(selected_places)
-            if next_idx < len(candidates) and len(pool) < CANDIDATE_POOL_SIZE // 2:
-                pool.append(candidates[next_idx])
-
-        # 예산 계산 (Dynamic Budget)
+        # 예산 계산
         total_budget = 0
         price_map = {
             "PRICE_LEVEL_FREE": 0, "PRICE_LEVEL_INEXPENSIVE": 8000,
@@ -491,9 +577,10 @@ async def scoring_node(state: AgentState) -> dict[str, Any]:
             "total_budget": budget_str
         }
         generated_courses.append(course)
-        print(f"[Scoring] 📍 코스 {theme_idx+1} '{theme}' 생성 완료 ({len(selected_places)}개 장소)")
+        type_summary = " → ".join([sp["type"] for sp in selected_places])
+        print(f"[Scoring v6] 📍 코스 {theme_idx+1} '{theme}' ({len(selected_places)}곳): {type_summary}")
 
-    print(f"✅ [Scoring Node v5] 코스 생성 완료: {len(generated_courses)}개 코스 (Exploration Factor 적용)")
+    print(f"✅ [Scoring Node v6] 코스 생성 완료: {len(generated_courses)}개 코스 (Slot-based Matching)")
     
     return {
         "scored_results": analyzed_results,

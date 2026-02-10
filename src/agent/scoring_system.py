@@ -11,6 +11,34 @@ from typing import List, Dict, Optional, Tuple
 from difflib import SequenceMatcher
 
 
+def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """두 좌표(위도/경도) 간 직선 거리를 km 단위로 반환합니다."""
+    R = 6371.0  # 지구 반지름 (km)
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2))
+         * math.sin(dlng / 2) ** 2)
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def proximity_bonus(dist_km: float) -> float:
+    """거리 기반 보너스/페널티를 반환합니다.
+    - 2km 이내: +2 (같은 동네)
+    - 2~5km:   +0 (같은 구, 기본)
+    - 5~10km:  -2 (구 간 이동, 약한 페널티)
+    - 10km+:   -4 (먼 권역, 중간 페널티)
+    """
+    if dist_km <= 2.0:
+        return 2.0
+    elif dist_km <= 5.0:
+        return 0.0
+    elif dist_km <= 10.0:
+        return -2.0
+    else:
+        return -4.0
+
+
 class RestaurantScoringSystem:
     """
     음식점 스코어링 및 랭킹 시스템

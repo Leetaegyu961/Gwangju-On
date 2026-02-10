@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { LogOut, LogIn, Sparkles } from 'lucide-react';
 
 interface GuestSettingsModalProps {
@@ -10,11 +10,12 @@ interface GuestSettingsModalProps {
 
 const GuestSettingsModal: React.FC<GuestSettingsModalProps> = ({ isOpen, onClose, onLogout }) => {
     const router = useRouter();
+    const pathname = usePathname();
 
     if (!isOpen) return null;
 
     const handleLogin = () => {
-        router.push('/login');
+        router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
         onClose();
     };
 

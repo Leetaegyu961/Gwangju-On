@@ -72,6 +72,12 @@ export const TastingNoteScreen = () => {
             console.error("Failed to save tasting notes", e);
         }
 
+        // 여행 완료 → 코스 데이터 정리 (다음 지도 진입 시 깨끗한 상태)
+        localStorage.removeItem('all_courses');
+        localStorage.removeItem('current_course');
+        localStorage.removeItem('current_course_meta');
+        localStorage.removeItem('memory_spots');
+
         // 타임라인 화면으로 이동
         router.push('/timeline');
     };
@@ -165,7 +171,7 @@ export const TastingNoteScreen = () => {
     const currentQ = questions[step - 1];
 
     return (
-        <div className="h-screen bg-white flex flex-col font-['Inter']">
+        <div className="h-screen bg-white flex flex-col font-['Inter'] pb-[4.5rem]">
             {/* Progress Bar */}
             <div className="fixed top-0 left-0 right-0 h-1.5 bg-gray-50 z-50">
                 <motion.div
@@ -194,7 +200,7 @@ export const TastingNoteScreen = () => {
             </header>
 
             {/* Question Content - Scrollable */}
-            <main className="flex-1 px-8 pt-12 pb-32 overflow-y-auto">
+            <main className="flex-1 px-8 pt-12 pb-6 overflow-y-auto">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -242,8 +248,8 @@ export const TastingNoteScreen = () => {
                 </AnimatePresence>
             </main>
 
-            {/* Footer Navigation - Fixed at bottom */}
-            <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-100 p-6 pb-8 z-50 shadow-2xl">
+            {/* Footer Navigation - Part of flex layout */}
+            <div className="shrink-0 bg-white border-t border-gray-100 px-6 pt-4 pb-4">
                 <button
                     onClick={nextStep}
                     disabled={!isStepComplete()}

@@ -20,7 +20,7 @@ RUN poetry config virtualenvs.create false && \
 COPY backend/ ./backend/
 COPY src/ ./src/
 COPY data/ ./data/
-COPY vectors.json ./
+COPY vector_data/ ./vector_data/
 
 # static 디렉토리 생성
 RUN mkdir -p static/uploads

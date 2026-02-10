@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 /**
@@ -10,6 +10,7 @@ import Image from 'next/image';
  */
 export const LoginScreen = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const googleButtonRef = useRef<HTMLDivElement>(null);
 
     // 구글 로그인 성공 콜백
@@ -41,9 +42,12 @@ export const LoginScreen = () => {
                     localStorage.setItem('user_profile', JSON.stringify(data.user));
                 }
 
-                // 온보딩 여부에 따라 이동
-                if (data.user.is_onboarded) {
-                    router.push('/map'); // or main
+                // redirect 파라미터가 있으면 해당 페이지로, 없으면 기본 흐름
+                const redirectUrl = searchParams.get('redirect');
+                if (redirectUrl && data.user.is_onboarded) {
+                    router.push(decodeURIComponent(redirectUrl));
+                } else if (data.user.is_onboarded) {
+                    router.push('/map');
                 } else {
                     router.push('/survey');
                 }

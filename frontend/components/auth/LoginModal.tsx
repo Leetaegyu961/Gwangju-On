@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -9,12 +9,17 @@ interface LoginModalProps {
 
 const LoginInducementModal: React.FC<LoginModalProps> = ({ isOpen, onClose, featureName }) => {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     if (!isOpen) return null;
 
     const handleLogin = () => {
-        // 로그인 페이지로 이동
-        router.push('/login');
+        // 현재 페이지 전체 URL을 redirect 파라미터로 전달
+        const currentUrl = searchParams.toString()
+            ? `${pathname}?${searchParams.toString()}`
+            : pathname;
+        router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
         onClose();
     };
 

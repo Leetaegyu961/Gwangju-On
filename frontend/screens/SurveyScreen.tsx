@@ -2,22 +2,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, X, ChevronDown, Mic, Utensils, Coffee, Music, MapPin, Bed } from 'lucide-react';
+import { Plus, X, ChevronDown, Utensils, Coffee, Music, MapPin, Bed } from 'lucide-react';
 import { CoursePoint } from '../types';
 import { InvitationPopup } from '../features/experience/InvitationPopup';
+import { GeminiService } from '../services/geminiService';
+import { getCourseImage } from '../utils/courseImages';
+
+const aiService = new GeminiService();
 
 export const SurveyScreen = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showInvitation, setShowInvitation] = useState(false);
+  const [personalizedInvitation, setPersonalizedInvitation] = useState<any>(null);
 
   useEffect(() => {
     // 이미 거절하고 돌아온 경우(?reason=decline_invitation)에는 띄우지 않음
-    if (searchParams.get('reason') !== 'decline_invitation') {
-      // 컴포넌트 마운트 후 약간의 지연을 주어 팝업이 확실히 뜨도록 함
-      const timer = setTimeout(() => setShowInvitation(true), 100);
-      return () => clearTimeout(timer);
-    }
+    if (searchParams.get('reason') === 'decline_invitation') return;
+
+    const init = async () => {
+      // 1. 개인화 초대장 조회 (로그인 사용자만)
+      try {
+        const personalized = await aiService.getPersonalizedInvitation();
+        if (personalized) {
+          // 이미지가 없는 장소에 기본 이미지 할당
+          const placesWithImages = (personalized.places || []).map((p: any) => ({
+            ...p,
+            imageUrl: p.img || p.imageUrl || getCourseImage([p.type || '여행'], p.name || ''),
+          }));
+          setPersonalizedInvitation({
+            ...personalized,
+            imageUrl: personalized.imageUrl || "https://images.unsplash.com/photo-1534234828563-025816976a44?w=800&q=80",
+            places: placesWithImages,
+          });
+        }
+      } catch (e) {
+        // 개인화 초대장 조회 실패 시 무시
+      }
+
+      // 2. 1/3 확률로 팝업 표시
+      if (Math.random() < 1 / 3) {
+        setTimeout(() => setShowInvitation(true), 100);
+      }
+    };
+    init();
   }, [searchParams]);
 
   const [courses, setCourses] = useState<CoursePoint[]>([
@@ -84,7 +112,12 @@ export const SurveyScreen = () => {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] pb-44 overflow-y-auto font-['Inter'] hide-scrollbar relative">
-      <InvitationPopup isOpen={showInvitation} onClose={() => setShowInvitation(false)} />
+      <InvitationPopup
+        isOpen={showInvitation}
+        onClose={() => setShowInvitation(false)}
+        invitationData={personalizedInvitation || undefined}
+        isPersonalized={!!personalizedInvitation}
+      />
       {/* Header */}
       <header className="px-6 py-5 flex items-center justify-center sticky top-0 z-[100] bg-[#FDFBF7]/80 backdrop-blur-md">
         <h1 className="text-center text-xl font-black tracking-tight text-gray-800">여행 취향 분석</h1>
@@ -317,19 +350,6 @@ export const SurveyScreen = () => {
         </div>
       </div>
 
-      {/* Input Simulator at Bottom (Image 1) */}
-      <div className="fixed bottom-24 left-6 right-6 z-[200] animate-slide-up">
-        <div className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl p-4 flex items-center gap-4 shadow-2xl">
-          <Mic size={24} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="프롬프트를 입력하세요..."
-            className="flex-1 bg-transparent border-none outline-none font-medium text-gray-700 placeholder:text-gray-300"
-            readOnly
-            onClick={() => router.push('/chat')}
-          />
-        </div>
-      </div>
     </div>
   );
 };

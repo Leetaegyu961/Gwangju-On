@@ -48,7 +48,11 @@ async def save_tasting_note(user_id: str, note: dict):
                 survey = intent_ctx.get("survey_data", {})
                 if isinstance(survey, dict):
                     session_themes = survey.get("themes", [])
-        await learn_from_tasting_note(db, user_id, satisfaction, session_themes)
+        await learn_from_tasting_note(
+            db, user_id, satisfaction, session_themes,
+            atmosphere=note.get("atmosphere"),
+            best_place_id=note.get("best_place")
+        )
     except Exception as e:
         print(f"⚠️ [Preference Learning] tasting-note failed: {e}")
 

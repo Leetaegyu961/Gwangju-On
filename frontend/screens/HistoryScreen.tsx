@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar, MapPin, DollarSign, Clock, Trash2 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { GeminiService } from '../services/geminiService';
 import { SavedCourse } from '../types';
+import { getCourseImage } from '../utils/courseImages';
 
 const aiService = new GeminiService();
 
@@ -100,14 +101,17 @@ export const HistoryScreen = () => {
             }
         }
 
-        // MapView 호환 포맷으로 변환
+        // MapView 호환 포맷으로 변환 (이미지 복구 포함)
         const mapCourses = relatedCourses.map(c => ({
             course_id: c.id,
             course_name: c.title,
             description: c.description,
-            places: c.points || [],
-            cards: [], // 저장된 카드 정보가 없으므로 빈 배열 (지도에서는 마커 위주로 표시됨)
-            is_selected: c.is_selected !== undefined ? c.is_selected : true // [Mod] 확정 상태 전달
+            places: (c.points || []).map((p: any) => ({
+                ...p,
+                img: p.img || getCourseImage([p.type || '장소'], p.name || '')
+            })),
+            cards: [],
+            is_selected: c.is_selected !== undefined ? c.is_selected : true
         }));
 
         // 클릭된 코스가 지도에서 선택된 상태로 시작하도록 설정

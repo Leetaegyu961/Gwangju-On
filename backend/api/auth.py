@@ -17,6 +17,15 @@ JWT_SECRET = os.getenv("JWT_SECRET", "default_secret")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
+# ⚠️ Security Warning: JWT_SECRET must be set in production
+if JWT_SECRET == "default_secret":
+    import warnings
+    warnings.warn(
+        "⚠️ JWT_SECRET is using 'default_secret'. "
+        "Set a strong JWT_SECRET env var for production!",
+        stacklevel=2
+    )
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:

@@ -81,30 +81,75 @@ async def learn_from_course_selection(db, user_id: str, course_places: list):
         print(f"📚 [Preference Learning] Course selection: {len(seen_tags)} tags updated for {user_id}")
 
 
-async def learn_from_tasting_note(db, user_id: str, satisfaction: int, session_themes: list):
+async def learn_from_tasting_note(db, user_id: str, satisfaction: int, session_themes: list,
+                                   atmosphere: str = None, best_place_id: str = None):
     """
-    테이스팅 노트의 만족도에 따라 세션 테마의 가중치를 조정합니다.
-    만족도 4-5: +0.2, 만족도 1-2: -0.1, 만족도 3: 변화 없음
+    테이스팅 노트의 만족도, 분위기, 베스트 장소를 기반으로 선호도를 학습합니다.
+
+    학습 항목:
+    1. satisfaction → 세션 테마 가중치 조정 (4-5: +0.2, 1-2: -0.1)
+    2. atmosphere → 분위기 선호 태그 강화 (+0.3)
+    3. best_place_id → 해당 장소의 카테고리 태그 강화 (+0.4)
 
     Args:
         db: MongoDB database instance
         user_id: 사용자 ID
         satisfaction: 만족도 (1-5)
         session_themes: 해당 세션의 테마 리스트
+        atmosphere: 분위기 선호 (예: "quiet", "lively", "romantic")
+        best_place_id: 최고 장소 ID 또는 이름
     """
+    # 1. 만족도 기반 테마 가중치 조정 (기존 로직)
     if satisfaction >= 4:
         delta = 0.2
     elif satisfaction <= 2:
         delta = -0.1
     else:
-        return  # 만족도 3은 변화 없음
+        delta = 0  # 만족도 3은 테마 변화 없음
 
-    for theme in session_themes:
-        if theme:
-            await increment_preference(db, user_id, theme, delta)
+    if delta != 0:
+        for theme in session_themes:
+            if theme:
+                await increment_preference(db, user_id, theme, delta)
 
-    if session_themes:
-        print(f"📝 [Preference Learning] Tasting note (satisfaction={satisfaction}): {len(session_themes)} themes adjusted for {user_id}")
+    # 2. 분위기 선호 학습
+    ATMOSPHERE_TAG_MAP = {
+        "quiet": "조용한",
+        "lively": "활기찬",
+        "romantic": "로맨틱",
+        "casual": "캐주얼",
+        "cozy": "아늑한",
+        "trendy": "트렌디",
+        "traditional": "전통적인",
+    }
+    if atmosphere:
+        tag = ATMOSPHERE_TAG_MAP.get(atmosphere)
+        if tag:
+            await increment_preference(db, user_id, tag, 0.3)
+            print(f"🎨 [Preference Learning] Atmosphere '{atmosphere}' → '{tag}' +0.3 for {user_id}")
+
+    # 3. 베스트 장소 카테고리 학습
+    if best_place_id:
+        try:
+            pool_session = await db["refinement_sessions"].find_one({"userId": user_id})
+            if pool_session:
+                for place in pool_session.get("refinement_pool", []):
+                    if place.get("id") == best_place_id or place.get("name") == best_place_id:
+                        place_type = place.get("type", "")
+                        if place_type:
+                            await increment_preference(db, user_id, place_type, 0.4)
+                            print(f"⭐ [Preference Learning] Best place type '{place_type}' +0.4 for {user_id}")
+                        # 장소의 tags도 학습
+                        for tag in place.get("tags", [])[:3]:
+                            if tag:
+                                await increment_preference(db, user_id, tag, 0.2)
+                        break
+        except Exception as e:
+            print(f"⚠️ [Preference Learning] Best place lookup failed: {e}")
+
+    learned_count = len(session_themes) + (1 if atmosphere else 0) + (1 if best_place_id else 0)
+    if learned_count > 0:
+        print(f"📝 [Preference Learning] Tasting note (satisfaction={satisfaction}): {learned_count} signals processed for {user_id}")
 
 
 async def learn_from_discovery_action(db, user_id: str, action: str, category: str):

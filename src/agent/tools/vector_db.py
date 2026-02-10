@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 import asyncio
 import time
 from typing import List, Dict, Any, Optional
@@ -22,53 +23,81 @@ class GCPVectorDB:
     def __init__(self):
         self.metadata_store = {}
         self.region_map = {}
+        self.gu_map = {}
         self.index_endpoint = None
         self.embedding_model = None
-        
+
         # Load Data & Connect
         self._load_local_data()
         self._init_connection()
 
     def _load_local_data(self):
         """
-        로컬 데이터 파일(extracted_keywords_*.json)에서 장소 상세 정보와 실제 지역 정보를 로드합니다.
-        (test_cloud_search.py 로직 반영)
+        vector_data/ 폴더의 모든 키워드 파일에서 장소 메타데이터를 로드합니다.
+        지원 형식: extracted_keywords_*.json (동구), kw_*.json (남구/광산구/북구/서구)
         """
         data_map = {}
-        region_map = {} # { "가게이름": "실제지역명" }
-        
-        # 1. Keywords (Contains Region Info)
-        # 파일명에서 정확한 지역 정보를 유추합니다.
-        target_files = {
-            "동명동": "extracted_keywords_동명동.json",
-            "시내권": "extracted_keywords_시내권.json",
-            "조대권": "extracted_keywords_조대권.json"
+        region_map = {}
+        gu_map = {}
+
+        # 파일명 prefix → 구 이름 매핑
+        gu_name_map = {
+            "namgu": "남구", "bukgu": "북구", "seogu": "서구",
+            "gwangsan": "광산구", "donggu": "동구"
         }
 
-        print("[VectorDB] [Load] Loading local metadata files...")
-        
-        for region_name, filename in target_files.items():
-            if os.path.exists(filename):
+        # vector_data/ 폴더 경로 결정
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        base_dir = os.path.join(project_root, "vector_data")
+        if not os.path.isdir(base_dir):
+            base_dir = "vector_data"
+
+        print(f"[VectorDB] [Load] Loading from {base_dir}...")
+
+        file_patterns = [
+            os.path.join(base_dir, "extracted_keywords_*.json"),
+            os.path.join(base_dir, "kw_*.json"),
+        ]
+
+        loaded_files = 0
+        for pattern in file_patterns:
+            for filepath in sorted(glob.glob(pattern)):
                 try:
-                    with open(filename, 'r', encoding='utf-8') as file:
-                        content = json.load(file)
-                        for p in content.get('places', []):
-                            name = p.get('place_name')
-                            if name:
-                                data_map[name] = {
-                                    "keywords": p.get('keywords', {}),
-                                    "summary": "",  # Summary is initially empty
-                                    "place_name": name,
-                                    "region": region_name
-                                }
-                                # 파일명 기준으로 올바른 지역 정보 매핑
-                                region_map[name] = region_name
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = json.load(f)
+
+                    region_raw = content.get('region', '')
+                    filename = os.path.basename(filepath)
+
+                    # region/gu 이름 결정
+                    if '_' in region_raw and region_raw.split('_', 1)[0] in gu_name_map:
+                        prefix, region_name = region_raw.split('_', 1)
+                        gu_name = gu_name_map[prefix]
+                    else:
+                        region_name = region_raw or filename.replace("extracted_keywords_", "").replace(".json", "")
+                        gu_name = "동구"
+
+                    for p in content.get('places', []):
+                        name = p.get('place_name')
+                        if not name:
+                            continue
+                        data_map[name] = {
+                            "keywords": p.get('keywords', {}),
+                            "place_name": name,
+                            "region": region_name,
+                            "gu": gu_name,
+                        }
+                        region_map[name] = region_name
+                        gu_map[name] = gu_name
+
+                    loaded_files += 1
                 except Exception as e:
-                    print(f"[VectorDB] [WARN] Failed to load {filename}: {e}")
-        
+                    print(f"[VectorDB] [WARN] Failed to load {filepath}: {e}")
+
         self.metadata_store = data_map
         self.region_map = region_map
-        print(f"[VectorDB] [OK] Loaded metadata for {len(self.metadata_store)} items.")
+        self.gu_map = gu_map
+        print(f"[VectorDB] [OK] Loaded {loaded_files} files, {len(self.metadata_store)} places.")
 
     def _init_connection(self):
         """Initialize connection to Vertex AI"""
@@ -147,13 +176,19 @@ class GCPVectorDB:
             # 3. Client-side Filtering
             for res in raw_results:
                 place_id = res.id
-                
-                # Filter 1: Region Check
-                # region_filter가 있으면, 로컬 맵핑된 지역과 일치하는지 확인
+
+                # Filter 1: Region Check (구 단위 or 권역 단위)
                 if region_filter:
-                    place_region = self.region_map.get(place_id, "Unknown")
-                    if place_region != region_filter:
-                        continue
+                    place_region = self.region_map.get(place_id, "")
+                    place_gu = self.gu_map.get(place_id, "")
+                    # "남구", "북구" 등 구 단위 필터 → gu_map으로 확인
+                    # "동명동", "수완권" 등 권역 필터 → region_map으로 확인
+                    if region_filter in ("동구", "남구", "북구", "서구", "광산구"):
+                        if place_gu != region_filter:
+                            continue
+                    else:
+                        if place_region != region_filter:
+                            continue
 
                 # Filter 2: Content Existence Check
                 # 메타데이터(키워드)가 존재하는지 확인

@@ -64,9 +64,11 @@ export const getCourseImage = (tags: string[] = [], name: string = ''): string =
         }
     }
 
-    // 2. 해당 카테고리에서 랜덤 이미지 선택
+    // 2. 해당 카테고리에서 이름 기반 결정적 이미지 선택
+    // (같은 장소 이름 → 항상 같은 이미지, 새로고침해도 유지)
     const images = PLACE_IMAGES[matchedCategory] || PLACE_IMAGES['default'];
-    const randomIndex = Math.floor(Math.random() * images.length);
+    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = hash % images.length;
 
-    return images[randomIndex];
+    return images[index];
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Brain, User, Target, Activity, Database } from 'lucide-react';
+import { X, Brain, User, Target, Activity } from 'lucide-react';
 import { GeminiService } from '../../services/geminiService';
 
 interface AgentContextDashboardProps {
@@ -46,7 +46,6 @@ export const AgentContextDashboard = ({ isOpen, onClose }: AgentContextDashboard
                         { id: 'profile', icon: User, label: '프로필' },
                         { id: 'intent', icon: Target, label: '여행 의도' },
                         { id: 'activity', icon: Activity, label: '활동 로그' },
-                        { id: 'raw', icon: Database, label: 'Raw Data' },
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -180,13 +179,6 @@ export const AgentContextDashboard = ({ isOpen, onClose }: AgentContextDashboard
                                 </div>
                             )}
 
-                            {activeTab === 'raw' && (
-                                <div className="bg-[#1e293b] p-5 rounded-[2rem] shadow-inner h-full min-h-[400px]">
-                                    <pre className="text-green-400 text-[10px] overflow-auto h-full font-mono custom-scrollbar leading-relaxed">
-                                        {JSON.stringify(context, null, 2)}
-                                    </pre>
-                                </div>
-                            )}
                         </div>
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center gap-4">

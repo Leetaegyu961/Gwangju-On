@@ -18,18 +18,34 @@ const ChatContent = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [streamProgress, setStreamProgress] = useState<{step: string; message: string; progress: number; icon?: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const invalidMsg = searchParams.get('invalidMsg');
+
     if (isLocationRequestMode || searchParams.get('mode') === 'course_init') {
-      setMessages([
+      const initialMessages: Message[] = [
         {
           id: '1',
           role: 'assistant',
           text: '가고 싶은 장소가 있나요?',
-          suggestions: ['바로 코스 생성하기'] // '계속 채팅하기' 제거됨
+          suggestions: ['바로 코스 생성하기']
         }
-      ]);
+      ];
+
+      // MapView에서 유효하지 않은 입력으로 되돌아온 경우
+      if (invalidMsg) {
+        initialMessages.push({
+          id: `invalid_redirect_${Date.now()}`,
+          role: 'assistant',
+          text: decodeURIComponent(invalidMsg),
+          showSurveyPrompt: true,
+          suggestions: ['바로 코스 생성하기']
+        });
+      }
+
+      setMessages(initialMessages);
     } else {
       // Normal entry
       setMessages([
@@ -139,7 +155,6 @@ const ChatContent = () => {
     setMessages(prev => [...prev.map(m => ({ ...m, isDecisionPoint: false })), userMsg]);
 
     let fullInput = input;
-    // 이전 대화 맥락(특히 위치 정보)을 포함하여 전송
     if (isLocationRequestMode) {
       const locationMsg = messages.find(m => m.role === 'user');
       if (locationMsg && !input.includes(locationMsg.text)) {
@@ -150,14 +165,40 @@ const ChatContent = () => {
     setInput('');
     setLoading(true);
 
+    // 입력 유효성 검증
     try {
-      const response = await aiService.processRequest(fullInput);
-      setMessages(prev => [...prev, response]);
-    } catch (err) {
-      setMessages(prev => [...prev, { id: 'err', role: 'assistant', text: '오류가 발생했습니다.' }]);
-    } finally {
-      setLoading(false);
+      const validation = await aiService.validateInput(fullInput);
+      if (!validation.isValid) {
+        setLoading(false);
+        // 유효하지 않은 입력 → 채팅에서 안내 메시지 + 설문 기반 코스 생성 유도
+        setMessages(prev => [...prev, {
+          id: `invalid_${Date.now()}`,
+          role: 'assistant' as const,
+          text: validation.message,
+          showSurveyPrompt: true,
+          suggestions: ['바로 코스 생성하기']
+        }]);
+        return;
+      }
+    } catch (e) {
+      // 검증 실패 시 그냥 진행
+      console.warn('[ChatScreen] Validation failed, proceeding:', e);
     }
+
+    setLoading(false);
+
+    // "코스 생성을 시작합니다!" 메시지 표시 후 MapView로 이동 (통합 로딩 UX)
+    setMessages(prev => [...prev, {
+      id: 'generating',
+      role: 'assistant',
+      text: '네! 코스 생성을 시작합니다! 🎯'
+    }]);
+
+    const userId = localStorage.getItem('temp_user_id');
+    const encodedPrompt = encodeURIComponent(fullInput);
+    setTimeout(() => {
+      router.push(`/map?auto_generate=true&userId=${userId}&prompt=${encodedPrompt}`);
+    }, 800);
   };
 
   return (
@@ -205,14 +246,20 @@ const ChatContent = () => {
                 {m.suggestions.map((suggestion, idx) => {
                   if (suggestion === '바로 코스 생성하기') {
                     return (
-                      <div key={idx} className="w-full flex flex-col gap-3">
+                      <div key={idx} className="w-full flex flex-col gap-2">
+                        {/* 설문조사 기반 코스 생성 유도 메시지 */}
+                        {m.showSurveyPrompt && (
+                          <p className="text-center text-sm text-gray-500 animate-pulse py-1">
+                            설문조사 기반으로 바로 코스를 생성해드릴까요?
+                          </p>
+                        )}
                         {/* Primary Action Button */}
                         <button
                           onClick={() => {
                              // 1. 사용자 메시지 추가 (UI 피드백)
                              const userMsg: Message = { id: Date.now().toString(), role: 'user', text: suggestion };
                              setMessages(prev => [...prev, userMsg]);
- 
+
                              // 2. 즉시 페이지 이동 (PRD v2.1) + 추가 요청사항 전달
                              // Use 'input' state from the bottom bar
                              const userId = localStorage.getItem('temp_user_id');
@@ -249,26 +296,21 @@ const ChatContent = () => {
                         return; // API 호출 안 함
                       }
 
-                      // 그 외의 경우 (요구사항 칩 등) -> API 호출
-                      setLoading(true);
-                      setTimeout(async () => {
-                        try {
-                          // 이전 대화 맥락을 포함해서 보내야 하지만, 현재 API 구조상 input만 보냄. 
-                          // 실제로는 "광주 동명동 + 조용한 데이트 코스" 형태로 합쳐서 보내거나 Context를 유지해야 함.
-                          // 여기서는 편의상 입력값만 보냄. (개선 필요: 위치 정보를 기억했다가 같이 보냄)
+                      // 그 외의 경우 (요구사항 칩 등) -> MapView 통합 로딩으로 이동
+                      const lastLocation = messages.find(msg => msg.role === 'user')?.text || "";
+                      const fullQuery = lastLocation ? `${lastLocation} ${suggestion}` : suggestion;
 
-                          // *임시 해결*: 이전 메시지(위치)를 찾아서 결합
-                          const lastLocation = messages.find(msg => msg.role === 'user')?.text || "";
-                          const fullQuery = lastLocation ? `${lastLocation} ${suggestion}` : suggestion;
+                      setMessages(prev => [...prev, {
+                        id: 'generating',
+                        role: 'assistant',
+                        text: '네! 코스 생성을 시작합니다! 🎯'
+                      }]);
 
-                          const response = await aiService.processRequest(fullQuery);
-                          setMessages(prev => [...prev, response]);
-                        } catch (e) {
-                          setMessages(prev => [...prev, { id: 'err', role: 'assistant', text: '오류가 발생했습니다.' }]);
-                        } finally {
-                          setLoading(false);
-                        }
-                      }, 100);
+                      const chipUserId = localStorage.getItem('temp_user_id');
+                      const chipPrompt = encodeURIComponent(fullQuery);
+                      setTimeout(() => {
+                        router.push(`/map?auto_generate=true&userId=${chipUserId}&prompt=${chipPrompt}`);
+                      }, 800);
                     }}
                     className="px-5 py-3 bg-white border border-[#0066FF]/20 text-[#0066FF] rounded-2xl font-bold text-sm shadow-sm hover:bg-blue-50 active:scale-95 transition-all"
                   >
@@ -285,13 +327,8 @@ const ChatContent = () => {
             <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm border border-blue-50 animate-bounce shrink-0">
               <img src="/mascot_circle.png" alt="Loading" className="w-full h-full object-cover" />
             </div>
-            <div className="bg-white px-5 py-3 rounded-[2rem] rounded-tl-none shadow-sm border border-gray-100 flex items-center gap-2">
-              <div className="dot-typing">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <span className="text-xs font-bold text-gray-400 ml-2">열심히 코스를 짜고 있어요!</span>
+            <div className="bg-white px-5 py-3 rounded-[2rem] rounded-tl-none shadow-sm border border-gray-100">
+              <span className="text-xs font-bold text-gray-400">준비 중...</span>
             </div>
           </div>
         )}

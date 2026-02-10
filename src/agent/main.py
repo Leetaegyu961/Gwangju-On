@@ -30,9 +30,7 @@ async def run_agent(user_input: str) -> str:
     initial_state = {
         "messages": [HumanMessage(content=user_input)],
         "current_step": "thinking",
-        "tool_results": None,
         "query_plan": None,
-        "place_data": None,
         "enriched_results": None,
         "final_answer": None,
     }

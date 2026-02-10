@@ -369,3 +369,43 @@ async def create_timeline(course_id: str, request: CreateTimelineRequest):
         "memory_spots_count": len(request.memorySpots),
         "upserted": result.upserted_id is not None
     }
+
+
+class UpdatePhotoRequest(BaseModel):
+    spotIndex: int
+    photoUrl: str
+
+@router.patch("/journey/{sessionId}/update-photo")
+async def update_spot_photo(sessionId: str, request: UpdatePhotoRequest):
+    """타임라인 특정 장소에 사용자 사진 URL 저장"""
+    db = await get_database()
+
+    result = await db["user_trip_sessions"].update_one(
+        {"sessionId": sessionId},
+        {"$set": {
+            f"memory_spots.{request.spotIndex}.user_photo": request.photoUrl,
+            "updated_at": datetime.utcnow().isoformat()
+        }}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {"status": "success", "message": "Photo URL saved"}
+
+
+@router.delete("/journey/{sessionId}/delete-photo")
+async def delete_spot_photo(sessionId: str, spotIndex: int):
+    """타임라인 특정 장소의 사용자 사진 제거"""
+    db = await get_database()
+
+    result = await db["user_trip_sessions"].update_one(
+        {"sessionId": sessionId},
+        {"$unset": {f"memory_spots.{spotIndex}.user_photo": ""},
+         "$set": {"updated_at": datetime.utcnow().isoformat()}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {"status": "success", "message": "Photo removed"}

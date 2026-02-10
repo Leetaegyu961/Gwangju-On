@@ -123,6 +123,8 @@ async def _generate_single_course(state: AgentState, theme_idx: int) -> dict[str
 1. 테마: **{current_theme}** (이 테마에 부합하는 장소를 최우선으로 선택)
 2. 장소 개수: 정확히 **{places_per_course}개**
 3. 구성: 식사 -> 카페 -> 활동 등 자연스러운 동선으로 구성
+   - **중요**: 장소 간 이동 거리를 최소화하세요. 같은 구/동 내 장소를 우선 선택하세요.
+   - 왔다갔다 하는 코스(예: 동명동→첨단→동명동)는 절대 만들지 마세요. 한 방향으로 자연스럽게 이동하는 동선이 좋습니다.
 4. **Diversity Strategy (중요)**:
    - 단순히 점수가 높은 장소를 고르지 마세요.
    - **반드시 "{current_theme}" 테마의 분위기와 특성에 맞는 장소를 선택하세요.**

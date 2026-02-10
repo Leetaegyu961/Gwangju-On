@@ -71,11 +71,15 @@ export default function TimelineScreen() {
                         id: session.sessionId,
                         title: session.title || session.ai_summary || "나만의 감성 광주 여행",
                         date: new Date(session.completed_at || session.created_at || session.timeline_created_at).toLocaleDateString(),
+                        _sortDate: new Date(session.timeline_created_at || session.completed_at || session.created_at || 0).getTime(),
                         location: session.intent_context?.survey_data?.region || "광주",
                         description: `#${session.memory_spots?.length || session.album_data?.length || session.total_courses || 0}코스 #추억`,
                         spots: session.memory_spots || session.album_data || session.points || [],
                         isNew: false
                     }));
+
+                    // 최신순 정렬 (가장 최근 여행이 맨 위)
+                    dbAlbums.sort((a: any, b: any) => b._sortDate - a._sortDate);
 
                     // DB 데이터 로드 성공 시 업데이트
                     setAlbums(dbAlbums);
@@ -244,42 +248,90 @@ export default function TimelineScreen() {
         fetchStaticMap();
     }, [selectedAlbum, albums, prevMarkersStr]);
 
-    const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPhotos(prev => ({
-                    ...prev,
-                    [index]: reader.result as string
-                }));
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        // 즉시 로컬 미리보기 (UX)
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPhotos(prev => ({ ...prev, [index]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+
+        // GCS에 업로드
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const baseUrl = API_URL.replace(/\/api\/?$/, '');
+        const userId = localStorage.getItem('temp_user_id') || 'anonymous';
+        const sessionId = selectedAlbum?.id || 'unknown';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(
+                `${baseUrl}/api/upload/photo?user_id=${encodeURIComponent(userId)}&session_id=${encodeURIComponent(sessionId)}&spot_index=${index}`,
+                { method: 'POST', body: formData }
+            );
+            if (res.ok) {
+                const data = await res.json();
+                // GCS 공개 URL로 교체
+                setPhotos(prev => ({ ...prev, [index]: data.url }));
+
+                // MongoDB에 사진 URL 저장
+                if (sessionId !== 'unknown' && sessionId !== 'current_local') {
+                    await fetch(`${baseUrl}/api/journey/${encodeURIComponent(sessionId)}/update-photo`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ spotIndex: index, photoUrl: data.url })
+                    });
+                }
+            } else {
+                console.error('Upload failed:', await res.text());
+            }
+        } catch (err) {
+            console.error('Photo upload error:', err);
+            // 업로드 실패해도 로컬 미리보기는 유지
         }
     };
 
     // 사진 삭제 (취소) 기능
-    const handleImageDelete = (index: number, e: React.MouseEvent) => {
+    const handleImageDelete = async (index: number, e: React.MouseEvent) => {
         e.preventDefault();
-        e.stopPropagation(); // 라벨(파일선택) 클릭 방지
+        e.stopPropagation();
         setPhotos(prev => {
             const newPhotos = { ...prev };
             delete newPhotos[index];
             return newPhotos;
         });
+
+        // MongoDB에서도 사진 제거
+        const sessionId = selectedAlbum?.id || '';
+        if (sessionId && sessionId !== 'current_local') {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const baseUrl = API_URL.replace(/\/api\/?$/, '');
+                await fetch(`${baseUrl}/api/journey/${encodeURIComponent(sessionId)}/delete-photo?spotIndex=${index}`, {
+                    method: 'DELETE'
+                });
+            } catch (err) {
+                console.error('Photo delete error:', err);
+            }
+        }
     };
 
     // [New] Share Selection Modal State
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     // 1. Share Current Slide (Single Image)
+    // Web Share API 사용 → 카카오톡, 인스타, 페이스북 등 네이티브 공유 시트 표시
     const shareCurrentSlide = async () => {
         if (!cardRef.current || isGenerating) return;
         setIsGenerating(true);
-        setIsShareModalOpen(false); // Close Modal
+        setIsShareModalOpen(false);
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 800)); // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 300));
             const canvas = await html2canvas(cardRef.current, {
                 scale: 2,
                 backgroundColor: '#FDFBF7',
@@ -287,46 +339,55 @@ export default function TimelineScreen() {
                 logging: false,
             });
 
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) {
+                setIsGenerating(false);
+                return;
+            }
+
+            const file = new File([blob], "gwangju-trip.png", { type: "image/png" });
+            const shareUrl = window.location.href;
+
+            // 1순위: 파일 포함 네이티브 공유 (Android Chrome, iOS Safari)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: '광주 ON - 나만의 여행 코스',
+                        text: '광주 여행 코스를 공유합니다!'
+                    });
                     setIsGenerating(false);
                     return;
+                } catch (e: any) {
+                    if (e.name === 'AbortError') { setIsGenerating(false); return; }
                 }
-                const file = new File([blob], "gwangju-trip.png", { type: "image/png" });
+            }
 
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: '광주 여행 코스',
-                            text: '나만의 광주 여행 코스를 확인해보세요!'
-                        });
-                    } catch (shareError) {
-                        console.log("Share cancelled", shareError);
-                    }
-                } else {
-                    try {
-                        await navigator.clipboard.write([
-                            new ClipboardItem({
-                                [blob.type]: blob
-                            })
-                        ]);
-                        alert("이미지가 클립보드에 복사되었습니다.\n(공유 기능을 완전하게 지원하지 않는 환경입니다)");
-                    } catch (e) {
-                        // Fallback Download
-                        const link = document.createElement("a");
-                        link.href = URL.createObjectURL(blob);
-                        link.download = "gwangju-trip.png";
-                        link.click();
-                    }
+            // 2순위: URL/텍스트만 네이티브 공유 (파일 미지원 브라우저)
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: '광주 ON - 나만의 여행 코스',
+                        text: '광주 여행 코스를 확인해보세요!',
+                        url: shareUrl
+                    });
+                    setIsGenerating(false);
+                    return;
+                } catch (e: any) {
+                    if (e.name === 'AbortError') { setIsGenerating(false); return; }
                 }
-                setIsGenerating(false);
-            }, 'image/png');
+            }
+
+            // 3순위: 다운로드 fallback (데스크톱 등)
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "gwangju-trip.png";
+            link.click();
+            setIsGenerating(false);
 
         } catch (e) {
             console.error("Share failed", e);
             setIsGenerating(false);
-            alert("공유하기 실패");
         }
     };
 
@@ -376,25 +437,36 @@ export default function TimelineScreen() {
             };
 
             if (files.length > 0) {
+                // 1순위: 파일 포함 네이티브 공유
                 if (navigator.canShare && navigator.canShare({ files })) {
                     try {
                         await navigator.share({
                             files: files,
-                            title: '광주 여행 앨범',
-                            text: '나만의 여행 코스 전체 앨범입니다.'
+                            title: '광주 ON - 여행 앨범',
+                            text: '나만의 광주 여행 코스 앨범입니다!'
                         });
-                    } catch (shareError: any) {
-                        console.log("Multi-share cancelled or failed", shareError);
-                        // 보안 정책(User Gesture) 등으로 실패 시 다운로드로 대체
-                        if (shareError.name === 'NotAllowedError' || shareError.message.includes('user gesture')) {
-                            alert("브라우저 보안 정책으로 자동 공유가 차단되었습니다.\n대신 이미지를 다운로드합니다. 💾");
-                            performDownload();
-                        }
+                        return;
+                    } catch (e: any) {
+                        if (e.name === 'AbortError') return;
                     }
-                } else {
-                    alert("이 기기에서는 여러 장의 이미지 동시 공유를 지원하지 않습니다.\n대신 이미지들이 순차적으로 저장됩니다.");
-                    performDownload();
                 }
+
+                // 2순위: URL만 네이티브 공유
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: '광주 ON - 여행 앨범',
+                            text: '광주 여행 코스를 확인해보세요!',
+                            url: window.location.href
+                        });
+                        return;
+                    } catch (e: any) {
+                        if (e.name === 'AbortError') return;
+                    }
+                }
+
+                // 3순위: 다운로드 fallback
+                performDownload();
             }
 
         } catch (e) {
@@ -507,7 +579,16 @@ export default function TimelineScreen() {
         setSelectedAlbum(album);
         // 상세 뷰 호환성을 위해 course 상태 업데이트
         setCourse(album.spots);
-        setPhotos({});
+
+        // MongoDB에 저장된 user_photo를 photos state로 복원
+        const savedPhotos: { [key: number]: string } = {};
+        album.spots.forEach((spot: any, i: number) => {
+            if (spot.user_photo) {
+                savedPhotos[i] = spot.user_photo;
+            }
+        });
+        setPhotos(savedPhotos);
+
         setViewMode('detail');
     };
 
@@ -698,7 +779,7 @@ export default function TimelineScreen() {
                                         <div className="relative z-10 text-center mt-4 mb-6 w-full">
                                             <h2 className="text-2xl font-black text-gray-800 mb-2 leading-tight break-keep" style={{ wordBreak: 'keep-all' }}>{album.title}</h2>
                                             <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold text-gray-400">
-                                                {album.description.split(' ').map((tag, i) => <span key={i}>{tag}</span>)}
+                                                {album.description.split(' ').map((tag: string, i: number) => <span key={i}>{tag}</span>)}
                                                 <span className="w-0.5 h-2 bg-gray-300 self-center mx-0.5"></span>
                                                 <span>{album.date}</span>
                                             </div>

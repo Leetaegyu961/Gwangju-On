@@ -20,7 +20,7 @@ async def vector_retrieval_node(state: AgentState) -> dict[str, Any]:
     Returns:
         dict: {"vector_candidates": [...]}
     """
-    query_plan = state.get("query_plan", {})
+    query_plan = state.get("query_plan") or {}
     if not query_plan:
         print("[VectorRetrieval] ⚠️ Query Plan 없음. 스킵합니다.")
         return {"vector_candidates": []}

@@ -1,0 +1,110 @@
+{
+  "region": "seogu_기타/미분류",
+  "metadata": {
+    "model": "gemini-2.0-flash",
+    "total_places": 3,
+    "elapsed_seconds": 3.3
+  },
+  "places": [
+    {
+      "place_name": "빛고을식당",
+      "keywords": {
+        "menu_type": [
+          "설렁탕",
+          "국밥",
+          "흑염소탕"
+        ],
+        "signature_menu": [
+          "흑염소탕"
+        ],
+        "price_info": [
+          "흑염소탕 20,000원"
+        ],
+        "ambiance": [
+          "편안한 분위기"
+        ],
+        "interior": [
+          "깔끔함",
+          "넓음"
+        ],
+        "facilities": [
+          "주차 가능 (치평동 공영주차장 1시간 무료)",
+          "포장 가능",
+          "단체 이용 가능",
+          "배달 가능",
+          "예약 가능",
+          "남/녀 화장실 구분",
+          "무선 인터넷",
+          "유아 의자"
+        ],
+        "bathroom": [
+          "식당 내부 위치, 남녀 구분"
+        ],
+        "location": [
+          "광주 서구 치평동",
+          "상무지구 먹자골목 중심가",
+          "김대중컨벤션역과 상무역 사이"
+        ],
+        "accessibility": [
+          "상무지구 먹자골목 중심가 위치, 접근성 좋음"
+        ],
+        "hours": [
+          "11:00 - 22:00",
+          "라스트오더 21:00",
+          "정기휴무: 매주 일요일",
+          "연중무휴 (빛고을흑염소)"
+        ],
+        "service": [
+          "육회 서비스 제공 (설렁탕 주문 시)"
+        ],
+        "policy": [
+          "애견 동반 불가능"
+        ],
+        "special_features": [
+          "깊은 국물 맛"
+        ],
+        "recommended_for": [
+          "부모님 동반 식사",
+          "몸보신"
+        ]
+      },
+      "analyzed_post_count": 5
+    },
+    {
+      "place_name": "대한유통푸드",
+      "keywords": {},
+      "analyzed_post_count": 0
+    },
+    {
+      "place_name": "코코아일랜드",
+      "keywords": {
+        "menu_type": [],
+        "signature_menu": [],
+        "price_info": [],
+        "ambiance": [],
+        "interior": [],
+        "facilities": [
+          "주차"
+        ],
+        "bathroom": [],
+        "location": [
+          "광주 서구 금호동",
+          "대전 서구 계룡로",
+          "내동 배재대학교 자리",
+          "둔산동 대전대한방병원 자리"
+        ],
+        "accessibility": [],
+        "hours": [],
+        "service": [
+          "택시"
+        ],
+        "policy": [],
+        "special_features": [],
+        "recommended_for": [
+          "4인 가구"
+        ]
+      },
+      "analyzed_post_count": 5
+    }
+  ]
+}

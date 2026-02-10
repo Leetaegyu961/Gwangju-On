@@ -64,7 +64,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(chat.router, prefix="/api")
-from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps, search
+from backend.api import user, photo, place_info, tmap, auth, journey, tasting_note, maps, search, upload
 app.include_router(search.router, prefix="/api") # Vertex Search
 app.include_router(maps.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
@@ -74,6 +74,7 @@ app.include_router(tmap.router, prefix="/api")  # Tmap POI Search
 app.include_router(auth.router, prefix="/api")
 app.include_router(journey.router, prefix="/api")
 app.include_router(tasting_note.router, prefix="/api")
+app.include_router(upload.router, prefix="/api")
 
 # Invitation System
 from backend.api import invitation
@@ -82,6 +83,10 @@ app.include_router(invitation.router, prefix="/api")
 # Session System
 from backend.api import session
 app.include_router(session.router, prefix="/api")
+
+# Refine Agent (코스 수정)
+from backend.api import refine
+app.include_router(refine.router, prefix="/api")
 
 @app.get("/")
 def read_root():

@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Navigation2, ArrowLeft, Locate, Loader2, Edit3, Check, X, GripVertical, Trash2, Search } from 'lucide-react';
+import { Navigation2, ArrowLeft, Locate, Loader2, Edit3, Check, X, GripVertical, Trash2, Search, Send } from 'lucide-react';
 import Script from 'next/script';
 import { motion, useAnimation, PanInfo, Reorder } from 'framer-motion';
 import { GeminiService } from '../services/geminiService';
+import { getCourseImage } from '../utils/courseImages';
 import LoginInducementModal from '../components/auth/LoginModal';
-import InvitationModal from '../components/invitation/InvitationModal';
+
 
 const aiService = new GeminiService();
 
@@ -36,6 +37,7 @@ export const MapView = () => {
 
   // 상세정보 검색 취소용 컨트롤러 (중복 요청 방지 및 취소 처리)
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pendingRouteModeRef = useRef<'pedestrian' | 'car' | null>(null); // 코스 전환 시 경로 자동 재계산용
 
   // UI 상태 관리
   const [activeStep, setActiveStep] = useState(0);    // 코스 모드에서 현재 선택된 단계 (Index)
@@ -64,6 +66,7 @@ export const MapView = () => {
   const [isDetailLoading, setIsDetailLoading] = useState(false); // AI 상세 정보 로딩 중 여부
   const [isSearching, setIsSearching] = useState(false);       // 장소 검색(POI) 로딩 중 여부
   const [isAutoGenerating, setIsAutoGenerating] = useState(false); // 자동 생성 중 여부
+  const [autoGenProgress, setAutoGenProgress] = useState<{step: string; message: string; progress: number} | null>(null);
 
   // 코스 상세 보기 확장 모드 (가로 리스트 vs 상세 스텝 뷰)
   const [isCourseDetailExpanded, setIsCourseDetailExpanded] = useState(false);
@@ -79,6 +82,12 @@ export const MapView = () => {
 
   // 키워드 검색 상태
   const [searchKeyword, setSearchKeyword] = useState('');
+
+  // [Refine Agent] 코스 수정 채팅 상태
+  const [refineInput, setRefineInput] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
+  const [refineMessage, setRefineMessage] = useState<string | null>(null);
+  const [isRefineOpen, setIsRefineOpen] = useState(false);
 
   // Toast 메시지 상태
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -102,9 +111,7 @@ export const MapView = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalFeature, setModalFeature] = useState("");
 
-  // Invitation State
-  const [showInvitationModal, setShowInvitationModal] = useState(false);
-  const [invitationCourses, setInvitationCourses] = useState<any[]>([]);
+
 
   // Helper to check guest status
   const checkIsGuest = () => {
@@ -241,6 +248,7 @@ export const MapView = () => {
     abortControllerRef.current = controller;
 
     setIsDetailLoading(true);
+    setSheetOpen(true); // 상세정보 호출 시 하단 시트 자동 열림
 
     // allPlaces에서 해당 장소의 상세 정보를 찾습니다 (좌표 등)
     const foundPlace = allPlaces.find(p => p.name === name) || {};
@@ -303,28 +311,12 @@ export const MapView = () => {
   // 따라서 window 객체에 전역 함수를 할당하여 HTML onclick 이벤트와 연결합니다.
   // --------------------------------------------------------------------------
   useEffect(() => {
-    // 마커 내부의 "상세정보 보기" 버튼 클릭 시 실행될 함수
+    // 마커 아이콘 클릭 시 바로 상세정보를 호출하는 전역 함수
     (window as any).handlePlaceDetail = (name: string, addr: string) => fetchPlaceDetail(name, addr);
-
-    // 마커 아이콘 클릭 시 실행될 토글 함수
-    // - 클릭한 마커의 상세정보 버튼만 보이게 하고 나머지는 숨김
-    (window as any).toggleDetailBtn = (id: string) => {
-      const el = document.getElementById(id);
-      if (el) {
-        // 다른 열린 버튼들은 닫기 (하나만 열리게)
-        document.querySelectorAll('.detail-btn-custom').forEach((b: any) => {
-          if (b.id !== id) b.style.display = 'none';
-        });
-        // 현재 버튼 토글 (Show/Hide)
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-      }
-    };
   }, [fetchPlaceDetail]);
 
   // Sheet height constants
-
-  // Sheet height constants
-  const OPEN_HEIGHT = 440;
+  const OPEN_HEIGHT = 540;
   const CLOSED_HEIGHT = 180;
 
   // Load spots from localStorage or Auto-generate
@@ -369,8 +361,22 @@ export const MapView = () => {
 
       const runAutoGen = async () => {
         setIsAutoGenerating(true);
+        setAutoGenProgress(null);
         try {
-          const response = await aiService.processRequest("설문 데이터를 기반으로 바로 코스를 짜줘.");
+          // 채팅에서 넘어온 프롬프트가 있으면 사용, 없으면 기본 메시지
+          const customPrompt = searchParams.get('prompt');
+          const extraRequest = searchParams.get('extraRequest');
+          let agentPrompt = "설문 데이터를 기반으로 바로 코스를 짜줘.";
+          if (customPrompt) {
+            agentPrompt = decodeURIComponent(customPrompt);
+          } else if (extraRequest) {
+            agentPrompt = `설문 데이터를 기반으로 코스를 짜줘. 추가 요청: ${decodeURIComponent(extraRequest)}`;
+          }
+
+          const response = await aiService.processRequestStream(
+            agentPrompt,
+            (progress) => setAutoGenProgress(progress)
+          );
 
           // allCourses 처리 (3개 코스)
           if (response.allCourses && response.allCourses.length > 0) {
@@ -407,18 +413,29 @@ export const MapView = () => {
             localStorage.setItem('current_course', JSON.stringify(safeSpots));
             setViewMode('course');
             console.log("✅ [MapView] Auto-generated course loaded");
+          } else {
+            // 코스가 없는 경우 (유효하지 않은 입력 등) → 채팅으로 되돌아가기
+            const responseMsg = response.text || "입력을 다시 확인해주세요.";
+            console.warn("⚠️ [MapView] No courses returned, redirecting to chat:", responseMsg);
+            setToastMessage(responseMsg);
+            setTimeout(() => {
+              router.push(`/chat?mode=course_init&invalidMsg=${encodeURIComponent(responseMsg)}`);
+            }, 1500);
           }
         } catch (e) {
           console.error("❌ [MapView] Auto-generation failed", e);
           setToastMessage("코스 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
         } finally {
           setIsAutoGenerating(false);
+          setAutoGenProgress(null);
           // 성공 시 토스트 및 URL 정리
           if (localStorage.getItem('all_courses') || localStorage.getItem('current_course')) {
             setToastMessage("코스가 생성되었습니다!");
 
             const params = new URLSearchParams(searchParams.toString());
             params.delete('auto_generate');
+            params.delete('prompt');
+            params.delete('extraRequest');
             router.replace(`/map?${params.toString()}`);
           }
         }
@@ -430,27 +447,39 @@ export const MapView = () => {
         const storedAllCourses = localStorage.getItem('all_courses');
         if (storedAllCourses) {
           const parsedAllCourses = JSON.parse(storedAllCourses);
-          setAllCourses(parsedAllCourses);
+
+          // [Fix] 이미지 복구: img가 없거나 localhost URL이면 getCourseImage로 복구
+          const isLocal = window.location.hostname === 'localhost';
+          const restoredCourses = parsedAllCourses.map((course: any) => ({
+            ...course,
+            places: (course.places || []).map((p: any) => {
+              let imgUrl = p.img;
+              // localhost URL이 Cloud Run에서 무효화되는 문제 수정
+              if (imgUrl && imgUrl.includes('localhost') && !isLocal) {
+                imgUrl = null;
+              }
+              // photo_name이 있으면 현재 도메인 기준 URL 재구성
+              if (!imgUrl && p.photo_name) {
+                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/?$/, '');
+                imgUrl = `${baseUrl}/api/photo?name=${p.photo_name}`;
+              }
+              return {
+                ...p,
+                img: imgUrl || getCourseImage([p.type || '장소'], p.name || '')
+              };
+            })
+          }));
+
+          setAllCourses(restoredCourses);
 
           // 첫 번째 코스를 기본으로 설정
-          if (parsedAllCourses.length > 0 && parsedAllCourses[0].places) {
-            setSpots(ensureIds(parsedAllCourses[0].places));
+          if (restoredCourses.length > 0 && restoredCourses[0].places) {
+            setSpots(ensureIds(restoredCourses[0].places));
             setSelectedCourseIndex(0);
             setViewMode('course');
             console.log("✅ [MapView] Loaded all 3 courses, displaying course 1");
 
-            // [상태 복구] 이전에 확정(저장)한 장소들이 있다면 pickedSpots에 복구
-            const savedPicks = localStorage.getItem('current_course');
-            if (savedPicks) {
-              try {
-                const parsedPicks = JSON.parse(savedPicks);
-                // 배열인지 확인 후 복구
-                if (Array.isArray(parsedPicks) && parsedPicks.length > 0) {
-                  setPickedSpots(parsedPicks);
-                  console.log(`♻️ [MapView] Restored ${parsedPicks.length} picked spots`);
-                }
-              } catch (e) { console.error("Failed to restore picked spots", e); }
-            }
+            // pickedSpots는 사용자가 "담기" 버튼으로 직접 고른 장소만 담는 세션 상태이므로 복원하지 않음
           }
         } else {
           // fallback: 기존 current_course 로드
@@ -469,100 +498,6 @@ export const MapView = () => {
     }
   }, [searchParams]);
 
-  // Invitation Check Effect
-  useEffect(() => {
-    const checkInvitation = async () => {
-      // [FIX] 이미 코스가 있거나(수락됨) 자동 생성 중이라면 추가적인 초대장 생성/조회를 스킵
-      if (hasAutoGeneratedRef.current || localStorage.getItem('current_course') || localStorage.getItem('all_courses')) {
-        return;
-      }
-
-      const userId = localStorage.getItem('temp_user_id');
-      const token = localStorage.getItem('access_token');
-
-      // Guest check (if no token, assumed guest, skip invitation)
-      if (!userId || !token) return;
-
-      try {
-        // 1. Check Profile for has_seen_invitation
-        const profile = await aiService.getUserProfile();
-        // Note: profile might be null if fetch fails
-        if (profile && !profile.has_seen_invitation) {
-          console.log("💌 [Invitation] Fetching personalized courses...");
-          const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, '');
-
-          // 2. Generate Courses
-          const res = await fetch(`${API_URL}/api/invitation/generate/${userId}`);
-          if (res.ok) {
-            const courses = await res.json();
-            if (courses && courses.length > 0) {
-              setInvitationCourses(courses);
-              setShowInvitationModal(true);
-
-              // 3. Mark as seen immediately
-              await fetch(`${API_URL}/api/invitation/seen/${userId}`, { method: 'PATCH' });
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Failed to process invitation", e);
-      }
-    };
-
-    // Slight delay to allow hydration/mounting
-    const timer = setTimeout(checkInvitation, 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleApplyInvitation = (course: any) => {
-    // Convert InvitationCourseCard to MapView course format
-    // course has: course_id, title, description, places
-    const mappedCourse = {
-      course_id: course.course_id,
-      course_name: course.title,
-      course_description: course.description,
-      places: course.places.map((p: any, i: number) => ({
-        id: p.id || `inv-${i}`,
-        name: p.name,
-        lat: p.lat || 0,
-        lng: p.lng || 0,
-        type: p.type || '장소',
-        desc: p.desc,
-        img: p.img,
-        tags: p.tags || []
-      }))
-    };
-
-    // Let's reload all 3 invitation courses into 'allCourses' but select the specific one.
-    const mappedAll = invitationCourses.map(c => ({
-      course_id: c.course_id,
-      course_name: c.title,
-      course_description: c.description,
-      places: (c.places && Array.isArray(c.places)) ? c.places.map((p: any, i: number) => ({
-        id: p.id || `inv-${c.course_id}-${i}`,
-        name: p.name,
-        lat: p.lat || 0,
-        lng: p.lng || 0,
-        type: p.type || '장소',
-        desc: p.desc,
-        img: p.img,
-        tags: p.tags || []
-      })) : []
-    }));
-
-    setAllCourses(mappedAll);
-    localStorage.setItem('all_courses', JSON.stringify(mappedAll));
-
-    const selectedIdx = mappedAll.findIndex(c => c.course_id === course.course_id);
-    setSelectedCourseIndex(selectedIdx >= 0 ? selectedIdx : 0);
-    setSpots(ensureIds(mappedAll[selectedIdx >= 0 ? selectedIdx : 0].places));
-
-    setViewMode('course');
-    setShowInvitationModal(false);
-
-    // Toast or Notification
-    setToastMessage(`'${course.title}' 코스가 적용되었습니다.`);
-  };
 
   // --------------------------------------------------------------------------
   // 5. Tmap 초기화 (최초 1회 실행)
@@ -613,11 +548,6 @@ export const MapView = () => {
     // [지도 빈 공간 클릭 이벤트 핸들러]
     // 지도 배경을 클릭했을 때, 활성화된 UI 요소들을 닫는 역할
     mapInstance.current.on("Click", async (evt: any) => {
-      // 기존 상세 버튼들 닫기
-      document.querySelectorAll('.detail-btn-custom').forEach((b: any) => {
-        b.style.display = 'none';
-      });
-
       // Reverse Geocoding 제거됨: 단순히 선택 해제 및 시트 닫기 처리
       console.log(`🖱️ [MapView] Map Clicked (Reverse Geo Disabled)`);
 
@@ -682,25 +612,24 @@ export const MapView = () => {
 
         const markerContent = viewMode === 'course'
           ? `<div style="background:#0066FF; color:white; padding:4px 10px; border-radius:20px; font-weight:900; font-size:12px; border:2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; pointer-events: auto;">${index + 1}</div>`
-          : `<div class="group" style="display:flex; flex-direction:column; align-items:center; width:120px; transform:translate(-50%, -50%); pointer-events:none;">
-               <div onclick="window.toggleDetailBtn('marker-detail-btn-${index}'); event.stopPropagation();" 
+          : `<div style="display:flex; flex-direction:column; align-items:center; pointer-events:none;">
+               <div onclick="window.handlePlaceDetail('${spot.name.replace(/'/g, "\\'")}', '${(spot.address || "").replace(/'/g, "\\'")}'); event.stopPropagation();"
                     style="background:${markerBg}; color:${markerBorder}; padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid ${markerBorder}; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size:16px; cursor: pointer; pointer-events: auto;">${markerIcon}</div>
-               <span style="background:white; margin-top:4px; padding:3px 8px; border-radius:8px; border:1px solid #eee; font-size:11px; font-weight:bold; color:#333; box-shadow:0 2px 4px rgba(0,0,0,0.05); white-space:nowrap; max-width:100%; overflow:hidden; text-overflow:ellipsis; pointer-events:none;">${spot.name}</span>
-               <button 
-                 id="marker-detail-btn-${index}"
-                 class="detail-btn-custom"
-                 onclick="window.handlePlaceDetail('${spot.name.replace(/'/g, "\\'")}', '${(spot.address || "").replace(/'/g, "\\'")}')"
-                 style="display:none; absolute; top:36px; background:black; color:white; margin-top:4px; padding:4px 10px; border-radius:8px; border:none; font-size:11px; font-weight:bold; cursor:pointer; pointer-events:auto; box-shadow:0 4px 8px rgba(0,0,0,0.2); z-index:9999;">
-                 상세정보 👉
-               </button>
+               <span style="background:white; margin-top:4px; padding:3px 8px; border-radius:8px; border:1px solid #eee; font-size:11px; font-weight:bold; color:#333; box-shadow:0 2px 4px rgba(0,0,0,0.05); white-space:nowrap; max-width:120px; overflow:hidden; text-overflow:ellipsis; pointer-events:none;">${spot.name}</span>
              </div>`;
 
-        const marker = new Tmapv3.Marker({
+        const markerOptions: any = {
           position: position,
           map: mapInstance.current,
           iconHTML: markerContent,
-          // title: spot.name // title 제거, 라벨로 대체
-        });
+        };
+
+        // 장소 모드: 아이콘 중앙(16px)에 앵커 포인트 설정하여 위치 고정
+        if (viewMode === 'places' && Tmapv3.Point) {
+          markerOptions.offset = new Tmapv3.Point(16, 16);
+        }
+
+        const marker = new Tmapv3.Marker(markerOptions);
 
         // Marker Click Event
         const onMarkerClick = () => {
@@ -928,6 +857,14 @@ export const MapView = () => {
 
   // [MODIFIED] Auto-update removed. Route updates only on button click.
 
+  // 장소 탭 진입 시 자동 검색 (최초 진입 또는 탭 전환 시)
+  // 코스 자동생성 중에는 불필요한 장소 검색을 실행하지 않음
+  useEffect(() => {
+    if (isMapReady && viewMode === 'places' && allPlaces.length === 0 && !isAutoGenerating) {
+      searchPlaces();
+    }
+  }, [isMapReady, viewMode, isAutoGenerating]);
+
   // Helper: format seconds to "X분"
   const formatTime = (seconds: number) => {
     const mins = Math.round(seconds / 60);
@@ -957,17 +894,7 @@ export const MapView = () => {
 
     if (shouldClose) {
       setSheetOpen(false);
-      // 즉시 요청 취소 및 로딩 해제
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-      setIsDetailLoading(false);
-
-      // 창을 내리면 상세 정보 및 로딩 상태 초기화
-      setTimeout(() => {
-        setSelectedPlace(null);
-      }, 200); // 애니메이션 자연스럽게 연결
+      // 시트를 내려도 상세정보(selectedPlace)는 유지 — 다시 올리면 그대로 표시
     } else if (shouldOpen) {
       setSheetOpen(true);
     }
@@ -996,19 +923,79 @@ export const MapView = () => {
   // 코스 선택 핸들러
   const handleCourseSelect = (index: number) => {
     if (allCourses[index] && allCourses[index].places) {
+      // 경로가 활성 상태였으면 코스 전환 후 자동 재계산 예약
+      if (totalTime > 0 || segmentInfos.length > 0) {
+        pendingRouteModeRef.current = routeMode;
+      }
+
       setSelectedCourseIndex(index);
       setSpots(ensureIds(allCourses[index].places));
-      // setPickedSpots([]); // 삭제: 코스가 바뀌어도 담은 장소 유지 (Mix & Match 가능)
       setActiveStep(0);
-      setIsEditMode(false); // 코스 변경 시 편집 모드 해제
+      setIsEditMode(false);
 
-      // Reset Route Data to trigger auto-recalculation
+      // Reset Route Data (spots 업데이트 후 useEffect에서 재계산됨)
       setTotalTime(0);
       setTotalFare(0);
       setSegmentTimes([]);
       setSegmentInfos([]);
 
       console.log(`📍 [MapView] Switched to course ${index + 1}: ${allCourses[index].course_name}`);
+    }
+  };
+
+  // 코스 전환 후 경로 자동 재계산
+  useEffect(() => {
+    if (pendingRouteModeRef.current && spots.length >= 2 && isMapReady) {
+      const mode = pendingRouteModeRef.current;
+      pendingRouteModeRef.current = null;
+      fetchRoute(mode);
+    }
+  }, [spots, isMapReady, fetchRoute]);
+
+  // [Refine Agent] 코스 수정 요청 핸들러
+  const handleRefine = async () => {
+    if (!refineInput.trim() || isRefining) return;
+    const msg = refineInput.trim();
+    setRefineInput('');
+    setIsRefining(true);
+    setRefineMessage(null);
+
+    try {
+      const result = await aiService.refineCourse(msg, selectedCourseIndex);
+
+      if (result.success && result.courses) {
+        // 수정된 코스에 이미지 보존 (img가 없으면 기존 이미지 또는 getCourseImage 사용)
+        const mergedCourses = result.courses.map((course: any, ci: number) => ({
+          ...course,
+          places: (course.places || []).map((p: any, pi: number) => {
+            // 기존 코스에서 같은 위치의 이미지 가져오기 (변경 안 된 장소)
+            const oldPlace = allCourses[ci]?.places?.[pi];
+            return {
+              ...p,
+              img: p.img || oldPlace?.img || getCourseImage([p.type || '장소'], p.name),
+            };
+          })
+        }));
+
+        setAllCourses(mergedCourses);
+        localStorage.setItem('all_courses', JSON.stringify(mergedCourses));
+
+        // 현재 코스 업데이트
+        if (mergedCourses[selectedCourseIndex]?.places) {
+          setSpots(ensureIds(mergedCourses[selectedCourseIndex].places));
+        }
+
+        setRefineMessage(result.changeSummary || result.message);
+        setToastMessage(result.changeSummary || '코스가 수정되었어요!');
+      } else {
+        setRefineMessage(result.message);
+      }
+    } catch (e) {
+      setRefineMessage('수정 중 오류가 발생했어요.');
+    } finally {
+      setIsRefining(false);
+      // 3초 후 메시지 숨기기
+      setTimeout(() => setRefineMessage(null), 5000);
     }
   };
 
@@ -1122,8 +1109,9 @@ export const MapView = () => {
     localStorage.setItem('current_course', JSON.stringify(finalSpots));
     localStorage.setItem('current_course_meta', JSON.stringify(newSingleCourseList[0]));
 
-    // 4. 완료 메시지 (타임라인 이동 로직 제거)
-    setToastMessage("이 코스로 확정되었습니다! (타임라인 생성 보류)");
+    // 4. 이전 여행 상태 초기화 후 여행 모드 페이지로 이동
+    localStorage.removeItem('travel_visited_steps');
+    router.push('/travel');
   };
 
   // 순서 변경 핸들러 (Reorder)
@@ -1246,17 +1234,50 @@ export const MapView = () => {
         </div>
       )}
 
-      {/* Global Loading Overlay for Auto-Generation */}
+      {/* Global Loading Overlay for Auto-Generation (SSE Progress) */}
       {isAutoGenerating && (
-        <div className="fixed inset-0 z-[1000] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 animate-fade-in">
-          <div className="relative">
-            <Loader2 size={48} className="text-[#0066FF] animate-spin" />
-            <div className="absolute inset-0 bg-blue-400 blur-2xl opacity-20 animate-pulse" />
+        <div className="fixed inset-0 z-[1000] bg-white/90 backdrop-blur-xl flex flex-col items-center justify-center px-8 animate-fade-in">
+          {/* 마스코트 + 스피너 */}
+          <div className="relative mb-8">
+            <div className="w-28 h-28 rounded-full bg-white shadow-xl border-2 border-blue-100 overflow-hidden">
+              <img src="/mascot_circle.png" alt="AI" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -inset-2 rounded-full border-[3px] border-transparent border-t-[#0066FF] animate-spin" />
           </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black text-gray-900">최적의 코스를 설계 중입니다</h2>
-            <p className="text-gray-500 font-bold animate-pulse">잠시만 기다려 주세요...</p>
+
+          {/* 제목 */}
+          <h2 className="text-xl font-black text-gray-900 mb-2 text-center">
+            {autoGenProgress ? '코스를 만들고 있어요' : '준비 중이에요'}
+          </h2>
+
+          {/* 진행 상황 메시지 */}
+          <p className="text-sm font-bold text-gray-500 mb-6 text-center h-5 transition-all duration-500">
+            {autoGenProgress?.message || '잠시만 기다려 주세요...'}
+          </p>
+
+          {/* 프로그레스 바 */}
+          <div className="w-full max-w-[280px] space-y-2">
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#0066FF] to-[#4D9AFF] rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${autoGenProgress?.progress || 3}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] font-bold text-gray-300">
+              <span>분석</span>
+              <span>검색</span>
+              <span>평가</span>
+              <span>생성</span>
+            </div>
           </div>
+
+          {/* 단계 표시 */}
+          {autoGenProgress && (
+            <div className="mt-8 flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full">
+              <div className="w-1.5 h-1.5 bg-[#0066FF] rounded-full animate-pulse" />
+              <span className="text-xs font-bold text-[#0066FF]">{autoGenProgress.progress}% 완료</span>
+            </div>
+          )}
         </div>
       )}
 
@@ -1297,7 +1318,7 @@ export const MapView = () => {
 
         <div className="flex border-b">
           <button
-            onClick={() => setViewMode('places')}
+            onClick={() => { setViewMode('places'); setTimeout(searchPlaces, 100); }}
             className={`flex-1 py-3 text-sm font-black transition-all ${viewMode === 'places' ? 'text-[#0066FF] border-b-2 border-[#0066FF]' : 'text-gray-400'}`}
           >
             장소
@@ -1358,7 +1379,7 @@ export const MapView = () => {
         )}
       </header>
 
-      {isSearching && (
+      {isSearching && !isAutoGenerating && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
           <div className="bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl flex flex-col items-center gap-3 border border-gray-100 animate-fade-in">
             <div className="w-8 h-8 border-4 border-[#0066FF] border-t-transparent rounded-full animate-spin"></div>
@@ -1377,6 +1398,19 @@ export const MapView = () => {
           </button>
         )}
       </div>
+
+      {/* AI 수정 버튼 (코스 모드 좌측 상단) */}
+      {viewMode === 'course' && allCourses.length > 0 && (
+        <div className="absolute top-[180px] left-4 z-40">
+          <button
+            onClick={() => setIsRefineOpen(true)}
+            className="bg-[#0066FF] text-white px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 active:scale-95 transition-all font-black text-sm border-2 border-white/50"
+          >
+            <Edit3 size={14} />
+            AI 수정
+          </button>
+        </div>
+      )}
 
       {/* 내 위치 버튼 */}
       <div className="absolute bottom-48 right-5 z-40">
@@ -1412,6 +1446,81 @@ export const MapView = () => {
           <Locate size={24} />
         </button>
       </div>
+
+      {/* [Refine Agent] 수정 패널 (바텀시트 위에 오버레이) */}
+      {isRefineOpen && viewMode === 'course' && (
+        <div className="absolute left-0 right-0 top-0 z-[300] animate-fade-in">
+          {/* 배경 오버레이 */}
+          <div className="fixed inset-0 bg-black/20" onClick={() => { setIsRefineOpen(false); setRefineMessage(null); }} />
+
+          {/* 패널 */}
+          <div className="relative bg-white rounded-b-3xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] p-5 pb-5">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#0066FF] flex items-center justify-center">
+                  <Edit3 size={14} className="text-white" />
+                </div>
+                <div>
+                  <span className="text-sm font-black text-gray-900">AI 코스 수정</span>
+                  <p className="text-[10px] text-gray-400 font-bold">장소 교체, 추가, 위치 변경 등</p>
+                </div>
+              </div>
+              <button onClick={() => { setIsRefineOpen(false); setRefineMessage(null); }} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <X size={16} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* AI 응답 */}
+            {refineMessage && (
+              <div className="mb-3 px-4 py-3 bg-blue-50 rounded-2xl">
+                <span className="text-xs font-bold text-[#0066FF]">{refineMessage}</span>
+              </div>
+            )}
+
+            {/* 빠른 액션 칩 */}
+            <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar">
+              {["1번째 바꿔줘", "카페 추가", "더 가까운 곳으로", "분위기 좋은 곳"].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => { setRefineInput(chip); }}
+                  className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-[11px] font-bold text-gray-500 whitespace-nowrap active:bg-blue-50 active:text-[#0066FF] active:border-blue-200 transition-colors"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* 입력 바 */}
+            <div className="flex items-center gap-2 bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
+              <input
+                value={refineInput}
+                onChange={e => setRefineInput(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleRefine()}
+                placeholder="수정 요청을 입력하세요..."
+                className="flex-1 bg-transparent outline-none text-sm font-bold text-gray-700 placeholder:text-gray-300"
+                disabled={isRefining}
+                autoFocus
+              />
+              <button
+                onClick={handleRefine}
+                disabled={!refineInput.trim() || isRefining}
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  refineInput.trim() && !isRefining
+                    ? 'bg-[#0066FF] text-white shadow-lg active:scale-90'
+                    : 'bg-gray-200 text-gray-400'
+                }`}
+              >
+                {isRefining ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Send size={16} />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <MotionDiv
         drag="y"
@@ -1589,8 +1698,8 @@ export const MapView = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-black text-gray-900 mb-2 truncate">{spots[activeStep].name}</h3>
-                      <p className="text-xs font-bold text-gray-500 leading-relaxed mb-3 line-clamp-2">{spots[activeStep].desc}</p>
+                      <h3 className="text-lg font-black text-gray-900 mb-2 break-words">{spots[activeStep].name}</h3>
+                      <p className="text-xs font-bold text-gray-500 leading-relaxed mb-3 line-clamp-3">{spots[activeStep].desc}</p>
                       <div className="flex flex-wrap gap-1.5">
                         {Array.isArray(spots[activeStep].tags) && spots[activeStep].tags.map((t: string) => (
                           <span key={t} className="px-2 py-1 bg-gray-50 rounded-md text-[10px] font-black text-gray-400">{t}</span>
@@ -1716,44 +1825,46 @@ export const MapView = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-3 mt-2 shrink-0">
-                    <button
-                      onClick={() => {
-                        fetchRoute('pedestrian');
-                        setSheetOpen(false); // 지도가 잘 보이도록 시트 접기
-                      }}
-                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
-                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'pedestrian'
-                        ? 'bg-[#0066FF] text-white border-[#0066FF]'
-                        : 'bg-white text-gray-700 border-gray-200'
-                        }`}
-                    >
-                      <span className="flex items-center gap-1.5"><span className="text-lg">🚶</span> 도보 안내</span>
-                      {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
-                    </button>
+                  <div className="flex flex-col gap-2 mt-2 shrink-0">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          fetchRoute('pedestrian');
+                          setSheetOpen(false);
+                        }}
+                        disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                        className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'pedestrian'
+                          ? 'bg-[#0066FF] text-white border-[#0066FF]'
+                          : 'bg-white text-gray-700 border-gray-200'
+                          }`}
+                      >
+                        <span className="flex items-center gap-1.5"><span className="text-lg">🚶</span> 도보 안내</span>
+                        {totalTime > 0 && routeMode === 'pedestrian' && <span className="text-[10px] opacity-90 font-bold">{formatTime(totalTime)}</span>}
+                      </button>
 
-                    <button
-                      onClick={() => {
-                        fetchRoute('car');
-                        setSheetOpen(false); // 지도가 잘 보이도록 시트 접기
-                      }}
-                      disabled={isLoadingRoute || activeStep >= spots.length - 1}
-                      className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'car'
-                        ? 'bg-[#00C853] text-white border-[#00C853]'
-                        : 'bg-white text-gray-700 border-gray-200'
-                        }`}
-                    >
-                      <span className="flex items-center gap-1.5"><span className="text-lg">🚗</span> 차량 안내</span>
-                      {totalTime > 0 && routeMode === 'car' && (
-                        <span className="text-[10px] opacity-90 font-bold flex flex-col items-center leading-tight">
-                          <span>{formatTime(totalTime)}</span>
-                          {totalFare > 0 && <span>{totalFare.toLocaleString()}원</span>}
-                        </span>
-                      )}
-                    </button>
+                      <button
+                        onClick={() => {
+                          fetchRoute('car');
+                          setSheetOpen(false);
+                        }}
+                        disabled={isLoadingRoute || activeStep >= spots.length - 1}
+                        className={`flex-1 py-3 rounded-2xl font-black text-sm transition-all flex flex-col items-center justify-center gap-1 shadow-sm border active:scale-95 ${routeMode === 'car'
+                          ? 'bg-[#00C853] text-white border-[#00C853]'
+                          : 'bg-white text-gray-700 border-gray-200'
+                          }`}
+                      >
+                        <span className="flex items-center gap-1.5"><span className="text-lg">🚗</span> 차량 안내</span>
+                        {totalTime > 0 && routeMode === 'car' && (
+                          <span className="text-[10px] opacity-90 font-bold flex flex-col items-center leading-tight">
+                            <span>{formatTime(totalTime)}</span>
+                            {totalFare > 0 && <span>{totalFare.toLocaleString()}원</span>}
+                          </span>
+                        )}
+                      </button>
+                    </div>
 
-                    <div className="flex-1 bg-gray-50 rounded-2xl border border-gray-100 px-2 py-2 flex flex-row items-center justify-center gap-3">
-                      <span className="text-xs font-black text-gray-800 flex items-center gap-1 shrink-0">길찾기</span>
+                    <div className="bg-gray-50 rounded-2xl border border-gray-100 px-3 py-2.5 flex flex-row items-center gap-3">
+                      <span className="text-xs font-black text-gray-800 shrink-0">길찾기</span>
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => {
@@ -1785,37 +1896,43 @@ export const MapView = () => {
               ) : (
                 // [2-A] Summary View (Horizontal Scroll List)
                 <div className="flex flex-col h-full pb-6 pt-2 relative">
-                  {/* Top Right Buttons (편집, 상세보기) */}
-                  <div className="absolute top-0 right-0 flex gap-2 z-10">
-
-                    <button
-                      onClick={() => setIsEditMode(!isEditMode)}
-                      className={`h-10 px-4 rounded-full flex items-center justify-center gap-1.5 transition-all shadow-sm border font-bold text-xs ${isEditMode ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'}`}
-                    >
-                      {isEditMode ? <Check size={16} /> : <Edit3 size={16} />}
-                      <span>{isEditMode ? '완료' : '편집'}</span>
-                    </button>
-
-                    <button
-                      onClick={() => setIsCourseDetailExpanded(true)}
-                      className="h-10 px-4 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-all active:scale-95 text-xs font-bold gap-1"
-                    >
-                      상세보기 & 길찾기 <ArrowLeft size={12} className="rotate-180" />
-                    </button>
-                  </div>
-
-                  <div className="mb-4 shrink-0 pr-4 relative">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold shrink-0">Recommended</span>
-                        <h2 className="text-lg font-bold text-gray-900 truncate">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
-                      </div>
+                  {/* 코스 헤더 (2줄 구조 - 모바일 최적화) */}
+                  <div className="mb-4 shrink-0">
+                    {/* 1줄: 코스 이름 */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="bg-[#0066FF] text-white text-[10px] px-2 py-0.5 rounded-sm font-bold shrink-0">Recommended</span>
+                      <h2 className="text-lg font-bold text-gray-900 truncate">{allCourses[selectedCourseIndex]?.course_name || "광주 핫플레이스 코스"}</h2>
                     </div>
 
-                    <p className="text-sm text-gray-500 font-medium line-clamp-1">
-                      동구 동명동 · {totalFare > 0 ? `${totalFare.toLocaleString()}원` : '비용 산출 중'} · {totalTime > 0 ? formatTime(totalTime) : '소요시간 계산 중'}
+                    {/* 설명 */}
+                    <p className="text-sm text-gray-500 font-medium line-clamp-1 mb-2">
+                      {allCourses[selectedCourseIndex]?.course_description || '광주 맞춤 코스'}
+                      {totalTime > 0 && ` · ${formatTime(totalTime)}`}
+                      {totalFare > 0 && ` · ${totalFare.toLocaleString()}원`}
+                      {isLoadingRoute && ' · 경로 계산 중...'}
                     </p>
-                    <div className="flex gap-2 mt-3 flex-wrap">
+
+                    {/* 2줄: 액션 버튼 (겹치지 않게 flex-wrap) */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => setIsEditMode(!isEditMode)}
+                        className={`h-9 px-3 rounded-full flex items-center justify-center gap-1 transition-all shadow-sm border font-bold text-[11px] ${isEditMode ? 'bg-gray-800 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
+                      >
+                        {isEditMode ? <Check size={14} /> : <Edit3 size={14} />}
+                        <span>{isEditMode ? '완료' : '편집'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => setIsCourseDetailExpanded(true)}
+                        className="h-9 px-3 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center transition-all active:scale-95 text-[11px] font-bold gap-1"
+                      >
+                        <Navigation2 size={12} />
+                        <span>길찾기</span>
+                      </button>
+                    </div>
+
+                    {/* 태그 */}
+                    <div className="flex gap-2 mt-2 flex-wrap">
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">연인과</span>
                       <span className="text-xs border border-pink-200 text-pink-500 bg-pink-50 px-2 py-1 rounded-md font-bold">데이트</span>
                       <span className="text-xs border border-blue-200 text-blue-500 bg-blue-50 px-2 py-1 rounded-md font-bold">힐링</span>
@@ -2004,15 +2121,6 @@ export const MapView = () => {
         featureName={modalFeature}
       />
 
-      <InvitationModal
-        isOpen={showInvitationModal}
-        onClose={() => {
-          setShowInvitationModal(false);
-          // router.push('/survey'); // Optional: redirect to survey if closed? Or just stay on map
-        }}
-        invitationCourses={invitationCourses}
-        onApply={handleApplyInvitation}
-      />
     </div >
   );
 };

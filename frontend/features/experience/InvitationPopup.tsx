@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
+import { X, Sparkles, ChevronRight, Loader2, Share2, Copy, Check as CheckIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import invitationCoursesData from '../../data/invitation_courses.json';
 import { getCourseImage } from '../../utils/courseImages';
+import { GeminiService } from '../../services/geminiService';
 
 // Fix for React 19 type mismatch
 const MotionDiv = motion.div as any;
@@ -20,11 +21,13 @@ interface InvitationPopupProps {
         description: string;
         imageUrl: string;
     };
+    isPersonalized?: boolean;
 }
 
-export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationPopupProps) => {
+export const InvitationPopup = ({ isOpen, onClose, invitationData, isPersonalized }: InvitationPopupProps) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const [selectedInvitation, setSelectedInvitation] = useState<any>(null);
 
@@ -62,8 +65,13 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
             pickRandomCourse();
         } else {
             setSelectedInvitation(invitationData);
+            // 개인화 초대장이면 열람 처리
+            if (isPersonalized) {
+                const service = new GeminiService();
+                service.markPersonalizedInvitationViewed();
+            }
         }
-    }, [invitationData]);
+    }, [invitationData, isPersonalized]);
 
     const data = selectedInvitation || {
         id: 'loading',
@@ -141,6 +149,44 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
         }
     };
 
+    const handleShare = async () => {
+        const shareUrl = `${window.location.origin}/invite/${data.id}`;
+        const shareTitle = `광주ON - ${data.title}`;
+        const shareText = `${data.description}\n\n${data.places?.map((p: any) => p.name).join(' → ')}`;
+
+        // Web Share API (모바일에서 카카오톡/메시지 등 OS 공유 시트 표시)
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl,
+                });
+                return;
+            } catch (e) {
+                // 사용자가 취소한 경우 무시
+                if ((e as Error).name === 'AbortError') return;
+            }
+        }
+
+        // Fallback: 클립보드 복사
+        try {
+            await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // 최후 fallback
+            const textArea = document.createElement('textarea');
+            textArea.value = `${shareTitle}\n${shareText}\n${shareUrl}`;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     const handleDecline = async () => {
         // 사일런트 데이터 로깅 (반려 이력 기록)
         try {
@@ -200,7 +246,7 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
                             <div className="absolute bottom-4 left-6 right-6 text-left">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Sparkles className="text-yellow-400" size={12} />
-                                    <span className="text-white/90 text-[10px] font-black tracking-widest uppercase">Special Invitation</span>
+                                    <span className="text-white/90 text-[10px] font-black tracking-widest uppercase">{isPersonalized ? 'Your Personal Invitation' : 'Special Invitation'}</span>
                                 </div>
                                 <h2 className="text-white text-lg font-black leading-tight">
                                     {data.title}
@@ -210,7 +256,7 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
 
                         {/* 상세 설명 및 액션 버튼 - 스크롤 가능 구역 */}
                         {/* 상세 설명 및 액션 버튼 - 스크롤 가능 구역 */}
-                        <div className="p-6 pb-32 space-y-6 text-left overflow-y-auto custom-scrollbar flex-1">
+                        <div className="p-6 pb-48 space-y-6 text-left overflow-y-auto custom-scrollbar flex-1">
                             <p className="text-gray-500 text-sm leading-relaxed font-medium">
                                 {data.description}
                             </p>
@@ -242,23 +288,36 @@ export const InvitationPopup = ({ isOpen, onClose, invitationData }: InvitationP
                         </div>
 
                         {/* 하단 고정 버튼 영역 */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-50 flex gap-3 z-30">
-                            <button
-                                onClick={handleDecline}
-                                className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
-                            >
-                                거절
-                            </button>
+                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-50 z-30 space-y-3">
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleDecline}
+                                    className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-colors active:scale-95"
+                                >
+                                    거절
+                                </button>
+
+                                <button
+                                    onClick={handleAccept}
+                                    disabled={isLoading}
+                                    className="flex-1 py-4 bg-[#0066FF] text-white rounded-2xl font-black text-sm shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-70"
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="animate-spin" size={20} />
+                                    ) : (
+                                        <>수락 <ChevronRight size={16} /></>
+                                    )}
+                                </button>
+                            </div>
 
                             <button
-                                onClick={handleAccept}
-                                disabled={isLoading}
-                                className="flex-1 py-4 bg-[#0066FF] text-white rounded-2xl font-black text-sm shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-70"
+                                onClick={handleShare}
+                                className="w-full py-3 bg-gray-50 text-gray-600 rounded-2xl font-bold text-sm hover:bg-gray-100 transition-colors active:scale-95 flex items-center justify-center gap-2 border border-gray-100"
                             >
-                                {isLoading ? (
-                                    <Loader2 className="animate-spin" size={20} />
+                                {copied ? (
+                                    <><CheckIcon size={16} className="text-green-500" /> 링크가 복사되었어요!</>
                                 ) : (
-                                    <>수락 <ChevronRight size={16} /></>
+                                    <><Share2 size={16} /> 친구에게 공유하기</>
                                 )}
                             </button>
                         </div>

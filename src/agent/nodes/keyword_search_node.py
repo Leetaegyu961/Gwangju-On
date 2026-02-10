@@ -60,7 +60,7 @@ async def keyword_retrieval_node(state: AgentState) -> dict[str, Any]:
         print("[KeywordRetrieval] ⚠️ API Key missing. Skipping.")
         return {"keyword_candidates": []}
 
-    query_plan = state.get("query_plan", {})
+    query_plan = state.get("query_plan") or {}
     queries = query_plan.get("place_queries", [])
 
     if not queries:

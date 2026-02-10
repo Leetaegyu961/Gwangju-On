@@ -78,6 +78,7 @@ export interface Message {
   allCourses?: CourseInfo[];      // 3개 코스 전체
   status?: 'analyzing' | 'searching' | 'generating' | 'done'; // 진행 단계
   suggestions?: string[]; // 사용자에게 제안할 답변 선택지
+  showSurveyPrompt?: boolean; // 설문조사 기반 코스 생성 유도 메시지 표시 여부
 }
 
 // 지도나 리스트에서 활용할 장소 마스터 데이터

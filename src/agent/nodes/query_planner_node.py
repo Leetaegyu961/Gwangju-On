@@ -32,10 +32,10 @@ class QueryPlan(BaseModel):
 async def query_planner_node(state: AgentState) -> dict[str, Any]:
     """
     사용자 질문을 분석하여 3가지 테마와 최적화된 검색 쿼리를 생성합니다. (Async)
-    
+
     Args:
         state: 현재 에이전트 상태
-        
+
     Returns:
         업데이트된 상태 (query_plan, themes)
     """
@@ -43,25 +43,25 @@ async def query_planner_node(state: AgentState) -> dict[str, Any]:
     messages = state.get("messages", [])
     if not messages:
         return {"query_plan": None}
-    
+
     last_message = messages[-1].content if hasattr(messages[-1], 'content') else str(messages[-1])
-    
+
     print(f"[Planner] 쿼리 및 테마 계획 생성 중: '{last_message}'")
-    
+
     # LLM 초기화 (Structured Output 사용)
     llm = ChatGoogleGenerativeAI(
         model=config.GEMINI_MODEL,
         google_api_key=config.GOOGLE_API_KEY,
         temperature=0,  # 일관된 결과를 위해 0
     )
-    
+
     # Structured Output으로 쿼리 계획 생성
     structured_llm = llm.with_structured_output(QueryPlan)
-    
+
     # 서베이 데이터 가져오기
     survey_data = state.get("survey_data", {})
     print(f"[Planner] Survey Data received: {survey_data}")  # 디버깅 로그 추가
-    
+
     user_context = ""
     if survey_data:
         gender = survey_data.get("gender", "알 수 없음")
@@ -76,6 +76,12 @@ async def query_planner_node(state: AgentState) -> dict[str, Any]:
 - 동행인: {companions}
 - 선호 지역: {region}
 """
+
+    # 개인화 컨텍스트 추가 (테이스팅 노트 + 선호도 + 이전 대화 요약)
+    personalization = state.get("personalization_context", "")
+    if personalization:
+        user_context += f"\n[개인화 컨텍스트 (이전 여행 이력 기반)]\n{personalization}\n"
+        print(f"[Planner] 개인화 컨텍스트 적용됨: {personalization[:80]}...")
 
     prompt = f"""당신은 사용자 질문을 분석하여 '3가지 추천 테마'와 '검색 쿼리'를 생성하는 전문가입니다.
 {user_context}
@@ -117,26 +123,46 @@ async def query_planner_node(state: AgentState) -> dict[str, Any]:
   → themes: ["데이트", "포토존", "이색"]  <-- (Good: 지역명 없음, 핵심 단어만)
   → place_queries: ["광주 동명동 분위기 좋은 맛집", "광주 동명동 사진 찍기 좋은 카페", "광주 동명동 이색 데이트"], result_count: 10
 """
-    
+
     try:
         # Async invoke
         query_plan = await structured_llm.ainvoke(prompt)
-        
+
+        # LLM이 None을 반환한 경우 서베이 기반 기본값으로 진행
+        if query_plan is None:
+            print(f"[Planner] LLM이 None을 반환함. 서베이 기반 기본 테마로 진행합니다.")
+            fallback_region = survey_data.get("region", "광주") if survey_data else "광주"
+            return {
+                "query_plan": {
+                    "themes": ["맛집", "카페", "힐링"],
+                    "place_queries": [f"{fallback_region} 맛집", f"{fallback_region} 카페", f"{fallback_region} 관광명소"],
+                    "result_count": 20,
+                    "reasoning": "LLM 응답 실패로 서베이 기반 기본 테마 사용"
+                },
+                "themes": ["맛집", "카페", "힐링"]
+            }
+
         print(f"[Planner] 쿼리 계획 (Async):")
         print(f"   - Themes: {query_plan.themes}")
         print(f"   - Place Queries: {query_plan.place_queries}")
         print(f"   - 개수(쿼리당): {query_plan.result_count}개")
         print(f"   - 이유: {query_plan.reasoning}")
-        
+
         return {
             "query_plan": query_plan.model_dump(),
             "themes": query_plan.themes  # state에 themes 저장
         }
-        
+
     except Exception as e:
         print(f"[Error] 쿼리 계획 생성 오류: {e}")
-        # 실패 시 기본값
+        # 실패 시 서베이 기반 기본 쿼리로 진행
+        fallback_region = survey_data.get("region", "광주") if survey_data else "광주"
         return {
-            "query_plan": None,
+            "query_plan": {
+                "themes": ["맛집", "카페", "힐링"],
+                "place_queries": [f"{fallback_region} 맛집", f"{fallback_region} 카페", f"{fallback_region} 관광명소"],
+                "result_count": 20,
+                "reasoning": f"LLM 오류로 기본 테마 사용 (지역: {fallback_region})"
+            },
             "themes": ["맛집", "카페", "힐링"]
         }
